@@ -197,8 +197,8 @@ export default function NeighborhoodsSection() {
   useEffect(() => {
     let loaded = 0;
     const check = () => { if (++loaded === 2) setImgsReady(true); };
-    const b = new Image(); b.onload = check; b.src = "/before.png";
-    const a = new Image(); a.onload = check; a.src = "/after.png";
+    const b = new Image(); b.onload = check; b.src = "/palisades-before.webp";
+    const a = new Image(); a.onload = check; a.src = "/palisades-after.webp";
     beforeRef.current = b;
     afterRef.current  = a;
   }, []);
@@ -301,7 +301,7 @@ export default function NeighborhoodsSection() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/before.png"
+            src="/palisades-before.webp"
             alt=""
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />

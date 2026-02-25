@@ -26,7 +26,7 @@ const REVEAL_AT = [
   0.22, 0.26, 0.30,          // Batch 1 — family
   0.36, 0.40, 0.43, 0.47,   // Batch 2 — stability
   0.50, 0.54, 0.58,          // Batch 3 — belonging
-  0.65,                       // Batch 4 — before.png
+  0.65,                       // Batch 4 — palisades-before
 ];
 
 const BATCH_OF  = (i: number) => (i < 4 ? 0 : i < 7 ? 1 : i < 11 ? 2 : i < 14 ? 3 : 4);
@@ -51,39 +51,39 @@ interface ImageSlot {
 }
 
 const ALL_IMAGES: ImageSlot[] = [
-  { src: "h-1",   left:  "4vw", top:    "5vh", width: "22vw", height: "30vh" },
-  { src: "h-2",   right: "4vw", top:    "5vh", width: "22vw", height: "30vh" },
-  { src: "h-3",   left: "29vw", bottom: "5vh", width: "22vw", height: "31vh" },
-  { src: "h-4",   right: "4vw", bottom: "5vh", width: "20vw", height: "28vh" },
-  { src: "f-1",   left: "34vw", top:  "2vh",   width: "34vw", height: "38vh" },
-  { src: "f-2",   left:  "2vw", top: "44vh",   width: "23vw", height: "43vh" },
-  { src: "f-3",   left: "48vw", top: "57vh",   width: "31vw", height: "36vh" },
-  { src: "st-1",  left: "15vw", top:  "2vh",   width: "24vw", height: "33vh" },
-  { src: "st-2",  right: "8vw", top:  "7vh",   width: "23vw", height: "35vh" },
-  { src: "st-3",  left: "10vw", top: "60vh",   width: "24vw", height: "34vh" },
-  { src: "st-4",  left: "37vw", top: "62vh",   width: "27vw", height: "33vh" },
-  { src: "b-1",   left:  "3vw", top: "33vh",   width: "27vw", height: "41vh" },
-  { src: "b-2",   right: "5vw", top:  "4vh",   width: "43vw", height: "34vh" },
-  { src: "b-3",   left: "36vw", top: "62vh",   width: "27vw", height: "33vh" },
-  { src: "before",left: "33vw", top: "61vh",   width: "34vw", height: "28vh" },
+  { src: "ruins-1",   left:  "4vw", top:    "5vh", width: "22vw", height: "30vh" },
+  { src: "ruins-2",   right: "4vw", top:    "5vh", width: "22vw", height: "30vh" },
+  { src: "ruins-3",   left: "29vw", bottom: "5vh", width: "22vw", height: "31vh" },
+  { src: "ruins-4",   right: "4vw", bottom: "5vh", width: "20vw", height: "28vh" },
+  { src: "families-1",   left: "34vw", top:  "2vh",   width: "34vw", height: "38vh" },
+  { src: "families-2",   left:  "2vw", top: "44vh",   width: "23vw", height: "43vh" },
+  { src: "families-3",   left: "48vw", top: "57vh",   width: "31vw", height: "36vh" },
+  { src: "streets-1",  left: "15vw", top:  "2vh",   width: "24vw", height: "33vh" },
+  { src: "streets-2",  right: "8vw", top:  "7vh",   width: "23vw", height: "35vh" },
+  { src: "streets-3",  left: "10vw", top: "60vh",   width: "24vw", height: "34vh" },
+  { src: "streets-4",  left: "37vw", top: "62vh",   width: "27vw", height: "33vh" },
+  { src: "blaze-1",   left:  "3vw", top: "33vh",   width: "27vw", height: "41vh" },
+  { src: "blaze-2",   right: "5vw", top:  "4vh",   width: "43vw", height: "34vh" },
+  { src: "blaze-3",   left: "36vw", top: "62vh",   width: "27vw", height: "33vh" },
+  { src: "palisades-before",left: "33vw", top: "61vh",   width: "34vw", height: "28vh" },
 ];
 
 const ALL_IMAGES_MOBILE: ImageSlot[] = [
-  { src: "h-1",   left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "h-2",   right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "h-3",   left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "h-4",   right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "f-1",   left:  "5vw", top:  "2vh",  width: "90vw", height: "34vh" },
-  { src: "f-2",   left:  "2vw", top: "68vh",  width: "46vw", height: "28vh" },
-  { src: "f-3",   right: "2vw", top: "68vh",  width: "46vw", height: "28vh" },
-  { src: "st-1",  left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "st-2",  right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "st-3",  left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "st-4",  right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "b-1",   left:  "2vw", top: "68vh",  width: "46vw", height: "26vh" },
-  { src: "b-2",   right: "2vw", top:  "2vh",  width: "90vw", height: "28vh" },
-  { src: "b-3",   right: "2vw", top: "68vh",  width: "46vw", height: "26vh" },
-  { src: "before",left: "13vw", top: "68vh",  width: "74vw", height: "26vh" },
+  { src: "ruins-1",   left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "ruins-2",   right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "ruins-3",   left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "ruins-4",   right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "families-1",   left:  "5vw", top:  "2vh",  width: "90vw", height: "34vh" },
+  { src: "families-2",   left:  "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "families-3",   right: "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "streets-1",  left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "streets-2",  right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "streets-3",  left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "streets-4",  right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "blaze-1",   left:  "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "blaze-2",   right: "2vw", top:  "2vh",  width: "90vw", height: "28vh" },
+  { src: "blaze-3",   right: "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "palisades-before",left: "13vw", top: "68vh",  width: "74vw", height: "26vh" },
 ];
 
 const B4_INIT_DESKTOP = { left: 33, top: 61, width: 34, height: 28 };
@@ -260,8 +260,8 @@ export default function DestroyingSection() {
   useEffect(() => {
     let loaded = 0;
     const check = () => { if (++loaded === 2) setImgsReady(true); };
-    const b = new Image(); b.onload = check; b.src = "/before.png";
-    const a = new Image(); a.onload = check; a.src = "/after.png";
+    const b = new Image(); b.onload = check; b.src = "/palisades-before.webp";
+    const a = new Image(); a.onload = check; a.src = "/palisades-after.webp";
     beforeImgRef.current = b;
     afterImgRef.current  = a;
   }, []);
@@ -476,7 +476,7 @@ export default function DestroyingSection() {
             {/* Darkened after image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/after.png"
+              src="/palisades-after.webp"
               alt=""
               style={{
                 position:      "absolute",
@@ -607,7 +607,7 @@ export default function DestroyingSection() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/before.png"
+                      src="/palisades-before.webp"
                       alt=""
                       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                     />
@@ -656,7 +656,7 @@ export default function DestroyingSection() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`/${img.src}.png`}
+                    src={`/${img.src}.webp`}
                     alt=""
                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
@@ -986,13 +986,13 @@ export default function DestroyingSection() {
               }}
             >
               {[
-                { src: "c-1", width: "20vw", height: "38vh" },
-                { src: "c-2", width: "20vw", height: "52vh" },
-                { src: "c-3", width: "20vw", height: "36vh" },
-                { src: "c-4", width: "24vw", height: "44vh" },
-                { src: "c-5", width: "24vw", height: "62vh" },
-                { src: "c-6", width: "20vw", height: "50vh" },
-                { src: "c-7", width: "22vw", height: "42vh" },
+                { src: "community-1", width: "20vw", height: "38vh" },
+                { src: "community-2", width: "20vw", height: "52vh" },
+                { src: "community-3", width: "20vw", height: "36vh" },
+                { src: "community-4", width: "24vw", height: "44vh" },
+                { src: "community-5", width: "24vw", height: "62vh" },
+                { src: "community-6", width: "20vw", height: "50vh" },
+                { src: "community-7", width: "22vw", height: "42vh" },
               ].map((photo) => (
                 <div
                   key={photo.src}
@@ -1005,7 +1005,7 @@ export default function DestroyingSection() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`/${photo.src}.png`}
+                    src={`/${photo.src}.webp`}
                     alt=""
                     style={{
                       width:     "100%",

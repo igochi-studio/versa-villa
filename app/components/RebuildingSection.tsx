@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 const IMAGES = [
-  "/003_Bienvenida 1241_by mrbarcelo 5.png",
-  "/003_Bienvenida 1241_by mrbarcelo 6.png",
-  "/003_Bienvenida 1241_by mrbarcelo 7.png",
-  "/003_Bienvenida 1241_by mrbarcelo 8.png",
-  "/003_Bienvenida 1241_by mrbarcelo 9.png",
+  "/rebuild-1.webp",
+  "/rebuild-2.webp",
+  "/rebuild-3.webp",
+  "/rebuild-4.webp",
+  "/rebuild-5.webp",
 ];
 
 const AUTO_INTERVAL = 4000;

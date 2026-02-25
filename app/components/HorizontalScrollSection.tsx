@@ -110,7 +110,7 @@ export default function HorizontalScrollSection() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/after.png"
+              src="/palisades-after.webp"
               alt=""
               style={{
                 position:      "absolute",

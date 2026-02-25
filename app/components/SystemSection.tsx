@@ -1,10 +1,10 @@
 "use client";
 
 const FEATURES = [
-  { src: "/sy-1.png", label: null },
-  { src: "/sy-2.png", label: "FIRE\nPROTECTIVE\nCURTAIN" },
-  { src: "/sy-3.png", label: "EXTERIOR\nWATER\nSPRINKLERS" },
-  { src: "/sy-4.png", label: "ATLEAST\n4-HOUR\nFIRE RATED\nWALL" },
+  { src: "/system-1.webp", label: null },
+  { src: "/system-2.webp", label: "FIRE\nPROTECTIVE\nCURTAIN" },
+  { src: "/system-3.webp", label: "EXTERIOR\nWATER\nSPRINKLERS" },
+  { src: "/system-4.webp", label: "ATLEAST\n4-HOUR\nFIRE RATED\nWALL" },
 ];
 
 export default function SystemSection() {
@@ -99,7 +99,7 @@ export default function SystemSection() {
         <div style={{ flex: "1 1 auto" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/sy-5.png"
+            src="/system-5.webp"
             alt="VersaVilla fire protection system render"
             style={{
               width:     "100%",

@@ -6,13 +6,13 @@ import { useScroll, useTransform, motion } from "framer-motion";
 const OLIVE = "#414833";
 
 const cyclingImages = [
-  "/c-1.png",
-  "/c-2.png",
-  "/c-3.png",
-  "/c-4.png",
-  "/c-5.png",
-  "/c-6.png",
-  "/c-7.png",
+  "/community-1.webp",
+  "/community-2.webp",
+  "/community-3.webp",
+  "/community-4.webp",
+  "/community-5.webp",
+  "/community-6.webp",
+  "/community-7.webp",
 ];
 
 export default function CelebrateSection() {
@@ -87,7 +87,7 @@ export default function CelebrateSection() {
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/versa villa dawn.png"
+              src="/villa-dawn.webp"
               alt="VersaVilla evening view"
               style={{
                 width: "90%",

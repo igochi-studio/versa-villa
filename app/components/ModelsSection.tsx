@@ -13,17 +13,17 @@ interface Model {
 }
 
 const leftModels: Model[] = [
-  { number: "001", image: "/type 1.png", stories: "2", bedrooms: "4", bathrooms: "5", area: "3,957", style: "MEDITERRANEAN" },
-  { number: "003", image: "/type 3.png", stories: "3", bedrooms: "5", bathrooms: "6", area: "4,947", style: "MEDITERRANEAN" },
-  { number: "005", image: "/type 5.png", stories: "3", bedrooms: "4", bathrooms: "6", area: "7,400", style: "MEDITERRANEAN" },
-  { number: "007", image: "/type 7.png", stories: "1", bedrooms: "3", bathrooms: "4", area: "2,200", style: "MEDITERRANEAN" },
+  { number: "001", image: "/villa-type-1.webp", stories: "2", bedrooms: "4", bathrooms: "5", area: "3,957", style: "MEDITERRANEAN" },
+  { number: "003", image: "/villa-type-3.webp", stories: "3", bedrooms: "5", bathrooms: "6", area: "4,947", style: "MEDITERRANEAN" },
+  { number: "005", image: "/villa-type-5.webp", stories: "3", bedrooms: "4", bathrooms: "6", area: "7,400", style: "MEDITERRANEAN" },
+  { number: "007", image: "/villa-type-7.webp", stories: "1", bedrooms: "3", bathrooms: "4", area: "2,200", style: "MEDITERRANEAN" },
 ];
 
 const rightModels: Model[] = [
-  { number: "002", image: "/type 2.png", stories: "2", bedrooms: "4", bathrooms: "5", area: "4,147", style: "MODERN" },
-  { number: "004", image: "/type 4.png", stories: "3", bedrooms: "5", bathrooms: "6", area: "4,947", style: "MODERN" },
-  { number: "006", image: "/type 6.png", stories: "3", bedrooms: "4", bathrooms: "6", area: "7,400", style: "CAPE COD" },
-  { number: "008", image: "/type 8.png", stories: "1", bedrooms: "3", bathrooms: "4", area: "2,200", style: "MODERN" },
+  { number: "002", image: "/villa-type-2.webp", stories: "2", bedrooms: "4", bathrooms: "5", area: "4,147", style: "MODERN" },
+  { number: "004", image: "/villa-type-4.webp", stories: "3", bedrooms: "5", bathrooms: "6", area: "4,947", style: "MODERN" },
+  { number: "006", image: "/villa-type-6.webp", stories: "3", bedrooms: "4", bathrooms: "6", area: "7,400", style: "CAPE COD" },
+  { number: "008", image: "/villa-type-8.webp", stories: "1", bedrooms: "3", bathrooms: "4", area: "2,200", style: "MODERN" },
 ];
 
 function ModelCard({ model, expanded }: { model: Model; expanded: boolean }) {
