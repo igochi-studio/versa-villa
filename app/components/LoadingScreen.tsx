@@ -43,6 +43,24 @@ export default function LoadingScreen() {
   const [phase, setPhase] = useState<Phase>("in");
   const shouldReduceMotion = useReducedMotion();
 
+  // Lock scroll during the loading animation so impatient scrolling
+  // doesn't skip past the Hero while the curtain is still playing.
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phase === "done") {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+  }, [phase]);
+
   useEffect(() => {
     if (shouldReduceMotion) {
       const t = setTimeout(() => setPhase("done"), 800);

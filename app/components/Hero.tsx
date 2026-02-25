@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { useDialKit } from "dialkit";
 
 const TREE_SPRING = {
   type: "spring" as const,
@@ -11,42 +12,83 @@ const TREE_SPRING = {
   delay: 2.7,
 };
 
-const CHAR_SPRING = {
-  type: "spring" as const,
-  stiffness: 140,
-  damping: 100,
-  mass: 2,
-};
+// ── Word-by-word blur reveal (time-based, not scroll) ─────
+// Inspired by @jh3yy's CSS scroll-to-unblur pattern,
+// adapted to fire on mount with staggered delays.
+const LINES = [["Wildfires", "swept", "through"], ["Los", "Angeles,"]];
 
-const LINES = ["Wildfires swept through", "Los Angeles,"];
-const CHAR_STAGGER = 0.022;
-const TEXT_START_DELAY = 2.7;
+// ease-out-quart: fast start, gentle settle — perfect for reveals
+const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
-function CharReveal({ line, charOffset }: { line: string; charOffset: number }) {
+function WordReveal({ params, skipDelay }: { params: ReturnType<typeof useWordRevealDials>; skipDelay?: boolean }) {
   const shouldReduceMotion = useReducedMotion();
+  const t = params.timing as { startDelay: number; stagger: number; duration: number };
+  const fx = params.effect as { blur: number; enterY: number };
+  const baseDelay = skipDelay ? 0 : t.startDelay;
+  let wordIndex = 0;
+
   return (
-    <span aria-label={line}>
-      {line.split("").map((char, i) => (
-        <motion.span
-          key={i}
-          aria-hidden="true"
-          style={{ display: "inline-block" }}
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 10, filter: "blur(12px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{
-            ...CHAR_SPRING,
-            delay: TEXT_START_DELAY + (charOffset + i) * CHAR_STAGGER,
-          }}
-        >
-          {char === " " ? "\u00A0" : char}
-        </motion.span>
+    <>
+      {LINES.map((line, lineIdx) => (
+        <span key={lineIdx} style={{ display: "block", whiteSpace: "nowrap" }}>
+          {line.map((word, wi) => {
+            const delay = baseDelay + wordIndex * t.stagger;
+            wordIndex++;
+            return (
+              <motion.span
+                key={wi}
+                aria-hidden="true"
+                style={{ display: "inline-block", willChange: "filter, opacity" }}
+                initial={shouldReduceMotion ? false : {
+                  opacity: 0,
+                  filter: `blur(${fx.blur}px)`,
+                  y: fx.enterY,
+                }}
+                animate={{
+                  opacity: 1,
+                  filter: "blur(0px)",
+                  y: 0,
+                }}
+                transition={{
+                  duration: t.duration,
+                  ease: EASE_OUT_QUART,
+                  delay,
+                }}
+              >
+                {word}{wi < line.length - 1 ? "\u00A0" : null}
+              </motion.span>
+            );
+          })}
+        </span>
       ))}
-    </span>
+    </>
   );
+}
+
+// ── DialKit: tune word blur reveal in real time ───────────
+function useWordRevealDials(onReplay: () => void) {
+  return useDialKit("Word Blur Reveal", {
+    timing: {
+      startDelay: [2.7, 0, 5],       // seconds — wait for loading screen
+      stagger:    [0.18, 0.02, 0.5],  // seconds between words
+      duration:   [0.7, 0.1, 2.0],    // seconds per word transition
+    },
+    effect: {
+      blur:   [20, 0, 40],            // px — starting blur amount
+      enterY: [8, 0, 30],             // px — vertical slide distance
+    },
+    replay: { type: "action" as const },
+  }, {
+    onAction: (action: string) => {
+      if (action === "replay") onReplay();
+    },
+  });
 }
 
 export default function Hero() {
   const shouldReduceMotion = useReducedMotion();
+  const [replayKey, setReplayKey] = useState(0);
+  const wordRevealParams = useWordRevealDials(() => setReplayKey((k) => k + 1));
 
   // Background color transition: start with LoadingScreen's green, fade to cream after loading completes
   const [bgColor, setBgColor] = useState("#414833"); // Matches LoadingScreen green
@@ -189,17 +231,7 @@ export default function Hero() {
               fontSynthesis: "none",
             }}
           >
-            {LINES.map((line, lineIndex) => {
-              const charOffset = LINES.slice(0, lineIndex).reduce(
-                (sum, l) => sum + l.length,
-                0
-              );
-              return (
-                <span key={lineIndex} style={{ display: "block", whiteSpace: "nowrap" }}>
-                  <CharReveal line={line} charOffset={charOffset} />
-                </span>
-              );
-            })}
+            <WordReveal key={replayKey} params={wordRevealParams} skipDelay={replayKey > 0} />
           </h1>
         </div>
 
