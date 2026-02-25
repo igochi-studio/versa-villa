@@ -228,32 +228,32 @@ export default function DestroyingSection() {
     offset: ["start start", "end end"],
   });
 
-  // ── Split scroll: burn phase (first 58% = 1400vh) + horiz phase (last 42% = 1000vh) ──
+  // ── Split scroll: burn phase (first 62% = 1400vh) + horiz phase (last 38% = 850vh) ──
   // burnProgress  0→1 over first 1400vh, clamps at 1 thereafter
-  // horizProgress 0→0 during burn, then 0→1 over last 1000vh
-  const burnProgress  = useTransform(scrollYProgress, [0, 0.583, 1], [0, 1, 1]);
-  const horizProgress = useTransform(scrollYProgress, [0, 0.583, 1], [0, 0, 1]);
+  // horizProgress 0→0 during burn, then 0→1 over last 850vh
+  const burnProgress  = useTransform(scrollYProgress, [0, 0.622, 1], [0, 1, 1]);
+  const horizProgress = useTransform(scrollYProgress, [0, 0.622, 1], [0, 0, 1]);
 
   // ── Horizontal slide transforms ──────────────────────────────────────────
   // 5 panels (P1-P3:100vw each, P4:165vw, P5:100vw = 565vw total)
-  // Equidistant transitions with brief holds between each
+  // Compact timeline: slides + short holds, minimal dead zone at end
   const containerSlideX = useTransform(
     horizProgress,
-    [0.00, 0.12, 0.16, 0.28, 0.32, 0.64, 0.68, 0.80, 0.88],
-    ["0vw", "-100vw", "-100vw", "-200vw", "-200vw", "-365vw", "-365vw", "-465vw", "-465vw"]
+    [0.00, 0.12, 0.15, 0.27, 0.30, 0.62, 0.65, 0.78, 0.82, 1.0],
+    ["0vw", "-100vw", "-100vw", "-200vw", "-200vw", "-365vw", "-365vw", "-465vw", "-465vw", "-465vw"]
   );
   // Panel 1 contracts to 0.95 as slide begins
   const panel1Scale     = useTransform(horizProgress, [0, 0.04], [1, 0.95]);
 
   // ── Parallax offsets — text lags slightly behind scroll for depth ──────
-  const p3TextX   = useTransform(horizProgress, [0.16, 0.32], [40, 0]);
-  const p3TextOp  = useTransform(horizProgress, [0.18, 0.26], [0, 1]);
-  const p4TextOp  = useTransform(horizProgress, [0.34, 0.42], [0, 1]);
-  const p4QuestOp = useTransform(horizProgress, [0.52, 0.60], [0, 1]);
-  const p5TextX   = useTransform(horizProgress, [0.68, 0.82], [50, 0]);
-  const p5TextOp  = useTransform(horizProgress, [0.70, 0.78], [0, 1]);
+  const p3TextX   = useTransform(horizProgress, [0.15, 0.30], [40, 0]);
+  const p3TextOp  = useTransform(horizProgress, [0.17, 0.25], [0, 1]);
+  const p4TextOp  = useTransform(horizProgress, [0.32, 0.40], [0, 1]);
+  const p4QuestOp = useTransform(horizProgress, [0.50, 0.58], [0, 1]);
+  const p5TextX   = useTransform(horizProgress, [0.65, 0.80], [50, 0]);
+  const p5TextOp  = useTransform(horizProgress, [0.67, 0.76], [0, 1]);
   // Photo vertical float — subtle upward drift as you scroll through P4
-  const p4PhotoY  = useTransform(horizProgress, [0.32, 0.64], [20, -10]);
+  const p4PhotoY  = useTransform(horizProgress, [0.30, 0.62], [20, -10]);
 
   // ── Burn scroll event — ref + discrete state only (no per-pixel re-render) ──
   useMotionValueEvent(burnProgress, "change", (v) => {
@@ -471,7 +471,7 @@ export default function DestroyingSection() {
   const images = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
 
   return (
-    <section ref={sectionRef} style={{ height: "2400vh" }}>
+    <section ref={sectionRef} style={{ height: "2250vh" }}>
       <motion.div
         className="sticky top-0 overflow-hidden"
         style={{ height: "100vh" }}
