@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useMotionValueEvent, useReducedMotion } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, useReducedMotion } from "motion/react";
 
 // ─── Scroll timeline (section = 600vh, v = 0 → 1) ────────────────────────────
 //

@@ -7,7 +7,7 @@ import {
   useTransform,
   useMotionValueEvent,
   useReducedMotion,
-} from "framer-motion";
+} from "motion/react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { SpeakerLoudIcon, SpeakerOffIcon } from "@radix-ui/react-icons";
 

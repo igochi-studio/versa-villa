@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
 
 // ease-out-quart: for entrances — jumps into place, settles naturally
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;

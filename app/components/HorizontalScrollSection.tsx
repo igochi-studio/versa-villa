@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "motion/react";
 
 // ── Cursors — show current audio state (click to toggle) ──────────────────
 // Sound ON  → speaker with waves (click will mute)
