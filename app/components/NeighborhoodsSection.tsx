@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useMotionValueEvent, useReducedMotion } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, useReducedMotion } from "motion/react";
 
 // ─── Scroll timeline (section = 600vh, v = 0 → 1) ────────────────────────────
 //
@@ -177,9 +177,13 @@ export default function NeighborhoodsSection() {
   const timeRef     = useRef(0);
   const scrollVRef  = useRef(0);
 
-  const [scrollV,    setScrollV]    = useState(0);
   const [textVisible, setTextVisible] = useState(false);
   const [imgsReady,  setImgsReady]  = useState(false);
+
+  // Refs for direct DOM manipulation (no re-renders for continuous values)
+  const textVisibleRef  = useRef(false);
+  const imgClipRef      = useRef<HTMLDivElement>(null);
+  const textElRef       = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -188,17 +192,49 @@ export default function NeighborhoodsSection() {
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const cv = Math.max(0, v);
-    setScrollV(cv);
     scrollVRef.current = cv;
-    if (cv >= T.TEXT_ON && !textVisible) setTextVisible(true);
+
+    // Discrete state — only fires once
+    if (cv >= T.TEXT_ON && !textVisibleRef.current) {
+      textVisibleRef.current = true;
+      setTextVisible(true);
+    }
+
+    // ── Direct DOM updates for continuous values ──
+    const imgFade  = map(cv, T.IMG_IN,   T.IMG_FULL);
+    const expandP  = easeInOut(map(cv, T.EXPAND_ON, T.EXPAND_OFF));
+    const textOp   = 1 - map(cv, T.EXPAND_ON, T.TEXT_OFF);
+    const canvasOp = map(cv, T.BURN_IN,  T.BURN_IN + 0.04);
+    const cssImgOp = imgFade * (1 - map(cv, T.BURN_IN - 0.01, T.BURN_IN + 0.04));
+
+    // Image rectangle: small centered → full viewport
+    const INIT_W = 33, INIT_H = 26, INIT_L = (100 - INIT_W) / 2, INIT_T = 52;
+    const iW = lerp(INIT_W, 100, expandP);
+    const iH = lerp(INIT_H, 100, expandP);
+    const iL = lerp(INIT_L, 0,   expandP);
+    const iT = lerp(INIT_T, 0,   expandP);
+    const iR = lerp(8,      0,   expandP);
+
+    if (canvasRef.current) canvasRef.current.style.opacity = String(canvasOp);
+    if (textElRef.current)   textElRef.current.style.opacity   = String(textOp);
+
+    if (imgClipRef.current) {
+      const s = imgClipRef.current.style;
+      s.left         = `${iL}vw`;
+      s.top          = `${iT}vh`;
+      s.width        = `${iW}vw`;
+      s.height       = `${iH}vh`;
+      s.borderRadius = `${iR}px`;
+      s.opacity      = String(cssImgOp);
+    }
   });
 
   // ── Load before / after images ────────────────────────────────────────────
   useEffect(() => {
     let loaded = 0;
     const check = () => { if (++loaded === 2) setImgsReady(true); };
-    const b = new Image(); b.onload = check; b.src = "/before.png";
-    const a = new Image(); a.onload = check; a.src = "/after.png";
+    const b = new Image(); b.onload = check; b.src = "/palisades-before.webp";
+    const a = new Image(); a.onload = check; a.src = "/palisades-after.webp";
     beforeRef.current = b;
     afterRef.current  = a;
   }, []);
@@ -245,26 +281,6 @@ export default function NeighborhoodsSection() {
     };
   }, [imgsReady]);
 
-  // ── Derived display values ────────────────────────────────────────────────
-
-  const imgFade  = map(scrollV, T.IMG_IN,   T.IMG_FULL);
-  const expandP  = easeInOut(map(scrollV, T.EXPAND_ON, T.EXPAND_OFF));
-  const textOp   = 1 - map(scrollV, T.EXPAND_ON, T.TEXT_OFF);
-  const canvasOp = map(scrollV, T.BURN_IN,  T.BURN_IN + 0.04);
-  const cssImgOp = imgFade * (1 - map(scrollV, T.BURN_IN - 0.01, T.BURN_IN + 0.04));
-
-  // Image rectangle: small centered → full viewport
-  const INIT_W  = 33;    // vw when small
-  const INIT_H  = 26;    // vh when small
-  const INIT_L  = (100 - INIT_W) / 2;  // vw — centers the image
-  const INIT_T  = 52;    // vh — sits just below the text
-
-  const iW = lerp(INIT_W, 100,    expandP);
-  const iH = lerp(INIT_H, 100,    expandP);
-  const iL = lerp(INIT_L, 0,      expandP);
-  const iT = lerp(INIT_T, 0,      expandP);
-  const iR = lerp(8,      0,      expandP); // border-radius px
-
   return (
     <section ref={sectionRef} style={{ height: "600vh" }}>
       <div
@@ -279,29 +295,30 @@ export default function NeighborhoodsSection() {
             position:      "absolute",
             inset:         0,
             zIndex:        5,
-            opacity:       canvasOp,
+            opacity:       0,
             pointerEvents: "none",
           }}
         />
 
         {/* ── Before image (reveals small, then expands) ─────────────────── */}
         <div
+          ref={imgClipRef}
           style={{
             position:     "absolute",
-            left:         `${iL}vw`,
-            top:          `${iT}vh`,
-            width:        `${iW}vw`,
-            height:       `${iH}vh`,
-            borderRadius: `${iR}px`,
+            left:         "33.5vw",
+            top:          "52vh",
+            width:        "33vw",
+            height:       "26vh",
+            borderRadius: "8px",
             overflow:     "hidden",
             zIndex:       4,
-            opacity:      cssImgOp,
+            opacity:      0,
             pointerEvents: "none",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/before.png"
+            src="/palisades-before.webp"
             alt=""
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
@@ -310,8 +327,9 @@ export default function NeighborhoodsSection() {
         {/* ── Text ─────────────────────────────────────────────────────────── */}
         {textVisible && (
           <div
+            ref={textElRef}
             className="absolute text-center pointer-events-none select-none w-full"
-            style={{ top: "36vh", left: 0, zIndex: 20, opacity: textOp }}
+            style={{ top: "36vh", left: 0, zIndex: 20, opacity: 1 }}
           >
             <p
               style={{

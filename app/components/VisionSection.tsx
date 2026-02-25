@@ -15,7 +15,7 @@ export default function VisionSection() {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/tree blowing.svg"
+          src="/tree-blowing.svg"
           alt="Wind-blown tree illustration"
           style={{
             width: "80%",

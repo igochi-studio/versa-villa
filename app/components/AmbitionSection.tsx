@@ -14,7 +14,7 @@ export default function AmbitionSection() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/Bienvenida evening.png"
+          src="/villa-evening.webp"
           alt="VersaVilla at sunset"
           style={{
             position:       "absolute",

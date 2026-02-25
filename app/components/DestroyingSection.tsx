@@ -7,26 +7,82 @@ import {
   useTransform,
   useMotionValueEvent,
   useReducedMotion,
-} from "framer-motion";
+} from "motion/react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { SpeakerLoudIcon, SpeakerOffIcon } from "@radix-ui/react-icons";
+import { useDialKit } from "dialkit";
 
-const CHAR_SPRING = { type: "spring" as const, stiffness: 250, damping: 60, mass: 1 };
-const BLUR_EASE   = [0.77, 0, 0.175, 1] as const;
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ANIMATION STORYBOARD — Destroying Section (Image Reveals)
+ *
+ * Trigger: scroll position within 1700vh section
+ * burnProgress 0→1 over first 1000vh, horizProgress 0→1 over last 700vh
+ *
+ * RULE #1: The screen is NEVER blank.
+ *          Old batch holds as a dimmed backdrop until the next phase replaces it.
+ *          Images crossfade like double-exposed film — new memories over old.
+ *
+ * RULE #2: First scroll = immediate content.
+ *          Two images materialize within the first ~30vh of scrolling.
+ *          No empty staring at a blank screen wondering if it's broken.
+ *
+ * Five lifecycle states per image:
+ *
+ *   FUTURE     opacity 0, blur 8px, scale 0.97
+ *              → not yet — invisible, waiting for its scroll threshold
+ *
+ *   ENTER      opacity 0→1, blur 8→0px, scale 0.97→1.0         [0.55s]
+ *              → rack-focus reveal with ease-out-quart
+ *              → blur clears ×1.4 slower than opacity
+ *              → scale settles ×1.6 slower — subtle "breathing in"
+ *
+ *   ACTIVE     opacity 1, blur 0, scale 1
+ *              → sharp, present, fully in focus
+ *
+ *   BACKDROP   opacity 0.25, blur 6px, scale 0.99               [0.5s]
+ *              → previous phase's batch — dimmed but present
+ *              → keeps the screen populated during crossfade
+ *              → ease-in-out-quart for graceful recession
+ *
+ *   GONE       opacity 0, blur 8px, scale 0.98                  [0.4s]
+ *              → 2+ phases old — fully exits
+ *              → or: phase 4 wipe — everything clears for burn
+ *
+ * Phase transitions (the crossfade):
+ *   When activePhase advances from N to N+1:
+ *     • Batch N:   ACTIVE → BACKDROP (dims to 25%, softens)
+ *     • Batch N-1: BACKDROP → GONE (now two phases old, exit)
+ *     • Batch N+1: images ENTER one-by-one as scroll hits thresholds
+ *   At no point is the screen empty. Batch N holds as BACKDROP
+ *   while Batch N+1 materializes on top.
+ *
+ *   Phase 4 exception: ALL previous batches → GONE immediately
+ *   (wipe for the before/after burn transition)
+ *
+ * Reveal cadence (burnProgress thresholds):
+ *   Each batch is spread across its FULL phase — no front-loading.
+ *   Something new appears roughly every 50–85vh of scrolling.
+ *   Batch 0: 0.003, 0.07, 0.14, 0.003  (TL+BR diagonal first, TR at 70vh, BL at 140vh)
+ *   Batch 1: 0.23, 0.28, 0.33           (fills 0.22→0.36, ~70vh apart)
+ *   Batch 2: 0.37, 0.40, 0.44, 0.48    (fills 0.36→0.50, ~50vh apart)
+ *   Batch 3: 0.51, 0.55, 0.60           (fills 0.50→0.64, ~65vh apart)
+ *   Batch 4: 0.65 (single image)
+ * ─────────────────────────────────────────────────────────────────────────── */
 
-// ─── Scroll timeline (section = 1600vh, burn phase = first 1400vh) ─────────
-// burnProgress goes 0→1 over the first 1400vh (87.5% of section).
-// horizProgress goes 0→1 over the last 200vh (12.5% of section).
-// All existing constants are relative to burnProgress (unchanged).
+const EASE_OUT_QUART    = [0.165, 0.84, 0.44, 1] as const;  // enter — snappy arrival
+const EASE_IN_OUT_QUART = [0.77, 0, 0.175, 1] as const;     // exit/backdrop — natural
+const BLUR_EASE = EASE_IN_OUT_QUART;                          // alias for legacy code
+
+// ─── Scroll timeline ─────────────────────────────────────────────────────────
 const TEXT_VISIBLE_AT = 0.005;
 const PHASE_START = [0, 0.22, 0.36, 0.50, 0.64];
 
 const REVEAL_AT = [
-  0.03, 0.07, 0.12, 0.18,   // Batch 0 — homes
-  0.22, 0.26, 0.30,          // Batch 1 — family
-  0.36, 0.40, 0.43, 0.47,   // Batch 2 — stability
-  0.50, 0.54, 0.58,          // Batch 3 — belonging
-  0.65,                       // Batch 4 — before.png
+  0.003, 0.07, 0.14, 0.003,  // Batch 0 — TL+BR diagonal first, TR at 70vh, BL at 140vh
+  0.23, 0.28, 0.33,           // Batch 1 — fills phase (0.22→0.36)
+  0.37, 0.40, 0.44, 0.48,    // Batch 2 — steady cadence (0.36→0.50)
+  0.51, 0.55, 0.60,           // Batch 3 — fills phase (0.50→0.64)
+  0.65,                        // Batch 4 — palisades-before
 ];
 
 const BATCH_OF  = (i: number) => (i < 4 ? 0 : i < 7 ? 1 : i < 11 ? 2 : i < 14 ? 3 : 4);
@@ -51,39 +107,39 @@ interface ImageSlot {
 }
 
 const ALL_IMAGES: ImageSlot[] = [
-  { src: "h-1",   left:  "4vw", top:    "5vh", width: "22vw", height: "30vh" },
-  { src: "h-2",   right: "4vw", top:    "5vh", width: "22vw", height: "30vh" },
-  { src: "h-3",   left: "29vw", bottom: "5vh", width: "22vw", height: "31vh" },
-  { src: "h-4",   right: "4vw", bottom: "5vh", width: "20vw", height: "28vh" },
-  { src: "f-1",   left: "34vw", top:  "2vh",   width: "34vw", height: "38vh" },
-  { src: "f-2",   left:  "2vw", top: "44vh",   width: "23vw", height: "43vh" },
-  { src: "f-3",   left: "48vw", top: "57vh",   width: "31vw", height: "36vh" },
-  { src: "st-1",  left: "15vw", top:  "2vh",   width: "24vw", height: "33vh" },
-  { src: "st-2",  right: "8vw", top:  "7vh",   width: "23vw", height: "35vh" },
-  { src: "st-3",  left: "10vw", top: "60vh",   width: "24vw", height: "34vh" },
-  { src: "st-4",  left: "37vw", top: "62vh",   width: "27vw", height: "33vh" },
-  { src: "b-1",   left:  "3vw", top: "33vh",   width: "27vw", height: "41vh" },
-  { src: "b-2",   right: "5vw", top:  "4vh",   width: "43vw", height: "34vh" },
-  { src: "b-3",   left: "36vw", top: "62vh",   width: "27vw", height: "33vh" },
-  { src: "before",left: "33vw", top: "61vh",   width: "34vw", height: "28vh" },
+  { src: "ruins-1",   left:  "4vw", top:    "5vh", width: "22vw", height: "30vh" },
+  { src: "ruins-2",   right: "4vw", top:    "5vh", width: "22vw", height: "30vh" },
+  { src: "ruins-3",   left: "29vw", bottom: "5vh", width: "22vw", height: "31vh" },
+  { src: "ruins-4",   right: "4vw", bottom: "5vh", width: "20vw", height: "28vh" },
+  { src: "families-1",   left: "34vw", top:  "2vh",   width: "34vw", height: "38vh" },
+  { src: "families-2",   left:  "2vw", top: "44vh",   width: "23vw", height: "43vh" },
+  { src: "families-3",   left: "48vw", top: "57vh",   width: "31vw", height: "36vh" },
+  { src: "streets-1",  left: "15vw", top:  "2vh",   width: "24vw", height: "33vh" },
+  { src: "streets-2",  right: "8vw", top:  "7vh",   width: "23vw", height: "35vh" },
+  { src: "streets-3",  left: "10vw", top: "60vh",   width: "24vw", height: "34vh" },
+  { src: "streets-4",  left: "37vw", top: "62vh",   width: "27vw", height: "33vh" },
+  { src: "blaze-1",   left:  "3vw", top: "33vh",   width: "27vw", height: "41vh" },
+  { src: "blaze-2",   right: "5vw", top:  "4vh",   width: "43vw", height: "34vh" },
+  { src: "blaze-3",   left: "36vw", top: "62vh",   width: "27vw", height: "33vh" },
+  { src: "palisades-before",left: "33vw", top: "61vh",   width: "34vw", height: "28vh" },
 ];
 
 const ALL_IMAGES_MOBILE: ImageSlot[] = [
-  { src: "h-1",   left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "h-2",   right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "h-3",   left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "h-4",   right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "f-1",   left:  "5vw", top:  "2vh",  width: "90vw", height: "34vh" },
-  { src: "f-2",   left:  "2vw", top: "68vh",  width: "46vw", height: "28vh" },
-  { src: "f-3",   right: "2vw", top: "68vh",  width: "46vw", height: "28vh" },
-  { src: "st-1",  left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "st-2",  right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
-  { src: "st-3",  left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "st-4",  right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
-  { src: "b-1",   left:  "2vw", top: "68vh",  width: "46vw", height: "26vh" },
-  { src: "b-2",   right: "2vw", top:  "2vh",  width: "90vw", height: "28vh" },
-  { src: "b-3",   right: "2vw", top: "68vh",  width: "46vw", height: "26vh" },
-  { src: "before",left: "13vw", top: "68vh",  width: "74vw", height: "26vh" },
+  { src: "ruins-1",   left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "ruins-2",   right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "ruins-3",   left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "ruins-4",   right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "families-1",   left:  "5vw", top:  "2vh",  width: "90vw", height: "34vh" },
+  { src: "families-2",   left:  "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "families-3",   right: "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "streets-1",  left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "streets-2",  right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "streets-3",  left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "streets-4",  right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "blaze-1",   left:  "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "blaze-2",   right: "2vw", top:  "2vh",  width: "90vw", height: "28vh" },
+  { src: "blaze-3",   right: "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "palisades-before",left: "13vw", top: "68vh",  width: "74vw", height: "26vh" },
 ];
 
 const B4_INIT_DESKTOP = { left: 33, top: 61, width: 34, height: 28 };
@@ -170,18 +226,75 @@ void main() {
   gl_FragColor = clamp(col, 0.0, 1.0);
 }`;
 
-function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
+// ── DialKit: tune image reveal transitions ────────────────
+function useImageRevealDials() {
+  return useDialKit("Image Reveals", {
+    enter: {
+      duration: [0.4, 0.1, 2.0],     // s — snappy reveal
+      blur:     [8, 0, 20],          // px — starting soft focus
+      scale:    [0.97, 0.9, 1.0],    // starting scale — "breathe in"
+    },
+    backdrop: {
+      duration: [0.5, 0.1, 2.0],     // s — graceful dim
+      opacity:  [0.25, 0, 0.5],      // dimmed but present
+      blur:     [6, 0, 16],          // px — softened, not invisible
+      scale:    [0.99, 0.95, 1.0],   // barely smaller
+    },
+    gone: {
+      duration: [0.35, 0.1, 1.5],    // s — fast final exit
+    },
+  });
+}
+
+// ── DialKit: tune character blur reveal in real time ───────────
+function useDestroyingRevealDials() {
+  return useDialKit("Destroying Text Reveal", {
+    timing: {
+      stagger:  [0.03, 0.01, 0.15],  // seconds between characters
+      duration: [0.5, 0.1, 2.0],     // seconds per character transition
+    },
+    effect: {
+      blur:   [12, 0, 40],           // px — starting blur amount
+      enterY: [6, 0, 30],            // px — vertical slide distance
+    },
+  });
+}
+
+function CharReveal({
+  text,
+  params,
+  baseDelay = 0,
+}: {
+  text: string;
+  params: ReturnType<typeof useDestroyingRevealDials>;
+  baseDelay?: number;
+}) {
   const shouldReduceMotion = useReducedMotion();
+  const t = params.timing as { stagger: number; duration: number };
+  const fx = params.effect as { blur: number; enterY: number };
+
   return (
     <span aria-label={text}>
       {text.split("").map((char, i) => (
         <motion.span
           key={i}
           aria-hidden="true"
-          style={{ display: "inline-block" }}
-          initial={shouldReduceMotion ? false : { filter: "blur(12px)", y: 10, opacity: 0 }}
-          animate={{ filter: "blur(0px)", y: 0, opacity: 1 }}
-          transition={{ ...CHAR_SPRING, delay: baseDelay + i * 0.04 }}
+          style={{ display: "inline-block", willChange: "filter, opacity" }}
+          initial={shouldReduceMotion ? false : {
+            opacity: 0,
+            filter: `blur(${fx.blur}px)`,
+            y: fx.enterY,
+          }}
+          animate={{
+            opacity: 1,
+            filter: "blur(0px)",
+            y: 0,
+          }}
+          transition={{
+            duration: t.duration,
+            ease: EASE_OUT_QUART,
+            delay: baseDelay + i * t.stagger,
+          }}
         >
           {char === " " ? "\u00A0" : char}
         </motion.span>
@@ -191,6 +304,8 @@ function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number 
 }
 
 export default function DestroyingSection() {
+  const revealParams = useDestroyingRevealDials();
+  const imgParams    = useImageRevealDials();
   const isMobile     = useIsMobile();
   const sectionRef   = useRef<HTMLElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
@@ -205,11 +320,19 @@ export default function DestroyingSection() {
   const videoRef     = useRef<HTMLVideoElement>(null);
   const flowerRef    = useRef<HTMLVideoElement>(null);
 
-  const [scrollV,     setScrollV]     = useState(0);
-  const [textVisible, setTextVisible] = useState(false);
-  const [imgsReady,   setImgsReady]   = useState(false);
-  const [bgColor,     setBgColor]     = useState("#414833");
-  const [isMuted,     setIsMuted]     = useState(false);
+  const [activePhase,   setActivePhase]   = useState(0);
+  const [revealedMask,  setRevealedMask]  = useState(0);
+  const revealedMaskRef = useRef(0);
+  const [textVisible,   setTextVisible]   = useState(false);
+  const [imgsReady,     setImgsReady]     = useState(false);
+  const [bgColor,       setBgColor]       = useState("#414833");
+  const [isMuted,       setIsMuted]       = useState(false);
+
+  // Refs for direct DOM manipulation of continuous values (no re-renders)
+  const textVisibleRef   = useRef(false);
+  const afterImgElRef    = useRef<HTMLImageElement>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
+  const beforeClipRef    = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setBgColor("#F7F5F0"), 2600);
@@ -221,47 +344,90 @@ export default function DestroyingSection() {
     offset: ["start start", "end end"],
   });
 
-  // ── Split scroll: burn phase (first 58% = 1400vh) + horiz phase (last 42% = 1000vh) ──
-  // burnProgress  0→1 over first 1400vh, clamps at 1 thereafter
+  // ── Split scroll: burn phase (first 50% = 1000vh) + horiz phase (last 50% = 1000vh) ──
+  // burnProgress  0→1 over first 1000vh, clamps at 1 thereafter
   // horizProgress 0→0 during burn, then 0→1 over last 1000vh
-  const burnProgress  = useTransform(scrollYProgress, [0, 0.583, 1], [0, 1, 1]);
-  const horizProgress = useTransform(scrollYProgress, [0, 0.583, 1], [0, 0, 1]);
+  const burnProgress  = useTransform(scrollYProgress, [0, 0.5, 1], [0, 1, 1]);
+  const horizProgress = useTransform(scrollYProgress, [0, 0.5, 1], [0, 0, 1]);
 
   // ── Horizontal slide transforms ──────────────────────────────────────────
   // 5 panels (P1-P3:100vw each, P4:165vw, P5:100vw = 565vw total)
-  // Equidistant transitions with brief holds between each
+  // Panel 2 (video) gets a long hold so people can't just scroll past it
+  // Video hold zone: 0.13→0.48 (35% of horiz = 350vh of dead scroll on video)
   const containerSlideX = useTransform(
     horizProgress,
-    [0.00, 0.12, 0.16, 0.28, 0.32, 0.64, 0.68, 0.80, 0.88],
-    ["0vw", "-100vw", "-100vw", "-200vw", "-200vw", "-365vw", "-365vw", "-465vw", "-465vw"]
+    [0.00, 0.10, 0.13, 0.48, 0.51, 0.74, 0.77, 0.90, 0.94, 1.0],
+    ["0vw", "-100vw", "-100vw", "-200vw", "-200vw", "-365vw", "-365vw", "-465vw", "-465vw", "-465vw"]
   );
   // Panel 1 contracts to 0.95 as slide begins
   const panel1Scale     = useTransform(horizProgress, [0, 0.04], [1, 0.95]);
 
   // ── Parallax offsets — text lags slightly behind scroll for depth ──────
-  const p3TextX   = useTransform(horizProgress, [0.16, 0.32], [40, 0]);
-  const p3TextOp  = useTransform(horizProgress, [0.18, 0.26], [0, 1]);
-  const p4TextOp  = useTransform(horizProgress, [0.34, 0.42], [0, 1]);
-  const p4QuestOp = useTransform(horizProgress, [0.52, 0.60], [0, 1]);
-  const p5TextX   = useTransform(horizProgress, [0.68, 0.82], [50, 0]);
-  const p5TextOp  = useTransform(horizProgress, [0.70, 0.78], [0, 1]);
+  const p3TextX   = useTransform(horizProgress, [0.48, 0.58], [40, 0]);
+  const p3TextOp  = useTransform(horizProgress, [0.50, 0.56], [0, 1]);
+  const p4TextOp  = useTransform(horizProgress, [0.54, 0.60], [0, 1]);
+  const p4QuestOp = useTransform(horizProgress, [0.64, 0.70], [0, 1]);
+  const p5TextX   = useTransform(horizProgress, [0.77, 0.92], [50, 0]);
+  const p5TextOp  = useTransform(horizProgress, [0.79, 0.86], [0, 1]);
   // Photo vertical float — subtle upward drift as you scroll through P4
-  const p4PhotoY  = useTransform(horizProgress, [0.32, 0.64], [20, -10]);
+  const p4PhotoY  = useTransform(horizProgress, [0.51, 0.74], [20, -10]);
 
-  // ── Burn scroll event (uses burnProgress, not raw scrollYProgress) ───────
+  // ── Burn scroll event — ref + discrete state only (no per-pixel re-render) ──
   useMotionValueEvent(burnProgress, "change", (v) => {
     const cv = Math.max(0, v);
-    setScrollV(cv);
     scrollVRef.current = cv;
-    if (cv >= TEXT_VISIBLE_AT) setTextVisible(true);
+
+    // ── Discrete state (React skips re-render if value unchanged) ──
+    if (cv >= TEXT_VISIBLE_AT && !textVisibleRef.current) {
+      textVisibleRef.current = true;
+      setTextVisible(true);
+    }
+
+    const newPhase = cv < PHASE_START[1] ? 0 : cv < PHASE_START[2] ? 1 : cv < PHASE_START[3] ? 2 : cv < PHASE_START[4] ? 3 : 4;
+    setActivePhase(newPhase);
+
+    // Only re-render when a NEW image threshold is crossed (not every scroll tick)
+    let mask = 0;
+    for (let i = 0; i < REVEAL_AT.length; i++) {
+      if (cv >= REVEAL_AT[i]) mask |= (1 << i);
+    }
+    if (mask !== revealedMaskRef.current) {
+      revealedMaskRef.current = mask;
+      setRevealedMask(mask);
+    }
+
+    // ── Direct DOM updates for continuous values (no re-render) ──
+    const canvasOp = mapR(cv, P4_BURN_IN, P4_BURN_IN + 0.04);
+    const expandP  = eio(mapR(cv, P4_EXPAND_ON, P4_EXPAND_OFF));
+    const textOp   = newPhase === 4
+      ? Math.max(0, 1 - mapR(cv, P4_EXPAND_ON, P4_EXPAND_ON + 0.06))
+      : 1;
+
+    const layerOp = Math.max(0.001, canvasOp); // never exactly 0 — keep layers composited
+    if (afterImgElRef.current)    afterImgElRef.current.style.opacity = String(layerOp);
+    if (canvasRef.current)        canvasRef.current.style.opacity     = String(layerOp);
+    if (textContainerRef.current) textContainerRef.current.style.opacity = String(textOp);
+
+    if (beforeClipRef.current) {
+      const B4      = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
+      const fadeIn  = mapR(cv, REVEAL_AT[14], REVEAL_AT[14] + 0.03);
+      const opacity = fadeIn * (1 - canvasOp);
+      const clipT   = lerp(B4.top,                    0, expandP);
+      const clipL   = lerp(B4.left,                   0, expandP);
+      const clipR   = lerp(100 - B4.left - B4.width,  0, expandP);
+      const clipB   = lerp(100 - B4.top  - B4.height, 0, expandP);
+      const clipRad = lerp(8, 0, expandP);
+      beforeClipRef.current.style.opacity  = String(opacity);
+      beforeClipRef.current.style.clipPath = `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`;
+    }
   });
 
   // ── Load before / after images ───────────────────────────────────────────
   useEffect(() => {
     let loaded = 0;
     const check = () => { if (++loaded === 2) setImgsReady(true); };
-    const b = new Image(); b.onload = check; b.src = "/before.png";
-    const a = new Image(); a.onload = check; a.src = "/after.png";
+    const b = new Image(); b.onload = check; b.src = "/palisades-before.webp";
+    const a = new Image(); a.onload = check; a.src = "/palisades-after.webp";
     beforeImgRef.current = b;
     afterImgRef.current  = a;
   }, []);
@@ -380,7 +546,7 @@ export default function DestroyingSection() {
     if (!video) return;
 
     return horizProgress.on("change", (h) => {
-      if (h > 0.08 && h < 0.18 && video.paused) {
+      if (h > 0.06 && h < 0.40 && video.paused) {
         video.currentTime = 0;
         video.muted = false;
         video
@@ -393,7 +559,7 @@ export default function DestroyingSection() {
           });
       }
       // Pause when scrolling away from Panel 2
-      if ((h < 0.03 || h > 0.24) && !video.paused) {
+      if ((h < 0.03 || h > 0.52) && !video.paused) {
         video.pause();
         if (h < 0.03) video.currentTime = 0;
       }
@@ -406,11 +572,11 @@ export default function DestroyingSection() {
     if (!flower) return;
 
     return horizProgress.on("change", (h) => {
-      if (h > 0.65 && flower.paused) {
+      if (h > 0.74 && flower.paused) {
         flower.muted = true;
         flower.play().catch(() => {});
       }
-      if (h < 0.60 && !flower.paused) {
+      if (h < 0.70 && !flower.paused) {
         flower.pause();
         flower.currentTime = 0;
       }
@@ -424,25 +590,10 @@ export default function DestroyingSection() {
     setIsMuted(video.muted);
   }, []);
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const activePhase =
-    scrollV < PHASE_START[1] ? 0 :
-    scrollV < PHASE_START[2] ? 1 :
-    scrollV < PHASE_START[3] ? 2 :
-    scrollV < PHASE_START[4] ? 3 : 4;
-
-  const expandP  = eio(mapR(scrollV, P4_EXPAND_ON,  P4_EXPAND_OFF));
-  const canvasOp = mapR(scrollV, P4_BURN_IN, P4_BURN_IN + 0.04);
-
-  const textOp = activePhase === 4
-    ? Math.max(0, 1 - mapR(scrollV, P4_EXPAND_ON, P4_EXPAND_ON + 0.06))
-    : 1;
-
-  const images  = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
-  const B4_INIT = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
+  const images = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
 
   return (
-    <section ref={sectionRef} style={{ height: "2400vh" }}>
+    <section ref={sectionRef} style={{ height: "2000vh" }}>
       <motion.div
         className="sticky top-0 overflow-hidden"
         style={{ height: "100vh" }}
@@ -476,8 +627,10 @@ export default function DestroyingSection() {
             {/* Darkened after image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/after.png"
+              ref={afterImgElRef}
+              src="/palisades-after.webp"
               alt=""
+              decoding="async"
               style={{
                 position:      "absolute",
                 inset:         0,
@@ -486,8 +639,9 @@ export default function DestroyingSection() {
                 height:        "100%",
                 objectFit:     "cover",
                 filter:        "brightness(0.4)",
-                opacity:       canvasOp,
+                opacity:       0.001,
                 pointerEvents: "none",
+                willChange:    "opacity",
               }}
             />
 
@@ -517,8 +671,9 @@ export default function DestroyingSection() {
                 position:      "absolute",
                 inset:         0,
                 zIndex:        30,
-                opacity:       canvasOp,
+                opacity:       0.001,
                 pointerEvents: "none",
+                willChange:    "opacity",
               }}
             />
 
@@ -579,35 +734,29 @@ export default function DestroyingSection() {
             {images.map((img, i) => {
               const batch          = BATCH_OF(i);
               const isCurrentBatch = batch === activePhase;
-              const isExiting      = batch === activePhase - 1;
-              const revealed       = scrollV >= REVEAL_AT[i];
+              const revealed       = (revealedMask & (1 << i)) !== 0;
 
               if (batch === 4) {
-                const fadeIn  = mapR(scrollV, REVEAL_AT[i], REVEAL_AT[i] + 0.03);
-                const opacity = fadeIn * (1 - canvasOp);
-
-                const clipT   = lerp(B4_INIT.top,                          0, expandP);
-                const clipL   = lerp(B4_INIT.left,                         0, expandP);
-                const clipR   = lerp(100 - B4_INIT.left - B4_INIT.width,   0, expandP);
-                const clipB   = lerp(100 - B4_INIT.top  - B4_INIT.height,  0, expandP);
-                const clipRad = lerp(8, 0, expandP);
-
+                const B4 = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
                 return (
                   <div
+                    ref={beforeClipRef}
                     key={img.src}
                     style={{
                       position:  "absolute",
                       top:       0, left:  0,
                       width:     "100%", height: "100%",
-                      clipPath:  `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`,
+                      clipPath:  `inset(${B4.top}vh ${100 - B4.left - B4.width}vw ${100 - B4.top - B4.height}vh ${B4.left}vw round 8px)`,
                       zIndex:    10,
-                      opacity,
+                      opacity:   0,
                       pointerEvents: "none",
+                      willChange: "clip-path, opacity",
+                      contain:    "layout style paint",
                     }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/before.png"
+                      src="/palisades-before.webp"
                       alt=""
                       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                     />
@@ -615,26 +764,58 @@ export default function DestroyingSection() {
                 );
               }
 
+              const ent = imgParams.enter as { duration: number; blur: number; scale: number };
+              const bk  = imgParams.backdrop as { duration: number; opacity: number; blur: number; scale: number };
+              const gn  = imgParams.gone as { duration: number };
+
+              // Five-state lifecycle
+              const isActive   = isCurrentBatch && revealed;
+              const isBackdrop = batch === activePhase - 1 && activePhase !== 4;
+              const isGone     = batch < activePhase - 1
+                              || (batch === activePhase - 1 && activePhase === 4);
+
               let targetOpacity: number;
               let targetFilter:  string;
+              let targetScale:   number;
+              let transition;
 
-              if (isCurrentBatch && revealed) {
+              if (isActive) {
                 targetOpacity = 1;
                 targetFilter  = "blur(0px)";
-              } else if (isExiting) {
-                targetOpacity = activePhase === 4 ? 0    : 0.13;
-                targetFilter  = activePhase === 4 ? "blur(0px)" : "blur(22px)";
+                targetScale   = 1;
+                transition = {
+                  opacity: { duration: ent.duration, ease: EASE_OUT_QUART },
+                  filter:  { duration: ent.duration * 1.3, ease: EASE_OUT_QUART },
+                  scale:   { duration: ent.duration * 1.5, ease: EASE_OUT_QUART },
+                };
+              } else if (isBackdrop) {
+                targetOpacity = bk.opacity;
+                targetFilter  = `blur(${bk.blur}px)`;
+                targetScale   = bk.scale;
+                transition = {
+                  opacity: { duration: bk.duration, ease: EASE_IN_OUT_QUART },
+                  filter:  { duration: bk.duration, ease: EASE_IN_OUT_QUART },
+                  scale:   { duration: bk.duration * 1.2, ease: EASE_IN_OUT_QUART },
+                };
+              } else if (isGone) {
+                targetOpacity = 0;
+                targetFilter  = `blur(${ent.blur}px)`;
+                targetScale   = 0.98;
+                transition = {
+                  opacity: { duration: gn.duration, ease: EASE_IN_OUT_QUART },
+                  filter:  { duration: 0 },  // snap — invisible at opacity 0, skip expensive blur
+                  scale:   { duration: 0 },  // snap — no point animating invisible element
+                };
               } else {
                 targetOpacity = 0;
-                targetFilter  = "blur(16px)";
+                targetFilter  = `blur(${ent.blur}px)`;
+                targetScale   = ent.scale;
+                transition = {
+                  opacity: { duration: 0.2, ease: EASE_OUT_QUART },
+                  filter:  { duration: 0.2, ease: EASE_OUT_QUART },
+                  scale:   { duration: 0.2, ease: EASE_OUT_QUART },
+                };
               }
-
-              const transition =
-                isExiting && activePhase === 4
-                  ? { opacity: { duration: 0.5, ease: [0.77, 0, 0.175, 1] as const }, filter: { duration: 0.3, ease: [0.77, 0, 0.175, 1] as const } }
-                  : isExiting
-                  ? { opacity: { duration: 1.6, ease: BLUR_EASE }, filter: { duration: 1.9, ease: BLUR_EASE } }
-                  : { opacity: { duration: 0.9, ease: BLUR_EASE }, filter: { duration: 1.3, ease: BLUR_EASE } };
 
               return (
                 <motion.div
@@ -650,13 +831,18 @@ export default function DestroyingSection() {
                     overflow:     "hidden",
                     borderRadius: "8px",
                     zIndex:       10,
+                    willChange:   "transform, filter, opacity",
                   }}
-                  animate={{ opacity: targetOpacity, filter: targetFilter }}
+                  animate={{
+                    opacity: targetOpacity,
+                    filter:  targetFilter,
+                    scale:   targetScale,
+                  }}
                   transition={transition}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`/${img.src}.png`}
+                    src={`/${img.src}.webp`}
                     alt=""
                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
@@ -667,8 +853,9 @@ export default function DestroyingSection() {
             {/* Destroying text */}
             {textVisible && (
               <div
+                ref={textContainerRef}
                 className="absolute text-center pointer-events-none select-none w-full"
-                style={{ top: "clamp(250px, 48vh, 450px)", left: 0, zIndex: 20, opacity: textOp }}
+                style={{ top: "clamp(250px, 48vh, 450px)", left: 0, zIndex: 20, opacity: 1 }}
               >
                 <p
                   style={{
@@ -683,7 +870,7 @@ export default function DestroyingSection() {
                     WebkitFontSmoothing: "antialiased",
                   }}
                 >
-                  <CharReveal text="Destroying" />
+                  <CharReveal text="Destroying" params={revealParams} />
                 </p>
                 <p
                   key={activePhase}
@@ -698,7 +885,7 @@ export default function DestroyingSection() {
                     WebkitFontSmoothing: "antialiased",
                   }}
                 >
-                  <CharReveal text={PHASE_TEXT[activePhase]} baseDelay={0.1} />
+                  <CharReveal text={PHASE_TEXT[activePhase]} params={revealParams} baseDelay={0.1} />
                 </p>
               </div>
             )}
@@ -986,13 +1173,13 @@ export default function DestroyingSection() {
               }}
             >
               {[
-                { src: "c-1", width: "20vw", height: "38vh" },
-                { src: "c-2", width: "20vw", height: "52vh" },
-                { src: "c-3", width: "20vw", height: "36vh" },
-                { src: "c-4", width: "24vw", height: "44vh" },
-                { src: "c-5", width: "24vw", height: "62vh" },
-                { src: "c-6", width: "20vw", height: "50vh" },
-                { src: "c-7", width: "22vw", height: "42vh" },
+                { src: "community-1", width: "20vw", height: "38vh" },
+                { src: "community-2", width: "20vw", height: "52vh" },
+                { src: "community-3", width: "20vw", height: "36vh" },
+                { src: "community-4", width: "24vw", height: "44vh" },
+                { src: "community-5", width: "24vw", height: "62vh" },
+                { src: "community-6", width: "20vw", height: "50vh" },
+                { src: "community-7", width: "22vw", height: "42vh" },
               ].map((photo) => (
                 <div
                   key={photo.src}
@@ -1005,7 +1192,7 @@ export default function DestroyingSection() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`/${photo.src}.png`}
+                    src={`/${photo.src}.webp`}
                     alt=""
                     style={{
                       width:     "100%",

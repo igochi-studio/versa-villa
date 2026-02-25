@@ -38,7 +38,7 @@ export default function ConstructionSection() {
       {/* Construction image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/versa villa construction.png"
+        src="/villa-construction.webp"
         alt="VersaVilla under construction"
         style={{
           width: "100%",

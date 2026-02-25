@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
 
 // ease-out-quart: for entrances — jumps into place, settles naturally
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
@@ -42,6 +42,24 @@ function LineReveal({ children, delay }: { children: string; delay: number }) {
 export default function LoadingScreen() {
   const [phase, setPhase] = useState<Phase>("in");
   const shouldReduceMotion = useReducedMotion();
+
+  // Lock scroll during the loading animation so impatient scrolling
+  // doesn't skip past the Hero while the curtain is still playing.
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phase === "done") {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (shouldReduceMotion) {

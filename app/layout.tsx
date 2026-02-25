@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "dialkit/styles.css";
+import { DialRoot } from "dialkit";
 import LoadingScreen from "./components/LoadingScreen";
+import ScrollToTop from "./components/ScrollToTop";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,8 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+        <ScrollToTop />
         <LoadingScreen />
         {children}
+        {process.env.NODE_ENV === "development" && <DialRoot position="top-right" />}
       </body>
     </html>
   );
