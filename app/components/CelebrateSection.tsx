@@ -24,14 +24,12 @@ export default function CelebrateSection() {
     offset: ["start start", "end end"],
   });
 
-  // Horizontal slide: hold panel 1, slide to panel 2, hold panel 2
   const containerX = useTransform(
     scrollYProgress,
     [0, 0.15, 0.5, 0.55, 1],
     ["0vw", "0vw", "-100vw", "-100vw", "-100vw"]
   );
 
-  // Cycle images every 1.5s
   useEffect(() => {
     const interval = setInterval(() => {
       setImageIndex((i) => (i + 1) % cyclingImages.length);
@@ -66,13 +64,13 @@ export default function CelebrateSection() {
               width: "100vw",
               height: "100%",
               backgroundColor: OLIVE,
-              padding: "48px 60px",
+              padding: "80px 48px 40px 120px",
               display: "flex",
               flexDirection: "column",
               flexShrink: 0,
             }}
           >
-            {/* Tag line */}
+            {/* Tag line — small gap before image */}
             <p
               style={{
                 fontFamily: "var(--font-inter), sans-serif",
@@ -81,38 +79,36 @@ export default function CelebrateSection() {
                 color: "#F7F5F0",
                 textTransform: "uppercase",
                 letterSpacing: "0.15em",
-                marginBottom: "24px",
+                margin: "0 0 40px 0",
               }}
             >
               [CELEBRATE WITH OUR FAMILY]
             </p>
 
-            {/* Main image — constrained to ~55vh so text fits below */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/versa villa dawn.png"
               alt="VersaVilla evening view"
               style={{
-                width: "80%",
-                maxHeight: "55vh",
+                width: "90%",
+                maxHeight: "58vh",
                 objectFit: "cover",
                 display: "block",
                 borderRadius: "4px",
               }}
             />
 
-            {/* Body text below image */}
             <p
               style={{
                 fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "32px",
+                fontSize: "28px",
                 fontWeight: 400,
                 color: "#F7F5F0",
-                lineHeight: "110%",
-                letterSpacing: "-0.64px",
+                lineHeight: "120%",
+                letterSpacing: "-0.56px",
                 textAlign: "justify",
-                maxWidth: "698px",
-                marginTop: "32px",
+                maxWidth: "640px",
+                marginTop: "28px",
                 WebkitFontSmoothing: "antialiased",
               }}
             >
@@ -130,10 +126,7 @@ export default function CelebrateSection() {
               width: "100vw",
               height: "100%",
               backgroundColor: OLIVE,
-              padding: "48px 60px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
+              padding: "80px 60px",
               flexShrink: 0,
               position: "relative",
             }}
@@ -142,11 +135,11 @@ export default function CelebrateSection() {
             <p
               style={{
                 fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "32px",
+                fontSize: "28px",
                 fontWeight: 400,
                 color: "#F7F5F0",
-                lineHeight: "110%",
-                letterSpacing: "-0.64px",
+                lineHeight: "120%",
+                letterSpacing: "-0.56px",
                 textAlign: "justify",
                 maxWidth: "520px",
                 WebkitFontSmoothing: "antialiased",
@@ -156,36 +149,52 @@ export default function CelebrateSection() {
               future of Pacific Palisades can become.
             </p>
 
-            {/* Center quote */}
+            {/* Center quote — absolutely positioned */}
             <div
               style={{
-                alignSelf: "center",
+                position: "absolute",
+                top: "485px",
+                left: "50%",
+                transform: "translateX(-50%)",
                 maxWidth: "520px",
               }}
             >
               <p
                 style={{
-                  fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontSize: "28px",
+                  fontFamily: "var(--font-inter), sans-serif",
+                  fontSize: "32px",
                   fontWeight: 400,
-                  fontStyle: "italic",
                   color: "#F7F5F0",
-                  lineHeight: "130%",
+                  lineHeight: "120%",
+                  letterSpacing: "-0.64px",
                   textAlign: "justify",
+                  margin: 0,
                   WebkitFontSmoothing: "antialiased",
                 }}
               >
-                &ldquo;<span style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "36px", fontStyle: "italic" }}>T</span>ogether,
-                we must remain strong, support one another, and rebuild.
+                <span
+                  style={{
+                    fontFamily: "var(--font-playfair), serif",
+                    fontSize: "40px",
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    lineHeight: "110%",
+                    letterSpacing: "-0.8px",
+                  }}
+                >
+                  &ldquo;T
+                </span>
+                ogether, we must remain strong, support one another, and rebuild.
               </p>
               <p
                 style={{
-                  fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontSize: "20px",
+                  fontFamily: "var(--font-playfair), serif",
+                  fontSize: "32px",
                   fontWeight: 400,
-                  fontStyle: "italic",
                   color: "#F7F5F0",
-                  marginTop: "16px",
+                  lineHeight: "110%",
+                  letterSpacing: "-0.64px",
+                  marginTop: "1.2em",
                   WebkitFontSmoothing: "antialiased",
                 }}
               >
@@ -193,15 +202,12 @@ export default function CelebrateSection() {
               </p>
             </div>
 
-            {/* Bottom right cycling image */}
+            {/* Bottom right cycling image — natural dimensions */}
             <div
               style={{
-                alignSelf: "flex-end",
-                width: "280px",
-                height: "280px",
-                borderRadius: "4px",
-                overflow: "hidden",
-                position: "relative",
+                position: "absolute",
+                bottom: "140px",
+                right: "60px",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -209,10 +215,12 @@ export default function CelebrateSection() {
                 src={cyclingImages[imageIndex]}
                 alt="Construction progress"
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
+                  maxWidth: "280px",
+                  maxHeight: "350px",
+                  width: "auto",
+                  height: "auto",
                   display: "block",
+                  borderRadius: "4px",
                 }}
               />
             </div>

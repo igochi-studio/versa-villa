@@ -7,6 +7,7 @@ import ConstructionSection from "./components/ConstructionSection";
 import ModelsSection from "./components/ModelsSection";
 import VisionSection from "./components/VisionSection";
 import CelebrateSection from "./components/CelebrateSection";
+import LandscapeSection from "./components/LandscapeSection";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
         <ModelsSection />
         <VisionSection />
         <CelebrateSection />
+        <LandscapeSection />
       </div>
     </main>
   );
