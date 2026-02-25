@@ -205,11 +205,18 @@ export default function DestroyingSection() {
   const videoRef     = useRef<HTMLVideoElement>(null);
   const flowerRef    = useRef<HTMLVideoElement>(null);
 
-  const [scrollV,     setScrollV]     = useState(0);
-  const [textVisible, setTextVisible] = useState(false);
-  const [imgsReady,   setImgsReady]   = useState(false);
-  const [bgColor,     setBgColor]     = useState("#414833");
-  const [isMuted,     setIsMuted]     = useState(false);
+  const [activePhase,   setActivePhase]   = useState(0);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [textVisible,   setTextVisible]   = useState(false);
+  const [imgsReady,     setImgsReady]     = useState(false);
+  const [bgColor,       setBgColor]       = useState("#414833");
+  const [isMuted,       setIsMuted]       = useState(false);
+
+  // Refs for direct DOM manipulation of continuous values (no re-renders)
+  const textVisibleRef   = useRef(false);
+  const afterImgElRef    = useRef<HTMLImageElement>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
+  const beforeClipRef    = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setBgColor("#F7F5F0"), 2600);
@@ -248,12 +255,49 @@ export default function DestroyingSection() {
   // Photo vertical float — subtle upward drift as you scroll through P4
   const p4PhotoY  = useTransform(horizProgress, [0.32, 0.64], [20, -10]);
 
-  // ── Burn scroll event (uses burnProgress, not raw scrollYProgress) ───────
+  // ── Burn scroll event — ref + discrete state only (no per-pixel re-render) ──
   useMotionValueEvent(burnProgress, "change", (v) => {
     const cv = Math.max(0, v);
-    setScrollV(cv);
     scrollVRef.current = cv;
-    if (cv >= TEXT_VISIBLE_AT) setTextVisible(true);
+
+    // ── Discrete state (React skips re-render if value unchanged) ──
+    if (cv >= TEXT_VISIBLE_AT && !textVisibleRef.current) {
+      textVisibleRef.current = true;
+      setTextVisible(true);
+    }
+
+    const newPhase = cv < PHASE_START[1] ? 0 : cv < PHASE_START[2] ? 1 : cv < PHASE_START[3] ? 2 : cv < PHASE_START[4] ? 3 : 4;
+    setActivePhase(newPhase);
+
+    let count = 0;
+    for (let i = 0; i < REVEAL_AT.length; i++) {
+      if (cv >= REVEAL_AT[i]) count++;
+    }
+    setRevealedCount(count);
+
+    // ── Direct DOM updates for continuous values (no re-render) ──
+    const canvasOp = mapR(cv, P4_BURN_IN, P4_BURN_IN + 0.04);
+    const expandP  = eio(mapR(cv, P4_EXPAND_ON, P4_EXPAND_OFF));
+    const textOp   = newPhase === 4
+      ? Math.max(0, 1 - mapR(cv, P4_EXPAND_ON, P4_EXPAND_ON + 0.06))
+      : 1;
+
+    if (afterImgElRef.current)    afterImgElRef.current.style.opacity = String(canvasOp);
+    if (canvasRef.current)        canvasRef.current.style.opacity     = String(canvasOp);
+    if (textContainerRef.current) textContainerRef.current.style.opacity = String(textOp);
+
+    if (beforeClipRef.current) {
+      const B4      = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
+      const fadeIn  = mapR(cv, REVEAL_AT[14], REVEAL_AT[14] + 0.03);
+      const opacity = fadeIn * (1 - canvasOp);
+      const clipT   = lerp(B4.top,                    0, expandP);
+      const clipL   = lerp(B4.left,                   0, expandP);
+      const clipR   = lerp(100 - B4.left - B4.width,  0, expandP);
+      const clipB   = lerp(100 - B4.top  - B4.height, 0, expandP);
+      const clipRad = lerp(8, 0, expandP);
+      beforeClipRef.current.style.opacity  = String(opacity);
+      beforeClipRef.current.style.clipPath = `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`;
+    }
   });
 
   // ── Load before / after images ───────────────────────────────────────────
@@ -424,22 +468,7 @@ export default function DestroyingSection() {
     setIsMuted(video.muted);
   }, []);
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const activePhase =
-    scrollV < PHASE_START[1] ? 0 :
-    scrollV < PHASE_START[2] ? 1 :
-    scrollV < PHASE_START[3] ? 2 :
-    scrollV < PHASE_START[4] ? 3 : 4;
-
-  const expandP  = eio(mapR(scrollV, P4_EXPAND_ON,  P4_EXPAND_OFF));
-  const canvasOp = mapR(scrollV, P4_BURN_IN, P4_BURN_IN + 0.04);
-
-  const textOp = activePhase === 4
-    ? Math.max(0, 1 - mapR(scrollV, P4_EXPAND_ON, P4_EXPAND_ON + 0.06))
-    : 1;
-
-  const images  = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
-  const B4_INIT = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
+  const images = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
 
   return (
     <section ref={sectionRef} style={{ height: "2400vh" }}>
@@ -476,6 +505,7 @@ export default function DestroyingSection() {
             {/* Darkened after image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={afterImgElRef}
               src="/palisades-after.webp"
               alt=""
               style={{
@@ -486,7 +516,7 @@ export default function DestroyingSection() {
                 height:        "100%",
                 objectFit:     "cover",
                 filter:        "brightness(0.4)",
-                opacity:       canvasOp,
+                opacity:       0,
                 pointerEvents: "none",
               }}
             />
@@ -517,7 +547,7 @@ export default function DestroyingSection() {
                 position:      "absolute",
                 inset:         0,
                 zIndex:        30,
-                opacity:       canvasOp,
+                opacity:       0,
                 pointerEvents: "none",
               }}
             />
@@ -580,28 +610,21 @@ export default function DestroyingSection() {
               const batch          = BATCH_OF(i);
               const isCurrentBatch = batch === activePhase;
               const isExiting      = batch === activePhase - 1;
-              const revealed       = scrollV >= REVEAL_AT[i];
+              const revealed = i < revealedCount;
 
               if (batch === 4) {
-                const fadeIn  = mapR(scrollV, REVEAL_AT[i], REVEAL_AT[i] + 0.03);
-                const opacity = fadeIn * (1 - canvasOp);
-
-                const clipT   = lerp(B4_INIT.top,                          0, expandP);
-                const clipL   = lerp(B4_INIT.left,                         0, expandP);
-                const clipR   = lerp(100 - B4_INIT.left - B4_INIT.width,   0, expandP);
-                const clipB   = lerp(100 - B4_INIT.top  - B4_INIT.height,  0, expandP);
-                const clipRad = lerp(8, 0, expandP);
-
+                const B4 = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
                 return (
                   <div
+                    ref={beforeClipRef}
                     key={img.src}
                     style={{
                       position:  "absolute",
                       top:       0, left:  0,
                       width:     "100%", height: "100%",
-                      clipPath:  `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`,
+                      clipPath:  `inset(${B4.top}vh ${100 - B4.left - B4.width}vw ${100 - B4.top - B4.height}vh ${B4.left}vw round 8px)`,
                       zIndex:    10,
-                      opacity,
+                      opacity:   0,
                       pointerEvents: "none",
                     }}
                   >
@@ -667,8 +690,9 @@ export default function DestroyingSection() {
             {/* Destroying text */}
             {textVisible && (
               <div
+                ref={textContainerRef}
                 className="absolute text-center pointer-events-none select-none w-full"
-                style={{ top: "clamp(250px, 48vh, 450px)", left: 0, zIndex: 20, opacity: textOp }}
+                style={{ top: "clamp(250px, 48vh, 450px)", left: 0, zIndex: 20, opacity: 1 }}
               >
                 <p
                   style={{
