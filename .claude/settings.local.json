@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/krishnerkar/Projects/versa-villa rm --cached public/versa-villa-intro-movie.mp4 2>/dev/null; rm -f /Users/krishnerkar/Projects/versa-villa/public/versa-villa-intro-movie.mp4)"
+    ]
+  }
+}
