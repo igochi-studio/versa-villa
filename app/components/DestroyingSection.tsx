@@ -1,17 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import {
   motion,
   useScroll,
+  useTransform,
   useMotionValueEvent,
   useReducedMotion,
 } from "framer-motion";
+import { useIsMobile } from "../hooks/useIsMobile";
+import { SpeakerLoudIcon, SpeakerOffIcon } from "@radix-ui/react-icons";
 
 const CHAR_SPRING = { type: "spring" as const, stiffness: 250, damping: 60, mass: 1 };
 const BLUR_EASE   = [0.77, 0, 0.175, 1] as const;
 
-// ─── Scroll timeline (section = 1400vh, v = 0 → 1) ────────────────────────
+// ─── Scroll timeline (section = 1600vh, burn phase = first 1400vh) ─────────
+// burnProgress goes 0→1 over the first 1400vh (87.5% of section).
+// horizProgress goes 0→1 over the last 200vh (12.5% of section).
+// All existing constants are relative to burnProgress (unchanged).
 const TEXT_VISIBLE_AT = 0.005;
 const PHASE_START = [0, 0.22, 0.36, 0.50, 0.64];
 
@@ -38,6 +44,7 @@ const P4_BURN_IN    = 0.78;
 const P4_BURN_START = 0.82;
 const P4_BURN_END   = 1.00;
 
+
 interface ImageSlot {
   src: string; left?: string; right?: string; top?: string; bottom?: string;
   width: string; height: string;
@@ -61,13 +68,32 @@ const ALL_IMAGES: ImageSlot[] = [
   { src: "before",left: "33vw", top: "61vh",   width: "34vw", height: "28vh" },
 ];
 
-// ─── Math helpers ──────────────────────────────────────────────────────────
+const ALL_IMAGES_MOBILE: ImageSlot[] = [
+  { src: "h-1",   left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "h-2",   right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "h-3",   left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "h-4",   right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "f-1",   left:  "5vw", top:  "2vh",  width: "90vw", height: "34vh" },
+  { src: "f-2",   left:  "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "f-3",   right: "2vw", top: "68vh",  width: "46vw", height: "28vh" },
+  { src: "st-1",  left:  "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "st-2",  right: "2vw", top:  "2vh",  width: "45vw", height: "30vh" },
+  { src: "st-3",  left:  "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "st-4",  right: "2vw", top: "68vh",  width: "45vw", height: "26vh" },
+  { src: "b-1",   left:  "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "b-2",   right: "2vw", top:  "2vh",  width: "90vw", height: "28vh" },
+  { src: "b-3",   right: "2vw", top: "68vh",  width: "46vw", height: "26vh" },
+  { src: "before",left: "13vw", top: "68vh",  width: "74vw", height: "26vh" },
+];
+
+const B4_INIT_DESKTOP = { left: 33, top: 61, width: 34, height: 28 };
+const B4_INIT_MOBILE  = { left: 13, top: 68, width: 74, height: 26 };
+
 function lerp(a: number, b: number, t: number)   { return a + (b - a) * t; }
 function clamp(x: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, x)); }
 function mapR(x: number, a: number, b: number)    { return clamp((x - a) / (b - a), 0, 1); }
 function eio(t: number) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 
-// ─── WebGL shaders ─────────────────────────────────────────────────────────
 const VS_SRC = `
 attribute vec2 a_pos;
 varying vec2 v_uv;
@@ -87,6 +113,19 @@ uniform float u_noise;
 uniform float u_edge;
 uniform float u_bloom;
 uniform vec3 u_glow;
+uniform float u_top_aspect;
+uniform float u_bot_aspect;
+uniform float u_canvas_aspect;
+
+vec2 coverUV(vec2 uv, float imgAspect, float canvasAspect) {
+  if (canvasAspect > imgAspect) {
+    float s = imgAspect / canvasAspect;
+    return vec2(uv.x, (uv.y - 0.5) * s + 0.5);
+  } else {
+    float s = canvasAspect / imgAspect;
+    return vec2((uv.x - 0.5) * s + 0.5, uv.y);
+  }
+}
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float smoothNoise(vec2 p) {
@@ -100,19 +139,19 @@ float fbm(vec2 p) {
   return v;
 }
 void main() {
+  vec2 topUV = coverUV(v_uv, u_top_aspect, u_canvas_aspect);
+  vec2 botUV = coverUV(v_uv, u_bot_aspect, u_canvas_aspect);
   float burnLine = 1.05 - u_progress * 1.15;
-  float n = fbm(v_uv * u_noise) * 2.0 - 1.0;
+  float n = fbm(vec2(v_uv.x * u_canvas_aspect, v_uv.y) * u_noise) * 2.0 - 1.0;
   float threshold = burnLine + n * 0.12;
   float dist = v_uv.y - threshold;
-  vec4 topCol = texture2D(u_top, v_uv);
-  // After region: fully transparent — HTML layers behind the canvas show through.
-  // The text + darkened after.png sit behind the canvas and are revealed naturally.
+  vec4 topCol = texture2D(u_top, topUV);
   if (dist > u_edge) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     return;
   }
   vec4 col;
-  vec4 botDark = vec4(texture2D(u_bot, v_uv).rgb * 0.4, 1.0);
+  vec4 botDark = vec4(texture2D(u_bot, botUV).rgb * 0.4, 1.0);
   if (dist < -u_edge) {
     col = topCol;
   } else {
@@ -131,7 +170,6 @@ void main() {
   gl_FragColor = clamp(col, 0.0, 1.0);
 }`;
 
-// ─── CharReveal ───────────────────────────────────────────────────────────
 function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
   const shouldReduceMotion = useReducedMotion();
   return (
@@ -152,26 +190,26 @@ function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number 
   );
 }
 
-// ─── Section ──────────────────────────────────────────────────────────────
 export default function DestroyingSection() {
-  const sectionRef  = useRef<HTMLElement>(null);
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const scrollVRef  = useRef(0);
-  const rafRef      = useRef<number>(0);
+  const isMobile     = useIsMobile();
+  const sectionRef   = useRef<HTMLElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const scrollVRef   = useRef(0);
+  const rafRef       = useRef<number>(0);
   const beforeImgRef = useRef<HTMLImageElement | null>(null);
   const afterImgRef  = useRef<HTMLImageElement | null>(null);
-
-  // WebGL refs
   const glRef        = useRef<WebGLRenderingContext | null>(null);
   const uProgressRef = useRef<WebGLUniformLocation | null>(null);
-  // DOM refs for rAF-driven clip/opacity — bypasses React re-renders
   const quoteRef     = useRef<HTMLDivElement>(null);
   const logoRef      = useRef<HTMLImageElement>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const flowerRef    = useRef<HTMLVideoElement>(null);
 
   const [scrollV,     setScrollV]     = useState(0);
   const [textVisible, setTextVisible] = useState(false);
   const [imgsReady,   setImgsReady]   = useState(false);
   const [bgColor,     setBgColor]     = useState("#414833");
+  const [isMuted,     setIsMuted]     = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setBgColor("#F7F5F0"), 2600);
@@ -183,14 +221,42 @@ export default function DestroyingSection() {
     offset: ["start start", "end end"],
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
+  // ── Split scroll: burn phase (first 58% = 1400vh) + horiz phase (last 42% = 1000vh) ──
+  // burnProgress  0→1 over first 1400vh, clamps at 1 thereafter
+  // horizProgress 0→0 during burn, then 0→1 over last 1000vh
+  const burnProgress  = useTransform(scrollYProgress, [0, 0.583, 1], [0, 1, 1]);
+  const horizProgress = useTransform(scrollYProgress, [0, 0.583, 1], [0, 0, 1]);
+
+  // ── Horizontal slide transforms ──────────────────────────────────────────
+  // 5 panels (P1-P3:100vw each, P4:165vw, P5:100vw = 565vw total)
+  // Equidistant transitions with brief holds between each
+  const containerSlideX = useTransform(
+    horizProgress,
+    [0.00, 0.12, 0.16, 0.28, 0.32, 0.64, 0.68, 0.80, 0.88],
+    ["0vw", "-100vw", "-100vw", "-200vw", "-200vw", "-365vw", "-365vw", "-465vw", "-465vw"]
+  );
+  // Panel 1 contracts to 0.95 as slide begins
+  const panel1Scale     = useTransform(horizProgress, [0, 0.04], [1, 0.95]);
+
+  // ── Parallax offsets — text lags slightly behind scroll for depth ──────
+  const p3TextX   = useTransform(horizProgress, [0.16, 0.32], [40, 0]);
+  const p3TextOp  = useTransform(horizProgress, [0.18, 0.26], [0, 1]);
+  const p4TextOp  = useTransform(horizProgress, [0.34, 0.42], [0, 1]);
+  const p4QuestOp = useTransform(horizProgress, [0.52, 0.60], [0, 1]);
+  const p5TextX   = useTransform(horizProgress, [0.68, 0.82], [50, 0]);
+  const p5TextOp  = useTransform(horizProgress, [0.70, 0.78], [0, 1]);
+  // Photo vertical float — subtle upward drift as you scroll through P4
+  const p4PhotoY  = useTransform(horizProgress, [0.32, 0.64], [20, -10]);
+
+  // ── Burn scroll event (uses burnProgress, not raw scrollYProgress) ───────
+  useMotionValueEvent(burnProgress, "change", (v) => {
     const cv = Math.max(0, v);
     setScrollV(cv);
     scrollVRef.current = cv;
     if (cv >= TEXT_VISIBLE_AT) setTextVisible(true);
   });
 
-  // ── Load before / after images ─────────────────────────────────────────
+  // ── Load before / after images ───────────────────────────────────────────
   useEffect(() => {
     let loaded = 0;
     const check = () => { if (++loaded === 2) setImgsReady(true); };
@@ -200,7 +266,7 @@ export default function DestroyingSection() {
     afterImgRef.current  = a;
   }, []);
 
-  // ── WebGL setup + render loop ──────────────────────────────────────────
+  // ── WebGL setup + render loop ─────────────────────────────────────────────
   useEffect(() => {
     if (!imgsReady) return;
     const canvas = canvasRef.current;
@@ -215,19 +281,17 @@ export default function DestroyingSection() {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
         console.error("Shader error:", gl.getShaderInfoLog(s));
-      }
       return s;
     };
 
     const prog = gl.createProgram()!;
-    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS_SRC));
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER,   VS_SRC));
     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS_SRC));
     gl.linkProgram(prog);
     gl.useProgram(prog);
 
-    // Full-screen quad
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
@@ -235,24 +299,29 @@ export default function DestroyingSection() {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-    // Uniform locations
-    uProgressRef.current = gl.getUniformLocation(prog, "u_progress");
-    const uNoise = gl.getUniformLocation(prog, "u_noise");
-    const uEdge  = gl.getUniformLocation(prog, "u_edge");
-    const uBloom = gl.getUniformLocation(prog, "u_bloom");
-    const uGlow  = gl.getUniformLocation(prog, "u_glow");
-    const uTop   = gl.getUniformLocation(prog, "u_top");
-    const uBot   = gl.getUniformLocation(prog, "u_bot");
+    uProgressRef.current    = gl.getUniformLocation(prog, "u_progress");
+    const uNoise            = gl.getUniformLocation(prog, "u_noise");
+    const uEdge             = gl.getUniformLocation(prog, "u_edge");
+    const uBloom            = gl.getUniformLocation(prog, "u_bloom");
+    const uGlow             = gl.getUniformLocation(prog, "u_glow");
+    const uTop              = gl.getUniformLocation(prog, "u_top");
+    const uBot              = gl.getUniformLocation(prog, "u_bot");
+    const uTopAspect        = gl.getUniformLocation(prog, "u_top_aspect");
+    const uBotAspect        = gl.getUniformLocation(prog, "u_bot_aspect");
+    const uCanvasAspect     = gl.getUniformLocation(prog, "u_canvas_aspect");
 
-    // Static uniforms — settings from the design spec
-    gl.uniform1f(uNoise,  10.8);              // 70% of [1–15] range
-    gl.uniform1f(uEdge,   0.02);              // lesser edge sharpness
-    gl.uniform1f(uBloom,  1.0);              // full bloom
-    gl.uniform3fv(uGlow,  [1.0, 1.0, 1.0]); // white glow
+    gl.uniform1f(uNoise,  10.8);
+    gl.uniform1f(uEdge,   0.02);
+    gl.uniform1f(uBloom,  1.0);
+    gl.uniform3fv(uGlow,  [1.0, 1.0, 1.0]);
     gl.uniform1i(uTop, 0);
     gl.uniform1i(uBot, 1);
 
-    // Load texture helper
+    const bImg = beforeImgRef.current!;
+    const aImg = afterImgRef.current!;
+    gl.uniform1f(uTopAspect, bImg.naturalWidth / bImg.naturalHeight);
+    gl.uniform1f(uBotAspect, aImg.naturalWidth / aImg.naturalHeight);
+
     const loadTex = (img: HTMLImageElement, unit: number) => {
       const tex = gl.createTexture()!;
       gl.activeTexture(gl.TEXTURE0 + unit);
@@ -264,8 +333,6 @@ export default function DestroyingSection() {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
       return tex;
     };
-
-    // u_top = before (above burn line), u_bot = after (below / burned)
     loadTex(beforeImgRef.current!, 0);
     loadTex(afterImgRef.current!,  1);
 
@@ -273,32 +340,24 @@ export default function DestroyingSection() {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
       gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform1f(uCanvasAspect, canvas.width / canvas.height);
     };
     resize();
     window.addEventListener("resize", resize);
 
-    // Hide text before first rAF tick fires — rAF owns opacity from here on.
-    // We intentionally do NOT set opacity in JSX so React can't reset it.
     if (quoteRef.current) quoteRef.current.style.opacity = '0';
 
     const tick = () => {
       const sv    = scrollVRef.current;
       const burnP = mapR(sv, P4_BURN_START, P4_BURN_END);
-      const alpha = mapR(sv, P4_BURN_IN,    P4_BURN_IN + 0.04); // CSS canvasOp
+      const alpha = mapR(sv, P4_BURN_IN,    P4_BURN_IN + 0.04);
 
-      // ── WebGL draw ────────────────────────────────────────────────────────
       gl.uniform1f(uProgressRef.current, burnP);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      // ── Quote: show once canvas is fully opaque ───────────────────────────
-      // The canvas before-region is opaque and covers the text; the after-region
-      // is transparent (shader outputs vec4(0)), so text reveals naturally
-      // through the canvas without any clip-path or buffer.
-      if (quoteRef.current) {
+      if (quoteRef.current)
         quoteRef.current.style.opacity = alpha >= 1 ? '1' : '0';
-      }
 
-      // ── Logo: snap on once the burn line sweeps past it ──────────────────
       if (logoRef.current) {
         const burnLineY  = (1.05 - burnP * 1.15) * window.innerHeight;
         const logoBottom = 40 + logoRef.current.offsetHeight;
@@ -315,7 +374,57 @@ export default function DestroyingSection() {
     };
   }, [imgsReady]);
 
-  // ── Derived values ────────────────────────────────────────────────────
+  // ── Video: autoplay with sound when Panel 2 slides into view ─────────────
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    return horizProgress.on("change", (h) => {
+      if (h > 0.08 && h < 0.18 && video.paused) {
+        video.currentTime = 0;
+        video.muted = false;
+        video
+          .play()
+          .then(() => setIsMuted(false))
+          .catch(() => {
+            // Browser blocked unmuted autoplay — fall back to muted
+            video.muted = true;
+            video.play().then(() => setIsMuted(true)).catch(() => {});
+          });
+      }
+      // Pause when scrolling away from Panel 2
+      if ((h < 0.03 || h > 0.24) && !video.paused) {
+        video.pause();
+        if (h < 0.03) video.currentTime = 0;
+      }
+    });
+  }, [horizProgress]);
+
+  // ── Flower video: autoplay when Panel 5 is in view ─────────────────────
+  useEffect(() => {
+    const flower = flowerRef.current;
+    if (!flower) return;
+
+    return horizProgress.on("change", (h) => {
+      if (h > 0.65 && flower.paused) {
+        flower.muted = true;
+        flower.play().catch(() => {});
+      }
+      if (h < 0.60 && !flower.paused) {
+        flower.pause();
+        flower.currentTime = 0;
+      }
+    });
+  }, [horizProgress]);
+
+  const handleVideoClick = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  }, []);
+
+  // ── Derived values ────────────────────────────────────────────────────────
   const activePhase =
     scrollV < PHASE_START[1] ? 0 :
     scrollV < PHASE_START[2] ? 1 :
@@ -325,16 +434,15 @@ export default function DestroyingSection() {
   const expandP  = eio(mapR(scrollV, P4_EXPAND_ON,  P4_EXPAND_OFF));
   const canvasOp = mapR(scrollV, P4_BURN_IN, P4_BURN_IN + 0.04);
 
-  // burnP is only used here for aria-hidden; actual clipping is driven by rAF.
-
   const textOp = activePhase === 4
     ? Math.max(0, 1 - mapR(scrollV, P4_EXPAND_ON, P4_EXPAND_ON + 0.06))
     : 1;
 
-  const B4_INIT = { left: 33, top: 61, width: 34, height: 28 };
+  const images  = isMobile ? ALL_IMAGES_MOBILE : ALL_IMAGES;
+  const B4_INIT = isMobile ? B4_INIT_MOBILE : B4_INIT_DESKTOP;
 
   return (
-    <section ref={sectionRef} style={{ height: "1400vh" }}>
+    <section ref={sectionRef} style={{ height: "2400vh" }}>
       <motion.div
         className="sticky top-0 overflow-hidden"
         style={{ height: "100vh" }}
@@ -342,245 +450,690 @@ export default function DestroyingSection() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
 
-        {/* ── Darkened after image — visible through the transparent canvas ── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/after.png"
-          alt=""
+        {/* ── Sliding container: 565vw, slides left during horizontal phase ── */}
+        <motion.div
           style={{
-            position:      "absolute",
-            inset:         0,
-            zIndex:        5,
-            width:         "100%",
-            height:        "100%",
-            objectFit:     "cover",
-            filter:        "brightness(0.4)",
-            opacity:       canvasOp,
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* ── Logo — top-center, fades in with the canvas ─────────────── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={logoRef}
-          src="/versa-villa-logo.svg"
-          alt="Versa Villa"
-          style={{
-            position:      "absolute",
-            top:           "40px",
-            left:          "50%",
-            transform:     "translateX(-50%)",
-            height:        "48px",
-            width:         "auto",
-            zIndex:        41,
-            opacity:       0,   // rAF owns this — snaps to 1 when burn passes over
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* ── WebGL burn canvas ────────────────────────────────────────── */}
-        <canvas
-          ref={canvasRef}
-          style={{
-            position:      "absolute",
-            inset:         0,
-            zIndex:        30,
-            opacity:       canvasOp,
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* ── Quote — behind the canvas (z=20 < canvas z=30) ──────────────── */}
-        {/* The canvas's opaque before-region covers it; the transparent        */}
-        {/* after-region reveals it naturally as the burn sweeps through.       */}
-        {/* Opacity is driven entirely by rAF — NOT set in JSX so React        */}
-        {/* re-renders cannot override it.                                      */}
-        <div
-          ref={quoteRef}
-          aria-hidden
-          style={{
-            position:      "absolute",
-            left:          "140px",
-            bottom:        "120px",
-            zIndex:        20,
-            pointerEvents: "none",
-            width:         "min(601px, 82vw)",
+            position: "relative",
+            width:    "565vw",
+            height:   "100vh",
+            x:        containerSlideX,
           }}
         >
-          {/* Main quote — Inter body, Playfair italic opening "T" */}
-          <p
+
+          {/* ── Panel 1: All burn / after-image content ── */}
+          <motion.div
             style={{
-              fontFamily:          "var(--font-inter), sans-serif",
-              fontSize:            "32px",
-              fontWeight:          400,
-              fontStyle:           "normal",
-              color:               "#F7F5F0",
-              lineHeight:          "110%",
-              letterSpacing:       "-0.64px",
-              textAlign:           "justify",
-              WebkitFontSmoothing: "antialiased",
+              position:        "absolute",
+              left:            0,
+              top:             0,
+              width:           "100vw",
+              height:          "100vh",
+              scale:           panel1Scale,
+              transformOrigin: "center center",
             }}
           >
-            <span
+
+            {/* Darkened after image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/after.png"
+              alt=""
               style={{
-                fontFamily:    "var(--font-playfair), serif",
-                fontSize:      "40px",
-                fontStyle:     "italic",
-                fontWeight:    400,
-                lineHeight:    "110%",
-                letterSpacing: "-0.8px",
+                position:      "absolute",
+                inset:         0,
+                zIndex:        5,
+                width:         "100%",
+                height:        "100%",
+                objectFit:     "cover",
+                filter:        "brightness(0.4)",
+                opacity:       canvasOp,
+                pointerEvents: "none",
               }}
-            >&ldquo;T</span>
-            his tragedy marks one of the most heartbreaking days of our career. Witnessing incredible buildings, cherished memories, and vibrant lives reduced to ashes is beyond devastating.&rdquo;
-          </p>
+            />
 
-          {/* Attribution */}
-          <p
-            style={{
-              fontFamily:          "var(--font-playfair), serif",
-              fontSize:            "32px",
-              fontWeight:          400,
-              fontStyle:           "normal",
-              color:               "#F7F5F0",
-              lineHeight:          "110%",
-              letterSpacing:       "-0.64px",
-              marginTop:           "1.5em",
-              WebkitFontSmoothing: "antialiased",
-            }}
-          >
-            ~ Ardie Tavangarian
-          </p>
-        </div>
+            {/* Logo */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={logoRef}
+              src="/versa-villa-logo.svg"
+              alt="Versa Villa"
+              style={{
+                position:      "absolute",
+                top:           "40px",
+                left:          "50%",
+                transform:     "translateX(-50%)",
+                height:        isMobile ? "36px" : "48px",
+                width:         "auto",
+                zIndex:        41,
+                opacity:       0,
+                pointerEvents: "none",
+              }}
+            />
 
-        {/* ── Images ──────────────────────────────────────────────────── */}
-        {ALL_IMAGES.map((img, i) => {
-          const batch          = BATCH_OF(i);
-          const isCurrentBatch = batch === activePhase;
-          const isExiting      = batch === activePhase - 1;
-          const revealed       = scrollV >= REVEAL_AT[i];
+            {/* WebGL burn canvas */}
+            <canvas
+              ref={canvasRef}
+              style={{
+                position:      "absolute",
+                inset:         0,
+                zIndex:        30,
+                opacity:       canvasOp,
+                pointerEvents: "none",
+              }}
+            />
 
-          if (batch === 4) {
-            const fadeIn  = mapR(scrollV, REVEAL_AT[i], REVEAL_AT[i] + 0.03);
-            const opacity = fadeIn * (1 - canvasOp);
-
-            const clipT   = lerp(B4_INIT.top,                         0, expandP);
-            const clipL   = lerp(B4_INIT.left,                        0, expandP);
-            const clipR   = lerp(100 - B4_INIT.left - B4_INIT.width, 0, expandP);
-            const clipB   = lerp(100 - B4_INIT.top  - B4_INIT.height,0, expandP);
-            const clipRad = lerp(8, 0, expandP);
-
-            return (
-              <div
-                key={img.src}
+            {/* Quote */}
+            <div
+              ref={quoteRef}
+              aria-hidden
+              style={{
+                position:      "absolute",
+                left:          isMobile ? "20px"             : "140px",
+                ...(isMobile ? { top: "42vh" } : { bottom: "120px" }),
+                zIndex:        20,
+                pointerEvents: "none",
+                width:         isMobile ? "min(340px, 92vw)" : "min(601px, 82vw)",
+              }}
+            >
+              <p
                 style={{
-                  position:  "absolute",
-                  top:       0, left:  0,
-                  width:     "100%", height: "100%",
-                  clipPath:  `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`,
-                  zIndex:    10,
-                  opacity,
-                  pointerEvents: "none",
+                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontSize:            isMobile ? "22px" : "32px",
+                  fontWeight:          400,
+                  color:               "#F7F5F0",
+                  lineHeight:          "120%",
+                  letterSpacing:       isMobile ? "-0.44px" : "-0.64px",
+                  textAlign:           "justify",
+                  WebkitFontSmoothing: "antialiased",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/before.png"
-                  alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
+                <span
+                  style={{
+                    fontFamily:    "var(--font-playfair), serif",
+                    fontSize:      isMobile ? "26px" : "40px",
+                    fontStyle:     "italic",
+                    fontWeight:    400,
+                    lineHeight:    "110%",
+                    letterSpacing: isMobile ? "-0.44px" : "-0.8px",
+                  }}
+                >&ldquo;T</span>
+                his tragedy marks one of the most heartbreaking days of our career. Witnessing incredible buildings, cherished memories, and vibrant lives reduced to ashes is beyond devastating.&rdquo;
+              </p>
+              <p
+                style={{
+                  fontFamily:          "var(--font-playfair), serif",
+                  fontSize:            isMobile ? "20px" : "32px",
+                  fontWeight:          400,
+                  color:               "#F7F5F0",
+                  lineHeight:          "110%",
+                  letterSpacing:       isMobile ? "-0.4px" : "-0.64px",
+                  marginTop:           "1.2em",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+              >
+                ~ Ardie Tavangarian
+              </p>
+            </div>
+
+            {/* Phase images */}
+            {images.map((img, i) => {
+              const batch          = BATCH_OF(i);
+              const isCurrentBatch = batch === activePhase;
+              const isExiting      = batch === activePhase - 1;
+              const revealed       = scrollV >= REVEAL_AT[i];
+
+              if (batch === 4) {
+                const fadeIn  = mapR(scrollV, REVEAL_AT[i], REVEAL_AT[i] + 0.03);
+                const opacity = fadeIn * (1 - canvasOp);
+
+                const clipT   = lerp(B4_INIT.top,                          0, expandP);
+                const clipL   = lerp(B4_INIT.left,                         0, expandP);
+                const clipR   = lerp(100 - B4_INIT.left - B4_INIT.width,   0, expandP);
+                const clipB   = lerp(100 - B4_INIT.top  - B4_INIT.height,  0, expandP);
+                const clipRad = lerp(8, 0, expandP);
+
+                return (
+                  <div
+                    key={img.src}
+                    style={{
+                      position:  "absolute",
+                      top:       0, left:  0,
+                      width:     "100%", height: "100%",
+                      clipPath:  `inset(${clipT}vh ${clipR}vw ${clipB}vh ${clipL}vw round ${clipRad}px)`,
+                      zIndex:    10,
+                      opacity,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/before.png"
+                      alt=""
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  </div>
+                );
+              }
+
+              let targetOpacity: number;
+              let targetFilter:  string;
+
+              if (isCurrentBatch && revealed) {
+                targetOpacity = 1;
+                targetFilter  = "blur(0px)";
+              } else if (isExiting) {
+                targetOpacity = activePhase === 4 ? 0    : 0.13;
+                targetFilter  = activePhase === 4 ? "blur(0px)" : "blur(22px)";
+              } else {
+                targetOpacity = 0;
+                targetFilter  = "blur(16px)";
+              }
+
+              const transition =
+                isExiting && activePhase === 4
+                  ? { opacity: { duration: 0.5, ease: [0.77, 0, 0.175, 1] as const }, filter: { duration: 0.3, ease: [0.77, 0, 0.175, 1] as const } }
+                  : isExiting
+                  ? { opacity: { duration: 1.6, ease: BLUR_EASE }, filter: { duration: 1.9, ease: BLUR_EASE } }
+                  : { opacity: { duration: 0.9, ease: BLUR_EASE }, filter: { duration: 1.3, ease: BLUR_EASE } };
+
+              return (
+                <motion.div
+                  key={img.src}
+                  style={{
+                    position:     "absolute",
+                    ...(img.left   != null && { left:   img.left }),
+                    ...(img.right  != null && { right:  img.right }),
+                    ...(img.top    != null && { top:    img.top }),
+                    ...(img.bottom != null && { bottom: img.bottom }),
+                    width:        img.width,
+                    height:       img.height,
+                    overflow:     "hidden",
+                    borderRadius: "8px",
+                    zIndex:       10,
+                  }}
+                  animate={{ opacity: targetOpacity, filter: targetFilter }}
+                  transition={transition}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/${img.src}.png`}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                </motion.div>
+              );
+            })}
+
+            {/* Destroying text */}
+            {textVisible && (
+              <div
+                className="absolute text-center pointer-events-none select-none w-full"
+                style={{ top: "clamp(250px, 48vh, 450px)", left: 0, zIndex: 20, opacity: textOp }}
+              >
+                <p
+                  style={{
+                    fontFamily:          "var(--font-playfair), serif",
+                    fontSize:            "clamp(24px, 4.5vw, 52px)",
+                    fontWeight:          400,
+                    fontStyle:           "italic",
+                    color:               "#4A3C24",
+                    letterSpacing:       "-0.02em",
+                    lineHeight:          1.1,
+                    marginBottom:        "2px",
+                    WebkitFontSmoothing: "antialiased",
+                  }}
+                >
+                  <CharReveal text="Destroying" />
+                </p>
+                <p
+                  key={activePhase}
+                  style={{
+                    fontFamily:          "var(--font-playfair), serif",
+                    fontSize:            "clamp(24px, 4.5vw, 52px)",
+                    fontWeight:          400,
+                    color:               "#4A3C24",
+                    letterSpacing:       "-0.02em",
+                    lineHeight:          1.1,
+                    whiteSpace:          isMobile ? "normal" : "nowrap",
+                    WebkitFontSmoothing: "antialiased",
+                  }}
+                >
+                  <CharReveal text={PHASE_TEXT[activePhase]} baseDelay={0.1} />
+                </p>
               </div>
-            );
-          }
+            )}
 
-          let targetOpacity: number;
-          let targetFilter:  string;
+          </motion.div>
+          {/* end Panel 1 */}
 
-          if (isCurrentBatch && revealed) {
-            targetOpacity = 1;
-            targetFilter  = "blur(0px)";
-          } else if (isExiting) {
-            targetOpacity = activePhase === 4 ? 0    : 0.13;
-            targetFilter  = activePhase === 4 ? "blur(0px)" : "blur(22px)";
-          } else {
-            targetOpacity = 0;
-            targetFilter  = "blur(16px)";
-          }
-
-          const transition =
-            isExiting && activePhase === 4
-              ? { opacity: { duration: 0.5, ease: [0.77, 0, 0.175, 1] as const }, filter: { duration: 0.3, ease: [0.77, 0, 0.175, 1] as const } }
-              : isExiting
-              ? { opacity: { duration: 1.6, ease: BLUR_EASE }, filter: { duration: 1.9, ease: BLUR_EASE } }
-              : { opacity: { duration: 0.9, ease: BLUR_EASE }, filter: { duration: 1.3, ease: BLUR_EASE } };
-
-          return (
-            <motion.div
-              key={img.src}
+          {/* ── Panel 2: Video ── */}
+          <div
+            style={{
+              position:        "absolute",
+              left:            "100vw",
+              top:             0,
+              width:           "100vw",
+              height:          "100vh",
+              backgroundColor: "#000",
+              cursor:          "pointer",
+            }}
+            onClick={handleVideoClick}
+          >
+            <video
+              ref={videoRef}
+              loop
+              playsInline
+              preload="auto"
               style={{
-                position:     "absolute",
-                ...(img.left   != null && { left:   img.left }),
-                ...(img.right  != null && { right:  img.right }),
-                ...(img.top    != null && { top:    img.top }),
-                ...(img.bottom != null && { bottom: img.bottom }),
-                width:        img.width,
-                height:       img.height,
-                overflow:     "hidden",
-                borderRadius: "8px",
-                zIndex:       10,
+                position:  "absolute",
+                inset:     0,
+                width:     "100%",
+                height:    "100%",
+                objectFit: "cover",
+                display:   "block",
               }}
-              animate={{ opacity: targetOpacity, filter: targetFilter }}
-              transition={transition}
+            >
+              <source src="/versa-villa-intro-movie.mp4" type="video/mp4" />
+            </video>
+
+            {/* [HELL] chapter label */}
+            <div
+              style={{
+                position:      "absolute",
+                top:           isMobile ? "20px" : "40px",
+                left:          isMobile ? "20px" : "40px",
+                zIndex:        10,
+                pointerEvents: "none",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily:    "var(--font-inter), sans-serif",
+                  fontSize:      isMobile ? "16px" : "24px",
+                  fontWeight:    600,
+                  color:         "#F7F5F0",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                [HELL]
+              </span>
+            </div>
+
+            {/* Mute / unmute icon — bottom right */}
+            <div
+              style={{
+                position:      "absolute",
+                bottom:        isMobile ? "20px" : "40px",
+                right:         isMobile ? "20px" : "40px",
+                zIndex:        10,
+                pointerEvents: "none",
+                opacity:       0.8,
+                color:         "#fff",
+              }}
+            >
+              {isMuted
+                ? <SpeakerOffIcon  width={isMobile ? 18 : 24} height={isMobile ? 18 : 24} />
+                : <SpeakerLoudIcon width={isMobile ? 18 : 24} height={isMobile ? 18 : 24} />
+              }
+            </div>
+          </div>
+          {/* end Panel 2 */}
+
+          {/* ── Panel 3: It's Personal ── */}
+          <div
+            style={{
+              position:        "absolute",
+              left:            "200vw",
+              top:             0,
+              width:           "100vw",
+              height:          "100vh",
+              backgroundColor: "#F7F5F0",
+              display:         "flex",
+              flexDirection:   "column",
+            }}
+          >
+            {/* Top content area — caption left, text right */}
+            <motion.div
+              style={{
+                display:       "flex",
+                flexDirection: "row",
+                padding:       isMobile ? "40px 24px 0 24px" : "60px 80px 0 80px",
+                flex:          "0 0 auto",
+                x:             p3TextX,
+                opacity:       p3TextOp,
+              }}
+            >
+              {/* Caption — left column */}
+              <div style={{ flex: "0 0 auto", width: isMobile ? "40%" : "45%", paddingTop: "4px" }}>
+                <span
+                  style={{
+                    fontFamily:    "var(--font-inter), sans-serif",
+                    fontSize:      isMobile ? "16px" : "24px",
+                    fontWeight:    600,
+                    color:         "#B8965A",
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    whiteSpace:    "nowrap",
+                  }}
+                >
+                  [IT&apos;S PERSONAL]
+                </span>
+              </div>
+
+              {/* Body text — right column */}
+              <div style={{ flex: "1 1 auto" }}>
+                <p
+                  style={{
+                    fontFamily:          "var(--font-inter), sans-serif",
+                    fontSize:            isMobile ? "22px" : "32px",
+                    fontWeight:          400,
+                    color:               "#1a1a1a",
+                    lineHeight:          "110%",
+                    letterSpacing:       "-0.02em",
+                    textAlign:           "justify",
+                    WebkitFontSmoothing: "antialiased",
+                  }}
+                >
+                  For more than 3 decades, Ardie Tavangarian and his team helped shape Pacific Palisades, designing and building homes throughout the neighborhood.{" "}
+                  <span
+                    style={{
+                      fontFamily: "var(--font-playfair), serif",
+                      fontStyle:  "italic",
+                      fontWeight: 400,
+                    }}
+                  >
+                    When the fires destroyed his own home,
+                  </span>{" "}
+                  the place where he raised his children, the loss became deeply personal. In the aftermath came reflection, and a clear conviction: rebuilding should not simply replace what was lost. It should create something stronger, more resilient, and worthy of the community&apos;s trust.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Palisades illustration — fills remaining space, full width */}
+            <div
+              style={{
+                flex:     "1 1 auto",
+                position: "relative",
+                overflow: "hidden",
+              }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/${img.src}.png`}
-                alt=""
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                src="/palisades.svg"
+                alt="Pacific Palisades coastline illustration"
+                style={{
+                  position:       "absolute",
+                  bottom:         0,
+                  left:           0,
+                  width:          "100%",
+                  height:         "auto",
+                  maxHeight:      "100%",
+                  objectFit:      "contain",
+                  objectPosition: "bottom left",
+                }}
               />
-            </motion.div>
-          );
-        })}
-
-        {/* ── Destroying text ─────────────────────────────────────────── */}
-        {textVisible && (
-          <div
-            className="absolute text-center pointer-events-none select-none w-full"
-            style={{ top: "450px", left: 0, zIndex: 20, opacity: textOp }}
-          >
-            <p
-              style={{
-                fontFamily:          "var(--font-playfair), serif",
-                fontSize:            "52px",
-                fontWeight:          400,
-                fontStyle:           "italic",
-                color:               "#4A3C24",
-                letterSpacing:       "-0.02em",
-                lineHeight:          1.1,
-                marginBottom:        "2px",
-                WebkitFontSmoothing: "antialiased",
-              }}
-            >
-              <CharReveal text="Destroying" />
-            </p>
-
-            <p
-              key={activePhase}
-              style={{
-                fontFamily:          "var(--font-playfair), serif",
-                fontSize:            "52px",
-                fontWeight:          400,
-                color:               "#4A3C24",
-                letterSpacing:       "-0.02em",
-                lineHeight:          1.1,
-                whiteSpace:          "nowrap",
-                WebkitFontSmoothing: "antialiased",
-              }}
-            >
-              <CharReveal text={PHASE_TEXT[activePhase]} baseDelay={0.1} />
-            </p>
+            </div>
           </div>
-        )}
+          {/* end Panel 3 */}
+
+          {/* ── Panel 4: The Change — 165vw wide ── */}
+          <div
+            style={{
+              position:        "absolute",
+              left:            "300vw",
+              top:             0,
+              width:           "165vw",
+              height:          "100vh",
+              backgroundColor: "#F7F5F0",
+            }}
+          >
+            {/* "The disaster revealed..." — aligns with c-3 */}
+            <motion.div
+              style={{
+                position: "absolute",
+                left:     "calc(43vw + 48px)",
+                top:      "60px",
+                width:    "45vw",
+                opacity:  p4TextOp,
+              }}
+            >
+              <p
+                style={{
+                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontSize:            "32px",
+                  fontWeight:          400,
+                  color:               "#1a1a1a",
+                  lineHeight:          "110%",
+                  letterSpacing:       "-0.02em",
+                  textAlign:           "justify",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+              >
+                The disaster revealed fundamental questions about how homes should be built going forward.
+              </p>
+            </motion.div>
+
+            {/* [THE CHANGE] caption */}
+            <motion.div
+              style={{
+                position: "absolute",
+                left:     "20vw",
+                top:      "30vh",
+                opacity:  p4TextOp,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily:    "var(--font-inter), sans-serif",
+                  fontSize:      "24px",
+                  fontWeight:    600,
+                  color:         "#B8965A",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                [THE CHANGE]
+              </span>
+            </motion.div>
+
+            {/* "How can homes..." questions — aligns with c-6 */}
+            <motion.div
+              style={{
+                position: "absolute",
+                left:     "calc(111vw + 120px)",
+                top:      "60px",
+                width:    "45vw",
+                opacity:  p4QuestOp,
+              }}
+            >
+              {[
+                "How can homes better withstand future disasters?",
+                "How can rebuilding happen faster after loss?",
+                "How can families live with greater long-term security?",
+              ].map((q, i) => (
+                <p
+                  key={i}
+                  style={{
+                    fontFamily:          "var(--font-inter), sans-serif",
+                    fontSize:            "32px",
+                    fontWeight:          400,
+                    color:               "#1a1a1a",
+                    lineHeight:          "110%",
+                    letterSpacing:       "-0.02em",
+                    paddingBottom:       "12px",
+                    marginBottom:        "12px",
+                    borderBottom:        "1px solid #B8965A",
+                    WebkitFontSmoothing: "antialiased",
+                  }}
+                >
+                  {q}
+                </p>
+              ))}
+            </motion.div>
+
+            {/* Photos c-1 through c-7 — flex row, 24px gaps, bottom-aligned */}
+            <motion.div
+              style={{
+                position:      "absolute",
+                left:          "3vw",
+                bottom:        0,
+                display:       "flex",
+                flexDirection: "row",
+                gap:           "24px",
+                alignItems:    "flex-end",
+                y:             p4PhotoY,
+              }}
+            >
+              {[
+                { src: "c-1", width: "20vw", height: "38vh" },
+                { src: "c-2", width: "20vw", height: "52vh" },
+                { src: "c-3", width: "20vw", height: "36vh" },
+                { src: "c-4", width: "24vw", height: "44vh" },
+                { src: "c-5", width: "24vw", height: "62vh" },
+                { src: "c-6", width: "20vw", height: "50vh" },
+                { src: "c-7", width: "22vw", height: "42vh" },
+              ].map((photo) => (
+                <div
+                  key={photo.src}
+                  style={{
+                    width:      photo.width,
+                    height:     photo.height,
+                    flexShrink: 0,
+                    overflow:   "hidden",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/${photo.src}.png`}
+                    alt=""
+                    style={{
+                      width:     "100%",
+                      height:    "100%",
+                      objectFit: "cover",
+                      display:   "block",
+                    }}
+                  />
+                </div>
+              ))}
+            </motion.div>
+          </div>
+          {/* end Panel 4 */}
+
+          {/* ── Panel 5: The Answer — 100vw ── */}
+          <div
+            style={{
+              position:        "absolute",
+              left:            "465vw",
+              top:             0,
+              width:           "100vw",
+              height:          "100vh",
+              backgroundColor: "#F7F5F0",
+            }}
+          >
+            {/* [THE ANSWER] caption — top left */}
+            <motion.div
+              style={{
+                position: "absolute",
+                top:      "60px",
+                left:     "80px",
+                opacity:  p5TextOp,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily:    "var(--font-inter), sans-serif",
+                  fontSize:      "24px",
+                  fontWeight:    600,
+                  color:         "#B8965A",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                [THE ANSWER]
+              </span>
+            </motion.div>
+
+            {/* Quote — centered */}
+            <motion.div
+              style={{
+                position:  "absolute",
+                top:       "22vh",
+                left:      "50%",
+                width:     "min(540px, 70vw)",
+                x:         p5TextX,
+                opacity:   p5TextOp,
+                translateX: "-50%",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontSize:            "32px",
+                  fontWeight:          400,
+                  color:               "#4A3C24",
+                  lineHeight:          "110%",
+                  letterSpacing:       "-0.02em",
+                  textAlign:           "justify",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-playfair), serif",
+                    fontSize:   "40px",
+                    fontStyle:  "italic",
+                    fontWeight: 400,
+                    lineHeight: "110%",
+                    letterSpacing: "-0.8px",
+                  }}
+                >
+                  &ldquo;T
+                </span>
+                he Pacific Palisades fire is a sobering reminder of how fragile everything we work so hard to create can be.
+              </p>
+              <p
+                style={{
+                  fontFamily:          "var(--font-playfair), serif",
+                  fontSize:            "32px",
+                  fontWeight:          400,
+                  color:               "#4A3C24",
+                  lineHeight:          "110%",
+                  letterSpacing:       "-0.64px",
+                  marginTop:           "1.2em",
+                  WebkitFontSmoothing: "antialiased",
+                }}
+              >
+                ~ Ardie Tavangarian
+              </p>
+            </motion.div>
+
+            {/* Flower animation — bottom center */}
+            <video
+              ref={flowerRef}
+              muted
+              autoPlay
+              loop
+              playsInline
+              preload="auto"
+              style={{
+                position:  "absolute",
+                bottom:    0,
+                left:      "50%",
+                transform: "translateX(-50%)",
+                width:     "45vw",
+                height:    "auto",
+                maxHeight: "48vh",
+                objectFit: "contain",
+              }}
+            >
+              <source src="/flower-animation.mp4" type="video/mp4" />
+            </video>
+          </div>
+          {/* end Panel 5 */}
+
+        </motion.div>
+        {/* end sliding container */}
 
       </motion.div>
     </section>
