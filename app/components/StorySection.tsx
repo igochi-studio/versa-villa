@@ -22,7 +22,7 @@ const PHRASES = [
   "It was about creating something stronger.",
 ];
 
-const THRESHOLDS = [0, 0.18, 0.36, 0.54];
+const THRESHOLDS = [0, 0.15, 0.38, 0.62];
 
 function getPhase(progress: number): number {
   for (let i = THRESHOLDS.length - 1; i >= 0; i--) {
