@@ -133,7 +133,8 @@ export default function Hero() {
           zIndex: 0,
         }}
       >
-        <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
+        <source src="/hero-bg.webm" type="video/webm" />
+        <source src="/hero-bg.mp4" type="video/mp4" />
       </video>
 
       {/* Black overlay */}
@@ -175,7 +176,7 @@ export default function Hero() {
                 display: "block",
               }}
             >
-              <source src="/versa-villa-intro-movie.mp4" type="video/mp4" />
+              <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
             </video>
           </motion.div>
         )}
