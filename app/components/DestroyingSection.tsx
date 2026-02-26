@@ -1314,7 +1314,7 @@ export default function DestroyingSection() {
                 objectFit: "contain",
               }}
             >
-              <source src="/flower-animation.mp4" type="video/mp4" />
+              <source src="/flower-animation-transparent.webm" type="video/webm" />
             </video>
           </div>
           {/* end Panel 5 */}
