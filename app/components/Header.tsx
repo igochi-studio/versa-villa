@@ -91,8 +91,17 @@ function useHeaderTheme(headerRef: React.RefObject<HTMLElement | null>) {
           // Skip header and its children
           if (header && header.contains(el)) continue;
 
-          // Video element = dark
-          if (el.tagName === "VIDEO") return true;
+          // Video / canvas = dark (WebGL burn canvas renders dark content)
+          if (el.tagName === "VIDEO" || el.tagName === "CANVAS") return true;
+
+          // Full-viewport images with dark filter (e.g. brightness(0.4) burn overlay)
+          if (el.tagName === "IMG") {
+            const imgStyle = getComputedStyle(el);
+            if (imgStyle.filter && imgStyle.filter.includes("brightness")) return true;
+            // Large images covering the viewport are likely dark section backgrounds
+            const rect = el.getBoundingClientRect();
+            if (rect.width > window.innerWidth * 0.8 && rect.height > window.innerHeight * 0.5) return true;
+          }
 
           // Check background image
           const style = getComputedStyle(el);

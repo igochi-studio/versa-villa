@@ -1,113 +1,112 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import {
   motion,
   AnimatePresence,
-  useReducedMotion,
-  useScroll,
+  useMotionValue,
+  useSpring,
   useTransform,
+  useScroll,
   useMotionValueEvent,
+  useReducedMotion,
+  MotionValue,
 } from "motion/react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * COSMOS-STYLE DESTROYING SECTION
+ * DESTROYING COSMOS
  *
- * Phase 1 (time-based, sticky):
- *   Text reveals → small gem-like images glimmer in batches across screen.
- *   Images cycle in/out — constant sparkle. Text stops at "entire neighborhoods."
+ * Phase-based state machine with bidirectional scroll support:
+ *   Phase 0 — Cosmos: floating images + "Destroying [subtitle]" cycling
+ *   Phase 1 — Expanded: palisades fullscreen (burn not started or reversing)
+ *   Phase 2 — Complete: burn done, quote visible
  *
- * Phase 2 (scroll-driven):
- *   palisades-before image expands from bottom-center to fill viewport.
- *   Once full, dispatches event for burn transition to auto-trigger.
+ * Forward:  scroll triggers expand → auto-burn → auto-quote-reveal
+ * Backward: scroll back → quote hides + burn reverses → palisades collapses
  * ─────────────────────────────────────────────────────────────────────────── */
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
+const EASE_REVEAL = [0.16, 1, 0.3, 1] as const;
 
-// ── Source images (reused across many slots) ─────────────────────────────────
+let audioCtx: AudioContext | null = null;
+function playTick(frequency = 3200, duration = 0.035, volume = 0.04) {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    if (audioCtx.state === "suspended") return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch {
+    /* silent */
+  }
+}
+
 const SOURCES = [
   "ruins-1", "ruins-2", "ruins-3", "ruins-4",
   "families-1", "families-2", "families-3",
   "streets-1", "streets-2", "streets-3", "streets-4",
   "blaze-1", "blaze-2", "blaze-3",
-  "palisades-before",
+  "community-1", "community-2", "community-3", "community-4",
+  "community-5", "community-6", "community-7",
+  "rebuild-1", "rebuild-2", "rebuild-3", "rebuild-4", "rebuild-5",
 ];
 
-// ── Slot positions — ~28 small gems scattered, avoiding center text area ─────
 interface Slot {
   id: number;
-  left: string;
+  src: string;
   top: string;
-  width: string;
-  height: string;
-  depth: number; // cursor parallax
-  dx: number;
-  dy: number;
-  dur: number;
-  phase: number;
+  left: string;
+  width: number;
+  height: number;
+  delay: number;
+  revealGroup: number;
+  depth: number;
+  floatY: number;
+  floatDur: number;
 }
 
 const DESKTOP_SLOTS: Slot[] = [
-  // Row 1 — top edge
-  { id: 0,  left: "3vw",  top: "4vh",  width: "5vw",  height: "6.5vh", depth: 1.0, dx: 2, dy: -1.5, dur: 8, phase: 0 },
-  { id: 1,  left: "11vw", top: "7vh",  width: "4.5vw",height: "5.5vh", depth: 0.7, dx: -1.5, dy: 2, dur: 9, phase: 1.5 },
-  { id: 2,  left: "20vw", top: "3vh",  width: "5.5vw",height: "5vh",   depth: 1.2, dx: 1.5, dy: 1, dur: 7.5, phase: 0.5 },
-  { id: 3,  left: "32vw", top: "5vh",  width: "4.5vw",height: "6vh",   depth: 0.8, dx: -1, dy: -1.5, dur: 8.5, phase: 2.5 },
-  { id: 4,  left: "55vw", top: "3vh",  width: "5vw",  height: "5.5vh", depth: 0.6, dx: 2, dy: 1.5, dur: 7, phase: 0.8 },
-  { id: 5,  left: "66vw", top: "6vh",  width: "4.5vw",height: "6vh",   depth: 1.1, dx: -2, dy: -1, dur: 9.5, phase: 1.2 },
-  { id: 6,  left: "78vw", top: "4vh",  width: "5vw",  height: "5.5vh", depth: 0.9, dx: 1.5, dy: -2, dur: 8, phase: 2 },
-  { id: 7,  left: "90vw", top: "7vh",  width: "4.5vw",height: "5vh",   depth: 1.3, dx: -1.5, dy: 1.5, dur: 7.5, phase: 0.3 },
-  // Row 2 — upper
-  { id: 8,  left: "5vw",  top: "18vh", width: "5.5vw",height: "7vh",   depth: 1.4, dx: 2, dy: 2, dur: 9, phase: 1 },
-  { id: 9,  left: "17vw", top: "20vh", width: "4.5vw",height: "5.5vh", depth: 0.8, dx: -1, dy: -2, dur: 7, phase: 2.2 },
-  { id: 10, left: "58vw", top: "17vh", width: "5vw",  height: "6vh",   depth: 0.7, dx: 1.5, dy: 1, dur: 8.5, phase: 0.7 },
-  { id: 11, left: "72vw", top: "19vh", width: "4.5vw",height: "5.5vh", depth: 1.2, dx: -2, dy: -1.5, dur: 7.5, phase: 1.8 },
-  { id: 12, left: "88vw", top: "18vh", width: "5vw",  height: "6.5vh", depth: 0.6, dx: 1, dy: 2, dur: 9, phase: 2.5 },
-  // Row 3 — mid (sides only, center clear for text)
-  { id: 13, left: "2vw",  top: "36vh", width: "5vw",  height: "7vh",   depth: 1.5, dx: 2, dy: -2, dur: 7.5, phase: 0.3 },
-  { id: 14, left: "14vw", top: "40vh", width: "4.5vw",height: "5.5vh", depth: 0.9, dx: -1.5, dy: 1.5, dur: 8, phase: 1.5 },
-  { id: 15, left: "82vw", top: "37vh", width: "5vw",  height: "6vh",   depth: 1.0, dx: -1, dy: -2, dur: 9, phase: 2.8 },
-  { id: 16, left: "93vw", top: "42vh", width: "4.5vw",height: "7vh",   depth: 0.5, dx: 2, dy: 1.5, dur: 7, phase: 0.8 },
-  // Row 4 — lower
-  { id: 17, left: "4vw",  top: "58vh", width: "5.5vw",height: "6.5vh", depth: 1.3, dx: -2, dy: -1.5, dur: 8.5, phase: 1 },
-  { id: 18, left: "16vw", top: "55vh", width: "4.5vw",height: "5.5vh", depth: 0.7, dx: 1.5, dy: 2, dur: 7, phase: 2.2 },
-  { id: 19, left: "27vw", top: "58vh", width: "5vw",  height: "6vh",   depth: 1.1, dx: -1, dy: -2, dur: 9.5, phase: 0.5 },
-  { id: 20, left: "60vw", top: "57vh", width: "4.5vw",height: "5.5vh", depth: 0.8, dx: 2, dy: 1.5, dur: 8, phase: 1.7 },
-  { id: 21, left: "74vw", top: "55vh", width: "5vw",  height: "6.5vh", depth: 1.2, dx: -1.5, dy: -1, dur: 7.5, phase: 2 },
-  { id: 22, left: "88vw", top: "58vh", width: "5.5vw",height: "6vh",   depth: 0.6, dx: 1, dy: 2, dur: 9, phase: 0.3 },
-  // Row 5 — bottom
-  { id: 23, left: "2vw",  top: "74vh", width: "5vw",  height: "6vh",   depth: 1.4, dx: 2, dy: -2, dur: 7, phase: 1.5 },
-  { id: 24, left: "14vw", top: "76vh", width: "4.5vw",height: "5.5vh", depth: 0.8, dx: -1.5, dy: 1, dur: 8.5, phase: 2.5 },
-  { id: 25, left: "26vw", top: "73vh", width: "5.5vw",height: "6vh",   depth: 1.0, dx: 1, dy: -1.5, dur: 9, phase: 0.7 },
-  // Palisades slot — bottom center (will expand)
-  { id: 26, left: "44vw", top: "72vh", width: "6vw",  height: "8vh",   depth: 0.3, dx: -0.5, dy: -0.5, dur: 10, phase: 0 },
-  { id: 27, left: "64vw", top: "75vh", width: "5vw",  height: "6vh",   depth: 1.1, dx: -2, dy: 1.5, dur: 7.5, phase: 1.2 },
-  { id: 28, left: "78vw", top: "73vh", width: "4.5vw",height: "5.5vh", depth: 0.9, dx: 1.5, dy: -1, dur: 8, phase: 2 },
-  { id: 29, left: "92vw", top: "76vh", width: "5vw",  height: "6.5vh", depth: 0.5, dx: -1, dy: 2, dur: 9.5, phase: 0.5 },
+  { id: 1,  src: "ruins-1",           top: "12%", left: "22%", width: 80,  height: 100, delay: 0.4,  revealGroup: 0, depth: 0.035, floatY: -10, floatDur: 5 },
+  { id: 2,  src: "community-1",       top: "28%", left: "12%", width: 90,  height: 90,  delay: 0.1,  revealGroup: 0, depth: 0.05,  floatY: -10, floatDur: 5 },
+  { id: 3,  src: "streets-3",         top: "15%", left: "42%", width: 110, height: 70,  delay: 0.7,  revealGroup: 1, depth: 0.065, floatY: -10, floatDur: 6 },
+  { id: 4,  src: "families-2",        top: "30%", left: "72%", width: 85,  height: 120, delay: 0.2,  revealGroup: 0, depth: 0.08,  floatY: -10, floatDur: 5 },
+  { id: 5,  src: "ruins-4",           top: "8%",  left: "88%", width: 100, height: 100, delay: 1.1,  revealGroup: 2, depth: 0.02,  floatY: -10, floatDur: 4 },
+  { id: 6,  src: "blaze-1",           top: "45%", left: "15%", width: 130, height: 80,  delay: 0.5,  revealGroup: 1, depth: 0.035, floatY: -10, floatDur: 5 },
+  { id: 7,  src: "streets-1",         top: "52%", left: "82%", width: 75,  height: 110, delay: 0.9,  revealGroup: 2, depth: 0.05,  floatY: -10, floatDur: 6 },
+  { id: 8,  src: "families-3",        top: "68%", left: "28%", width: 95,  height: 95,  delay: 0.05, revealGroup: 0, depth: 0.065, floatY: -10, floatDur: 5 },
+  { id: 9,  src: "ruins-2",           top: "78%", left: "12%", width: 115, height: 75,  delay: 1.2,  revealGroup: 3, depth: 0.08,  floatY: -10, floatDur: 4 },
+  { id: 10, src: "palisades-before",  top: "82%", left: "45%", width: 85,  height: 125, delay: 0.45, revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 6 },
+  { id: 11, src: "streets-2",         top: "72%", left: "68%", width: 105, height: 105, delay: 0.8,  revealGroup: 2, depth: 0.035, floatY: -10, floatDur: 5 },
+  { id: 12, src: "blaze-3",           top: "88%", left: "88%", width: 135, height: 85,  delay: 0.3,  revealGroup: 0, depth: 0.05,  floatY: -10, floatDur: 5 },
+  { id: 13, src: "community-3",       top: "38%", left: "88%", width: 75,  height: 115, delay: 1.4,  revealGroup: 3, depth: 0.065, floatY: -10, floatDur: 6 },
+  { id: 14, src: "streets-4",         top: "58%", left: "8%",  width: 95,  height: 95,  delay: 1.0,  revealGroup: 2, depth: 0.08,  floatY: -10, floatDur: 5 },
+  { id: 15, src: "rebuild-1",         top: "8%",  left: "8%",  width: 80,  height: 80,  delay: 0.6,  revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 4 },
+  { id: 16, src: "blaze-2",           top: "85%", left: "25%", width: 90,  height: 90,  delay: 0.85, revealGroup: 2, depth: 0.035, floatY: -10, floatDur: 5 },
 ];
 
 const MOBILE_SLOTS: Slot[] = [
-  { id: 0,  left: "3vw",  top: "4vh",  width: "14vw", height: "8vh",  depth: 1.0, dx: 1.5, dy: -1, dur: 8, phase: 0 },
-  { id: 1,  left: "22vw", top: "3vh",  width: "13vw", height: "7vh",  depth: 0.7, dx: -1, dy: 1.5, dur: 9, phase: 1.5 },
-  { id: 2,  left: "60vw", top: "5vh",  width: "14vw", height: "7.5vh",depth: 1.2, dx: 1, dy: 1, dur: 7.5, phase: 0.5 },
-  { id: 3,  left: "80vw", top: "3vh",  width: "12vw", height: "8vh",  depth: 0.8, dx: -1.5, dy: -1, dur: 8.5, phase: 2.5 },
-  { id: 4,  left: "5vw",  top: "17vh", width: "13vw", height: "8vh",  depth: 1.4, dx: 1.5, dy: 1.5, dur: 9, phase: 1 },
-  { id: 5,  left: "65vw", top: "18vh", width: "14vw", height: "7vh",  depth: 0.6, dx: -1, dy: -1.5, dur: 7, phase: 2.2 },
-  { id: 6,  left: "84vw", top: "17vh", width: "12vw", height: "7.5vh",depth: 1.1, dx: 1, dy: 1, dur: 8.5, phase: 0.7 },
-  { id: 7,  left: "2vw",  top: "36vh", width: "14vw", height: "9vh",  depth: 1.5, dx: 1.5, dy: -1.5, dur: 7.5, phase: 0.3 },
-  { id: 8,  left: "80vw", top: "38vh", width: "15vw", height: "8vh",  depth: 0.5, dx: -1, dy: 1.5, dur: 9, phase: 2.8 },
-  { id: 9,  left: "3vw",  top: "58vh", width: "13vw", height: "8vh",  depth: 1.3, dx: -1.5, dy: -1, dur: 8.5, phase: 1 },
-  { id: 10, left: "20vw", top: "56vh", width: "14vw", height: "7vh",  depth: 0.7, dx: 1, dy: 1.5, dur: 7, phase: 2.2 },
-  { id: 11, left: "70vw", top: "57vh", width: "13vw", height: "7.5vh",depth: 1.2, dx: -1.5, dy: -1, dur: 7.5, phase: 0.5 },
-  { id: 12, left: "3vw",  top: "74vh", width: "14vw", height: "7vh",  depth: 0.8, dx: 1, dy: -1, dur: 8, phase: 1.5 },
-  // Palisades
-  { id: 13, left: "35vw", top: "72vh", width: "16vw", height: "10vh", depth: 0.3, dx: -0.5, dy: -0.5, dur: 10, phase: 0 },
-  { id: 14, left: "72vw", top: "75vh", width: "14vw", height: "7vh",  depth: 1.1, dx: -1.5, dy: 1, dur: 7.5, phase: 1.2 },
+  { id: 1,  src: "ruins-1",           top: "8%",  left: "5%",  width: 80,  height: 100, delay: 0.1,  revealGroup: 0, depth: 0.03,  floatY: -8, floatDur: 5 },
+  { id: 2,  src: "community-1",       top: "6%",  left: "65%", width: 90,  height: 90,  delay: 0.3,  revealGroup: 0, depth: 0.04,  floatY: -8, floatDur: 5 },
+  { id: 3,  src: "streets-3",         top: "25%", left: "2%",  width: 85,  height: 70,  delay: 0.5,  revealGroup: 1, depth: 0.05,  floatY: -8, floatDur: 6 },
+  { id: 4,  src: "families-2",        top: "28%", left: "72%", width: 80,  height: 100, delay: 0.7,  revealGroup: 1, depth: 0.035, floatY: -8, floatDur: 5 },
+  { id: 5,  src: "blaze-1",           top: "48%", left: "5%",  width: 90,  height: 70,  delay: 0.9,  revealGroup: 2, depth: 0.04,  floatY: -8, floatDur: 5 },
+  { id: 6,  src: "streets-1",         top: "50%", left: "75%", width: 75,  height: 95,  delay: 1.1,  revealGroup: 2, depth: 0.05,  floatY: -8, floatDur: 6 },
+  { id: 7,  src: "community-3",       top: "70%", left: "8%",  width: 85,  height: 85,  delay: 1.3,  revealGroup: 3, depth: 0.03,  floatY: -8, floatDur: 5 },
+  { id: 8,  src: "palisades-before",  top: "75%", left: "40%", width: 80,  height: 110, delay: 1.0,  revealGroup: 2, depth: 0.02,  floatY: -6, floatDur: 6 },
+  { id: 9,  src: "ruins-2",           top: "72%", left: "70%", width: 90,  height: 75,  delay: 1.5,  revealGroup: 3, depth: 0.04,  floatY: -8, floatDur: 5 },
 ];
 
-const PALISADES_SLOT_DESKTOP = 26;
-const PALISADES_SLOT_MOBILE = 13;
+const PALISADES_ID_DESKTOP = 10;
+const PALISADES_ID_MOBILE = 8;
 
 const SUBTITLES = [
   "homes built over decades,",
@@ -117,124 +116,266 @@ const SUBTITLES = [
   "entire neighborhoods.",
 ];
 
-const GLIMMER_CYCLE_MS = 2500; // ms between glimmer waves
-const SLOTS_PER_WAVE = 5;      // how many slots activate per wave
-const SLOT_VISIBLE_WAVES = 3;  // how many waves a slot stays visible before fading
-const SUBTITLE_INTERVAL = 3000;
-const SUBTITLE_START_DELAY = 1200;
-const TITLE_REVEAL_DELAY = 400;
-const IMAGES_START_DELAY = 2000; // images start after text
+const SUBTITLE_INTERVAL = 2000;
+const SUBTITLE_START_DELAY = 400;
+const TITLE_REVEAL_DELAY = 150;
 
-// ── Seeded random for deterministic image assignment ─────────────────────────
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
+const GLIMMER_CYCLE_MS = 5000;
+
+// ── Quote word-by-word reveal data ───────────────────────────────────────────
+const QUOTE_WORDS = "This tragedy marks one of the most heartbreaking days of our career. Witnessing incredible buildings, cherished memories, and vibrant lives reduced to ashes is beyond devastating.".split(" ");
+const QUOTE_WORD_STAGGER = 0.07;
+const QUOTE_WORD_DURATION = 0.9;
+
+function isInHeaderZone(slot: Slot): boolean {
+  const top = parseFloat(slot.top);
+  const left = parseFloat(slot.left);
+  return (top < 25 && left > 55) || (top < 15 && left < 15);
 }
 
-// Assign images to slots ensuring no adjacent slots have the same image
-function assignImages(slotCount: number, wave: number): string[] {
-  const rand = seededRandom(wave * 1000 + 42);
-  const result: string[] = [];
-  // Filter out palisades-before from the general pool
-  const pool = SOURCES.filter((s) => s !== "palisades-before");
-  for (let i = 0; i < slotCount; i++) {
-    let attempts = 0;
-    let pick: string;
-    do {
-      pick = pool[Math.floor(rand() * pool.length)];
-      attempts++;
-    } while (
-      attempts < 20 &&
-      ((i > 0 && result[i - 1] === pick) || (i > 1 && result[i - 2] === pick))
-    );
-    result.push(pick);
+// ── Burn helpers ──────────────────────────────────────────────────────────────
+function clamp(x: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, x)); }
+function mapR(x: number, a: number, b: number) { return clamp((x - a) / (b - a), 0, 1); }
+function eio(t: number) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
+
+const P4_BURN_IN    = 0.02;
+const P4_BURN_START = 0.08;
+const P4_BURN_END   = 1.00;
+
+const VS_SRC = `
+attribute vec2 a_pos;
+varying vec2 v_uv;
+void main() {
+  v_uv = a_pos * 0.5 + 0.5;
+  v_uv.y = 1.0 - v_uv.y;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
+
+const FS_SRC = `
+precision highp float;
+varying vec2 v_uv;
+uniform sampler2D u_top;
+uniform sampler2D u_bot;
+uniform float u_progress;
+uniform float u_noise;
+uniform float u_edge;
+uniform float u_bloom;
+uniform vec3 u_glow;
+uniform float u_top_aspect;
+uniform float u_bot_aspect;
+uniform float u_canvas_aspect;
+
+vec2 coverUV(vec2 uv, float imgAspect, float canvasAspect) {
+  if (canvasAspect > imgAspect) {
+    float s = imgAspect / canvasAspect;
+    return vec2(uv.x, (uv.y - 0.5) * s + 0.5);
+  } else {
+    float s = canvasAspect / imgAspect;
+    return vec2((uv.x - 0.5) * s + 0.5, uv.y);
   }
-  return result;
 }
 
-// ── Cursor parallax ──────────────────────────────────────────────────────────
-function useCursorParallax() {
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const currentRef = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number>(0);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+float smoothNoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u2 = f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u2.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u2.x),u2.y);
+}
+float fbm(vec2 p) {
+  float v=0.0,a=0.5;
+  for(int i=0;i<5;i++){ v+=a*smoothNoise(p); p*=2.1; a*=0.5; }
+  return v;
+}
+void main() {
+  vec2 topUV = coverUV(v_uv, u_top_aspect, u_canvas_aspect);
+  vec2 botUV = coverUV(v_uv, u_bot_aspect, u_canvas_aspect);
+  float burnLine = 1.05 - u_progress * 1.15;
+  float n = fbm(vec2(v_uv.x * u_canvas_aspect, v_uv.y) * u_noise) * 2.0 - 1.0;
+  float threshold = burnLine + n * 0.12;
+  float dist = v_uv.y - threshold;
+  vec4 topCol = texture2D(u_top, topUV);
+  if (dist > u_edge) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    return;
+  }
+  vec4 col;
+  vec4 botDark = vec4(texture2D(u_bot, botUV).rgb * 0.4, 1.0);
+  if (dist < -u_edge) {
+    col = topCol;
+  } else {
+    float t = (dist + u_edge) / (2.0 * u_edge);
+    float glowAmt = sin(t * 3.14159) * u_bloom;
+    vec4 blended = mix(topCol, botDark, t);
+    col = vec4(mix(blended.rgb, u_glow, glowAmt * 0.85), 1.0);
+    col.rgb += u_glow * glowAmt * 0.4;
+  }
+  float outerDist = abs(dist);
+  float outerEdge = u_edge * 4.0;
+  if (outerDist < outerEdge && outerDist >= u_edge * 0.5) {
+    float bloom = pow(1.0 - outerDist/outerEdge, 2.0) * u_bloom * 0.3;
+    col.rgb += u_glow * bloom;
+  }
+  gl_FragColor = clamp(col, 0.0, 1.0);
+}`;
 
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseRef.current = {
-        x: (e.clientX / window.innerWidth) - 0.5,
-        y: (e.clientY / window.innerHeight) - 0.5,
-      };
-    };
-    const animate = () => {
-      const t = mouseRef.current;
-      const c = currentRef.current;
-      c.x += (t.x - c.x) * 0.06;
-      c.y += (t.y - c.y) * 0.06;
-      setOffset({ x: c.x, y: c.y });
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    window.addEventListener("mousemove", handleMove);
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      window.removeEventListener("mousemove", handleMove);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
+// ── Scroll thresholds ────────────────────────────────────────────────────────
+const EXPAND_TRIGGER  = 0.45; // scroll down past this → expand
+const COLLAPSE_TRIGGER = 0.35; // scroll back below this → collapse
+const REVERSE_TRIGGER  = 0.55; // scroll back below this → reverse burn + hide quote
 
-  return offset;
+// ── Single floating image card ───────────────────────────────────────────────
+function FloatingImageCard({
+  slot,
+  isRevealed,
+  isGlimmered,
+  currentSrc,
+  smoothMouseX,
+  smoothMouseY,
+  shouldReduceMotion,
+  headerVisible,
+}: {
+  slot: Slot;
+  isRevealed: boolean;
+  isGlimmered: boolean;
+  currentSrc: string;
+  smoothMouseX: MotionValue<number>;
+  smoothMouseY: MotionValue<number>;
+  shouldReduceMotion: boolean | null;
+  headerVisible: boolean;
+}) {
+  const x = useTransform(smoothMouseX, (v) => v * slot.depth);
+  const y = useTransform(smoothMouseY, (v) => v * slot.depth);
+  const hideForHeader = headerVisible && isInHeaderZone(slot);
+
+  return (
+    <motion.div
+      style={{
+        position: "absolute",
+        top: slot.top,
+        left: slot.left,
+        width: slot.width,
+        height: slot.height,
+        x,
+        y,
+      }}
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.85, filter: "blur(12px)" }}
+      animate={isRevealed ? {
+        opacity: hideForHeader ? 0 : (isGlimmered ? 0 : 1),
+        scale: 1,
+        filter: "blur(0px)",
+      } : {}}
+      transition={{
+        duration: 0.8,
+        delay: slot.delay,
+        ease: EASE_REVEAL,
+        opacity: { duration: hideForHeader ? 0.4 : (isGlimmered ? 0.6 : 0.8) },
+      }}
+    >
+      <motion.div
+        style={{ width: "100%", height: "100%", borderRadius: "16px", overflow: "hidden" }}
+        animate={isRevealed ? { y: [0, slot.floatY, 0] } : {}}
+        transition={{
+          duration: slot.floatDur,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: slot.delay + 0.8,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/${currentSrc}.webp`}
+          alt=""
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          loading="eager"
+          draggable={false}
+        />
+      </motion.div>
+    </motion.div>
+  );
 }
 
+// ── Main component ───────────────────────────────────────────────────────────
 export default function DestroyingCosmos() {
   const outerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [subtitleIndex, setSubtitleIndex] = useState(0);
-  const [textDone, setTextDone] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showSubtitle, setShowSubtitle] = useState(false);
-  const [wave, setWave] = useState(-1); // current glimmer wave (-1 = not started)
-  const [expandTriggered, setExpandTriggered] = useState(false);
+  const [subtitleIndex, setSubtitleIndex] = useState(0);
+  const [revealedGroups, setRevealedGroups] = useState<Set<number>>(new Set());
+  const [glimmeredSlots, setGlimmeredSlots] = useState<Set<number>>(new Set());
+  const [slotSrcs, setSlotSrcs] = useState<Map<number, string>>(new Map());
+  const [allRevealed, setAllRevealed] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
-  const cursorOffset = useCursorParallax();
 
   const slots = isMobile ? MOBILE_SLOTS : DESKTOP_SLOTS;
-  const palisadesSlotId = isMobile ? PALISADES_SLOT_MOBILE : PALISADES_SLOT_DESKTOP;
+  const palisadesId = isMobile ? PALISADES_ID_MOBILE : PALISADES_ID_DESKTOP;
 
-  // Track which slots are visible and their assigned images
-  // Each wave activates SLOTS_PER_WAVE slots; they stay for SLOT_VISIBLE_WAVES waves
-  const { visibleSlots, slotImages } = useMemo(() => {
-    if (wave < 0) return { visibleSlots: new Set<number>(), slotImages: new Map<number, string>() };
+  // ── Phase state machine ─────────────────────────────────────────────────
+  // 0 = cosmos, 1 = expanded, 2 = complete (burn done + quote visible)
+  const [phase, setPhase] = useState(0);
+  const phaseRef = useRef(0);
+  const goPhase = useCallback((p: number) => {
+    phaseRef.current = p;
+    setPhase(p);
+  }, []);
 
-    const visible = new Set<number>();
-    const images = new Map<number, string>();
-    const totalSlots = slots.length;
+  // ── Burn refs ──────────────────────────────────────────────────────────
+  const canvasRef      = useRef<HTMLCanvasElement>(null);
+  const scrollVRef     = useRef(0);
+  const rafRef         = useRef<number>(0);
+  const beforeImgRef   = useRef<HTMLImageElement | null>(null);
+  const afterImgRef    = useRef<HTMLImageElement | null>(null);
+  const glRef          = useRef<WebGLRenderingContext | null>(null);
+  const uProgressRef   = useRef<WebGLUniformLocation | null>(null);
+  const afterImgElRef  = useRef<HTMLImageElement>(null);
+  const autoBurnRafRef = useRef<number>(0);
+  const burnDirRef     = useRef<"forward" | "reverse" | null>(null);
+  const [imgsReady, setImgsReady] = useState(false);
 
-    // For each recent wave, activate a group of slots
-    for (let w = Math.max(0, wave - SLOT_VISIBLE_WAVES + 1); w <= wave; w++) {
-      const assignment = assignImages(totalSlots, w);
-      // Each wave activates a different set of slots (round-robin through all slots)
-      for (let i = 0; i < SLOTS_PER_WAVE; i++) {
-        const slotIdx = (w * SLOTS_PER_WAVE + i) % totalSlots;
-        visible.add(slotIdx);
-        images.set(slotIdx, assignment[slotIdx]);
-      }
-    }
+  // ── Smooth cursor parallax ─────────────────────────────────────────────
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothMouseX = useSpring(mouseX, { damping: 25, stiffness: 150 });
+  const smoothMouseY = useSpring(mouseY, { damping: 25, stiffness: 150 });
 
-    // Always show palisades-before at its designated slot once images have started
-    if (wave >= 1) {
-      visible.add(palisadesSlotId);
-      images.set(palisadesSlotId, "palisades-before");
-    }
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    mouseX.set(e.clientX - window.innerWidth / 2);
+    mouseY.set(e.clientY - window.innerHeight / 2);
+  };
 
-    return { visibleSlots: visible, slotImages: images };
-  }, [wave, slots.length, palisadesSlotId]);
+  const textX = useTransform(smoothMouseX, (v) => v * 0.01);
+  const textY = useTransform(smoothMouseY, (v) => v * 0.01);
 
-  // IntersectionObserver
+  // ── Preload images ─────────────────────────────────────────────────────
+  useEffect(() => {
+    SOURCES.forEach((src) => { const img = new Image(); img.src = `/${src}.webp`; });
+    let loaded = 0;
+    const check = () => { if (++loaded === 2) setImgsReady(true); };
+    const b = new Image(); b.onload = check; b.src = "/palisades-before.webp";
+    const a = new Image(); a.onload = check; a.src = "/palisades-after.webp";
+    beforeImgRef.current = b;
+    afterImgRef.current = a;
+  }, []);
+
+  // ── Header visibility ──────────────────────────────────────────────────
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 80) setHeaderVisible(false);
+      else if (y < lastY) setHeaderVisible(true);
+      else setHeaderVisible(false);
+      lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── IntersectionObserver — only reset when scrolling back ABOVE section ──
   useEffect(() => {
     const el = stickyRef.current;
     if (!el) return;
@@ -242,23 +383,45 @@ export default function DestroyingCosmos() {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.disconnect();
+        } else {
+          // Only reset if the element is BELOW the viewport (user scrolled back up above it)
+          const rect = entry.boundingClientRect;
+          const scrolledPast = rect.top < 0; // element is above viewport = user scrolled forward past it
+          if (scrolledPast) {
+            // Scrolled forward past section — keep state frozen, just mark not visible
+            setIsVisible(false);
+          } else {
+            // Scrolled back above section — full reset
+            setIsVisible(false);
+            setShowTitle(false);
+            setShowSubtitle(false);
+            setSubtitleIndex(0);
+            setRevealedGroups(new Set());
+            setGlimmeredSlots(new Set());
+            setAllRevealed(false);
+            goPhase(0);
+            burnDirRef.current = null;
+            if (autoBurnRafRef.current) cancelAnimationFrame(autoBurnRafRef.current);
+            scrollVRef.current = 0;
+            if (afterImgElRef.current) afterImgElRef.current.style.opacity = "0";
+            if (canvasRef.current) canvasRef.current.style.opacity = "0";
+          }
         }
       },
-      { threshold: 0.6 }
+      { threshold: 0.3 }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [goPhase]);
 
-  // Title reveal
+  // ── Title reveal ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!isVisible) return;
     const t = setTimeout(() => setShowTitle(true), TITLE_REVEAL_DELAY);
     return () => clearTimeout(t);
   }, [isVisible]);
 
-  // Subtitle reveal + cycling (STOPS at last subtitle)
+  // ── Subtitle cycling ───────────────────────────────────────────────────
   useEffect(() => {
     if (!isVisible) return;
     let count = 0;
@@ -268,82 +431,279 @@ export default function DestroyingCosmos() {
       interval = setInterval(() => {
         count++;
         if (count >= SUBTITLES.length - 1) {
-          // Stop at last subtitle
-          setSubtitleIndex(SUBTITLES.length - 1);
-          setTextDone(true);
+          setSubtitleIndex((prev) => Math.max(prev, SUBTITLES.length - 1));
           if (interval) clearInterval(interval);
         } else {
-          setSubtitleIndex(count);
+          setSubtitleIndex((prev) => Math.max(prev, count));
         }
       }, SUBTITLE_INTERVAL);
     }, SUBTITLE_START_DELAY + SUBTITLE_INTERVAL);
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(cycleTimer);
-      if (interval) clearInterval(interval);
-    };
+    return () => { clearTimeout(showTimer); clearTimeout(cycleTimer); if (interval) clearInterval(interval); };
   }, [isVisible]);
 
-  // Glimmer waves — start after text begins, continue indefinitely
+  // ── Reveal groups ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!isVisible) return;
-    const startTimer = setTimeout(() => {
-      setWave(0);
-      const interval = setInterval(() => {
-        setWave((prev) => prev + 1);
-      }, GLIMMER_CYCLE_MS);
-      return () => clearInterval(interval);
-    }, IMAGES_START_DELAY);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const maxGroup = Math.max(...slots.map((s) => s.revealGroup));
+    const initSrcs = new Map<number, string>();
+    slots.forEach((s) => initSrcs.set(s.id, s.src));
+    setSlotSrcs(initSrcs);
 
-    let interval: ReturnType<typeof setInterval> | null = null;
-    const t = setTimeout(() => {
-      setWave(0);
-      interval = setInterval(() => {
-        setWave((prev) => prev + 1);
-      }, GLIMMER_CYCLE_MS);
-    }, IMAGES_START_DELAY);
-    clearTimeout(startTimer);
+    const groupDelays = [0, 600, 1200, 1800, 2400];
+    for (let g = 0; g <= maxGroup; g++) {
+      const t = setTimeout(() => {
+        if (phaseRef.current >= 1) return; // Don't play sounds during expand/burn/quote
+        setRevealedGroups((prev) => { const next = new Set(prev); next.add(g); return next; });
+        playTick(3400 - g * 150, 0.04, 0.035);
+        if (g === maxGroup) setTimeout(() => setAllRevealed(true), 1500);
+      }, groupDelays[g] ?? groupDelays[groupDelays.length - 1] + (g - groupDelays.length + 1) * 700);
+      timers.push(t);
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [isVisible, slots]);
 
-    return () => {
-      clearTimeout(t);
-      if (interval) clearInterval(interval);
+  // ── Glimmer — only active in phase 0 ─────────────────────────────────
+  useEffect(() => {
+    if (!allRevealed || phase >= 1) return;
+    const nonPalisades = slots.filter((s) => s.id !== palisadesId).map((s) => s.id);
+    const interval = setInterval(() => {
+      if (phaseRef.current >= 1) return; // Guard against race
+      const target = nonPalisades[Math.floor(Math.random() * nonPalisades.length)];
+      setGlimmeredSlots((prev) => { const next = new Set(prev); next.add(target); return next; });
+      setTimeout(() => {
+        setSlotSrcs((prev) => {
+          const updated = new Map(prev);
+          const current = updated.get(target);
+          let pick: string;
+          do { pick = SOURCES[Math.floor(Math.random() * SOURCES.length)]; } while (pick === current);
+          updated.set(target, pick);
+          return updated;
+        });
+        setGlimmeredSlots((prev) => { const next = new Set(prev); next.delete(target); return next; });
+      }, 700);
+    }, GLIMMER_CYCLE_MS);
+    return () => clearInterval(interval);
+  }, [allRevealed, phase, slots, palisadesId]);
+
+  // ── Burn visuals update (direct DOM, no re-renders) ────────────────────
+  const updateBurnVisuals = useCallback((cv: number) => {
+    scrollVRef.current = cv;
+    const canvasOp = mapR(cv, P4_BURN_IN, P4_BURN_IN + 0.04);
+    const layerOp = Math.max(0.001, canvasOp);
+    if (afterImgElRef.current) afterImgElRef.current.style.opacity = String(layerOp);
+    if (canvasRef.current) canvasRef.current.style.opacity = String(layerOp);
+  }, []);
+
+  // ── Burn animation functions ───────────────────────────────────────────
+  const { scrollYProgress } = useScroll({ target: outerRef, offset: ["start start", "end end"] });
+
+  const startForwardBurn = useCallback(() => {
+    if (burnDirRef.current) cancelAnimationFrame(autoBurnRafRef.current);
+    burnDirRef.current = "forward";
+    const duration = 5000;
+    let start = 0;
+    const from = scrollVRef.current;
+
+    const tick = (now: number) => {
+      if (!start) start = now;
+      if (burnDirRef.current !== "forward") return;
+      const t = Math.min((now - start) / duration, 1);
+      updateBurnVisuals(from + (1 - from) * eio(t));
+      if (t < 1) {
+        autoBurnRafRef.current = requestAnimationFrame(tick);
+      } else {
+        burnDirRef.current = null;
+        goPhase(2); // burn complete → show quote
+      }
     };
-  }, [isVisible]);
 
-  // ── Scroll-driven palisades expand (Phase 2) ──────────────────────────────
-  const { scrollYProgress } = useScroll({
-    target: outerRef,
-    offset: ["start start", "end end"],
-  });
+    // Small delay for visual settle after expand
+    setTimeout(() => {
+      if (burnDirRef.current === "forward") {
+        autoBurnRafRef.current = requestAnimationFrame(tick);
+      }
+    }, 400);
+  }, [updateBurnVisuals, goPhase]);
 
-  // Map scroll progress: 0-0.5 = pinned phase, 0.5-1.0 = expand phase
-  const expandProgress = useTransform(scrollYProgress, [0.5, 0.95], [0, 1], {
-    clamp: true,
-  });
-  const otherOpacity = useTransform(scrollYProgress, [0.5, 0.65], [1, 0], {
-    clamp: true,
-  });
-  const textOpacity = useTransform(scrollYProgress, [0.5, 0.6], [1, 0], {
-    clamp: true,
-  });
+  const startReverseBurn = useCallback(() => {
+    if (burnDirRef.current) cancelAnimationFrame(autoBurnRafRef.current);
+    burnDirRef.current = "reverse";
+    const duration = 3000; // faster reverse
+    let start = 0;
+    const from = scrollVRef.current;
 
-  // Detect when expand is complete — dispatch event for burn transition
-  useMotionValueEvent(expandProgress, "change", (v) => {
-    if (v >= 0.98 && !expandTriggered) {
-      setExpandTriggered(true);
-      window.dispatchEvent(
-        new CustomEvent("cosmos-expand-complete")
+    const tick = (now: number) => {
+      if (!start) start = now;
+      if (burnDirRef.current !== "reverse") return;
+      const t = Math.min((now - start) / duration, 1);
+      updateBurnVisuals(from * (1 - eio(t)));
+      if (t < 1) {
+        autoBurnRafRef.current = requestAnimationFrame(tick);
+      } else {
+        burnDirRef.current = null;
+        // Reverse done: collapse if scroll is back far enough
+        const sv = scrollYProgress.get();
+        if (sv < COLLAPSE_TRIGGER) {
+          goPhase(0);
+        } else if (sv >= EXPAND_TRIGGER) {
+          // User scrolled forward again during reverse — re-burn
+          startForwardBurn();
+        }
+        // Otherwise stay at phase 1 (expanded, waiting)
+      }
+    };
+
+    autoBurnRafRef.current = requestAnimationFrame(tick);
+  }, [updateBurnVisuals, goPhase, scrollYProgress, startForwardBurn]);
+
+  // ── Scroll-driven phase transitions ────────────────────────────────────
+  const isVisibleRef = useRef(false);
+  useEffect(() => { isVisibleRef.current = isVisible; }, [isVisible]);
+
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (!isVisibleRef.current) return;
+    const p = phaseRef.current;
+
+    // Phase 0: cosmos — subtitle advancement + forward trigger
+    if (p === 0) {
+      const scrollIdx = Math.min(
+        SUBTITLES.length - 1,
+        Math.floor((v / (EXPAND_TRIGGER - 0.05)) * SUBTITLES.length)
       );
+      setSubtitleIndex((prev) => Math.max(prev, scrollIdx));
+
+      if (v >= EXPAND_TRIGGER) {
+        goPhase(1);
+        // Expand animation starts via phase >= 1 → motion.div animate
+        // onAnimationComplete will trigger forward burn
+      }
+    }
+
+    // Phase 1: expanded — backward collapse trigger
+    if (p === 1) {
+      if (v < COLLAPSE_TRIGGER && !burnDirRef.current) {
+        goPhase(0);
+      }
+    }
+
+    // Phase 2: complete — backward reverse trigger
+    if (p === 2) {
+      if (v < REVERSE_TRIGGER) {
+        goPhase(1); // quote hides, reverse burn starts
+        startReverseBurn();
+      }
     }
   });
 
-  // Palisades slot position for expand animation
-  const pSlot = slots[palisadesSlotId];
+  // ── Palisades expand/collapse completion handler ────────────────────────
+  const handlePalisadesComplete = useCallback(() => {
+    // Only start forward burn if we just expanded (phase 1, no burn running)
+    if (phaseRef.current === 1 && !burnDirRef.current && imgsReady) {
+      startForwardBurn();
+    }
+  }, [startForwardBurn, imgsReady]);
+
+  // ── WebGL setup + render loop ──────────────────────────────────────────
+  useEffect(() => {
+    if (!imgsReady) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const opts = { alpha: true, premultipliedAlpha: false };
+    const gl = (canvas.getContext("webgl", opts) || canvas.getContext("experimental-webgl", opts)) as WebGLRenderingContext | null;
+    if (!gl) return;
+    glRef.current = gl;
+
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+        console.error("Shader error:", gl.getShaderInfoLog(s));
+      return s;
+    };
+
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS_SRC));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS_SRC));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "a_pos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    uProgressRef.current = gl.getUniformLocation(prog, "u_progress");
+    const uNoise       = gl.getUniformLocation(prog, "u_noise");
+    const uEdge        = gl.getUniformLocation(prog, "u_edge");
+    const uBloom       = gl.getUniformLocation(prog, "u_bloom");
+    const uGlow        = gl.getUniformLocation(prog, "u_glow");
+    const uTop         = gl.getUniformLocation(prog, "u_top");
+    const uBot         = gl.getUniformLocation(prog, "u_bot");
+    const uTopAspect   = gl.getUniformLocation(prog, "u_top_aspect");
+    const uBotAspect   = gl.getUniformLocation(prog, "u_bot_aspect");
+    const uCanvasAspect = gl.getUniformLocation(prog, "u_canvas_aspect");
+
+    gl.uniform1f(uNoise, 10.8);
+    gl.uniform1f(uEdge, 0.02);
+    gl.uniform1f(uBloom, 1.0);
+    gl.uniform3fv(uGlow, [1.0, 1.0, 1.0]);
+    gl.uniform1i(uTop, 0);
+    gl.uniform1i(uBot, 1);
+
+    const bImg = beforeImgRef.current!;
+    const aImg = afterImgRef.current!;
+    gl.uniform1f(uTopAspect, bImg.naturalWidth / bImg.naturalHeight);
+    gl.uniform1f(uBotAspect, aImg.naturalWidth / aImg.naturalHeight);
+
+    const loadTex = (img: HTMLImageElement, unit: number) => {
+      const tex = gl.createTexture()!;
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      return tex;
+    };
+    loadTex(beforeImgRef.current!, 0);
+    loadTex(afterImgRef.current!, 1);
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform1f(uCanvasAspect, canvas.width / canvas.height);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const tick = () => {
+      const burnP = mapR(scrollVRef.current, P4_BURN_START, P4_BURN_END);
+      gl.uniform1f(uProgressRef.current, burnP);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, [imgsReady]);
+
+  const pSlot = slots.find((s) => s.id === palisadesId)!;
 
   return (
-    <div ref={outerRef} style={{ height: "400vh" }}>
+    <div ref={outerRef} style={{ height: "700vh" }}>
       <div
         ref={stickyRef}
+        onMouseMove={handleMouseMove}
         style={{
           position: "sticky",
           top: 0,
@@ -353,118 +713,237 @@ export default function DestroyingCosmos() {
           backgroundColor: "#F8F2E4",
         }}
       >
-        {/* Float keyframes */}
-        <style>{`
-          @keyframes cosmos-float {
-            0%, 100% { transform: translate(var(--cosmos-cx), var(--cosmos-cy)); }
-            50% { transform: translate(calc(var(--cosmos-cx) + var(--cosmos-dx)), calc(var(--cosmos-cy) + var(--cosmos-dy))); }
-          }
-        `}</style>
-
-        {/* Gem images — glimmer in/out */}
-        <motion.div style={{ opacity: otherOpacity }}>
+        {/* Regular floating images — visible in phase 0, hidden in phase >= 1 */}
+        <motion.div
+          animate={{ opacity: phase >= 1 ? 0 : 1 }}
+          transition={{ duration: 0.5 }}
+        >
           {slots.map((slot) => {
-            if (slot.id === palisadesSlotId) return null; // rendered separately
-            const isActive = visibleSlots.has(slot.id);
-            const src = slotImages.get(slot.id);
-            const px = cursorOffset.x * slot.depth * 45;
-            const py = cursorOffset.y * slot.depth * 45;
-
+            if (slot.id === palisadesId) return null;
+            const isRevealed = revealedGroups.has(slot.revealGroup);
+            const isGlimmered = glimmeredSlots.has(slot.id);
+            const currentSrc = slotSrcs.get(slot.id) ?? slot.src;
             return (
-              <AnimatePresence key={slot.id}>
-                {isActive && src && (
-                  <motion.div
-                    key={`${slot.id}-${src}`}
-                    style={{
-                      position: "absolute",
-                      left: slot.left,
-                      top: slot.top,
-                      width: slot.width,
-                      height: slot.height,
-                      willChange: "filter, opacity, transform",
-                      ["--cosmos-dx" as string]: `${slot.dx}px`,
-                      ["--cosmos-dy" as string]: `${slot.dy}px`,
-                      ["--cosmos-cx" as string]: `${px}px`,
-                      ["--cosmos-cy" as string]: `${py}px`,
-                      animation: `cosmos-float ${slot.dur}s ease-in-out infinite`,
-                      animationDelay: `-${slot.phase}s`,
-                    }}
-                    initial={{ opacity: 0, filter: "blur(10px)", scale: 0.92 }}
-                    animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
-                    exit={{ opacity: 0, filter: "blur(8px)", scale: 0.95 }}
-                    transition={{
-                      duration: 1.6,
-                      ease: EASE_OUT_QUINT,
-                      filter: { duration: 2.0, ease: EASE_OUT_QUINT },
-                      scale: { duration: 2.2, ease: EASE_OUT_QUINT },
-                    }}
-                  >
-                    <img
-                      src={`/${src}.webp`}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: 0,
-                        display: "block",
-                      }}
-                      loading="eager"
-                      draggable={false}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <FloatingImageCard
+                key={slot.id}
+                slot={slot}
+                isRevealed={isRevealed}
+                isGlimmered={isGlimmered}
+                currentSrc={currentSrc}
+                smoothMouseX={smoothMouseX}
+                smoothMouseY={smoothMouseY}
+                shouldReduceMotion={shouldReduceMotion}
+                headerVisible={headerVisible}
+              />
             );
           })}
         </motion.div>
 
-        {/* Palisades-before — expands on scroll to fill viewport */}
+        {/* Palisades card — smooth expand/collapse in both directions */}
         <motion.div
           style={{
             position: "absolute",
-            left: pSlot.left,
+            zIndex: 20,
+            overflow: "hidden",
+          }}
+          initial={{
             top: pSlot.top,
+            left: pSlot.left,
             width: pSlot.width,
             height: pSlot.height,
-            zIndex: 20,
-            willChange: "transform, filter, opacity",
-            // Expand: scale and translate to fill viewport
-            // We use expandProgress to interpolate from slot position to full screen
+            borderRadius: 16,
           }}
+          animate={phase >= 1 ? {
+            top: "0%",
+            left: "0%",
+            width: "100%",
+            height: "100%",
+            borderRadius: 0,
+          } : {
+            top: pSlot.top,
+            left: pSlot.left,
+            width: pSlot.width,
+            height: pSlot.height,
+            borderRadius: 16,
+          }}
+          transition={{
+            duration: 0.9,
+            ease: [0.23, 1, 0.32, 1],
+          }}
+          onAnimationComplete={handlePalisadesComplete}
         >
           <motion.div
-            style={{
-              width: "100%",
-              height: "100%",
-              // Expand transforms driven by scroll
-              scale: useTransform(expandProgress, [0, 1], [1, Math.max(100 / 6, 100 / 8)]),
-              originX: 0.5,
-              originY: 0.5,
-            }}
+            style={{ width: "100%", height: "100%", overflow: "hidden" }}
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.85, filter: "blur(12px)" }}
+            animate={revealedGroups.has(pSlot.revealGroup) ? { opacity: 1, scale: 1, filter: "blur(0px)" } : {}}
+            transition={{ duration: 0.8, delay: pSlot.delay, ease: EASE_REVEAL }}
           >
-            {wave >= 1 && (
-              <motion.img
-                src="/palisades-before.webp"
-                alt=""
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  borderRadius: 0,
-                  display: "block",
-                }}
-                initial={{ opacity: 0, filter: "blur(10px)" }}
-                animate={{ opacity: 1, filter: "blur(0px)" }}
-                transition={{ duration: 1.6, ease: EASE_OUT_QUINT }}
-                loading="eager"
-                draggable={false}
-              />
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/palisades-before.webp"
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              loading="eager"
+              draggable={false}
+            />
           </motion.div>
         </motion.div>
 
-        {/* Center text */}
+        {/* ── Burn layers ── */}
+
+        {/* Darkened after image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={afterImgElRef}
+          src="/palisades-after.webp"
+          alt=""
+          decoding="async"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 22,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "brightness(0.4)",
+            opacity: 0,
+            pointerEvents: "none",
+            willChange: "opacity",
+          }}
+        />
+
+        {/* WebGL burn canvas */}
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            opacity: 0,
+            pointerEvents: "none",
+            willChange: "opacity",
+          }}
+        />
+
+        {/* Quote — centered, word-by-word blur reveal when phase >= 2 */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 35,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            padding: isMobile ? "0 24px" : "0 80px",
+          }}
+        >
+          <div style={{ maxWidth: isMobile ? "100%" : "780px", textAlign: "center" }}>
+            {/* Large quotation mark */}
+            <motion.span
+              style={{
+                display: "block",
+                fontFamily: "var(--font-playfair), serif",
+                fontSize: isMobile ? "60px" : "80px",
+                fontWeight: 400,
+                color: "#F8F2E4",
+                lineHeight: 1,
+                marginBottom: isMobile ? "16px" : "24px",
+                willChange: "filter, opacity",
+              }}
+              initial={{ opacity: 0, filter: "blur(6px)" }}
+              animate={phase >= 2
+                ? { opacity: 1, filter: "blur(0px)" }
+                : { opacity: 0, filter: "blur(6px)" }}
+              transition={phase >= 2
+                ? { duration: 0.8, ease: EASE_OUT_QUINT }
+                : { duration: 0.3 }}
+            >
+              &ldquo;
+            </motion.span>
+
+            {/* Quote text — word by word blur reveal (forward) / quick fade (reverse) */}
+            <p
+              style={{
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: isMobile ? "24px" : "40px",
+                fontWeight: 400,
+                color: "#F8F2E4",
+                lineHeight: "100%",
+                letterSpacing: "-0.02em",
+                textAlign: "center",
+                WebkitFontSmoothing: "antialiased",
+                MozOsxFontSmoothing: "grayscale",
+                margin: 0,
+              }}
+            >
+              {QUOTE_WORDS.map((word, i) => (
+                <motion.span
+                  key={i}
+                  style={{
+                    display: "inline-block",
+                    willChange: "filter, opacity, transform",
+                  }}
+                  initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                  animate={phase >= 2
+                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                    : { opacity: 0, y: 14, filter: "blur(6px)" }}
+                  transition={phase >= 2 ? {
+                    duration: QUOTE_WORD_DURATION,
+                    ease: EASE_OUT_QUINT,
+                    delay: 0.3 + i * QUOTE_WORD_STAGGER,
+                    filter: {
+                      duration: 1.1,
+                      ease: EASE_OUT_QUINT,
+                      delay: 0.3 + i * QUOTE_WORD_STAGGER,
+                    },
+                  } : {
+                    duration: 0.3,
+                    delay: 0,
+                  }}
+                >
+                  {word}{i < QUOTE_WORDS.length - 1 ? "\u00A0" : null}
+                </motion.span>
+              ))}
+            </p>
+
+            {/* Attribution */}
+            <motion.p
+              style={{
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: isMobile ? "14px" : "18px",
+                fontWeight: 700,
+                color: "#F8F2E4",
+                lineHeight: "100%",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                textAlign: "center",
+                marginTop: isMobile ? "24px" : "36px",
+                WebkitFontSmoothing: "antialiased",
+                MozOsxFontSmoothing: "grayscale",
+                willChange: "filter, opacity",
+              }}
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              animate={phase >= 2
+                ? { opacity: 1, filter: "blur(0px)" }
+                : { opacity: 0, filter: "blur(4px)" }}
+              transition={phase >= 2 ? {
+                duration: 0.8,
+                ease: EASE_OUT_QUINT,
+                delay: 0.3 + QUOTE_WORDS.length * QUOTE_WORD_STAGGER + 0.3,
+              } : {
+                duration: 0.3,
+                delay: 0,
+              }}
+            >
+              ~ Ardie Tavangarian
+            </motion.p>
+          </div>
+        </div>
+
+        {/* Center text — "Destroying [subtitle]" — visible in phase 0 only */}
         <motion.div
           style={{
             position: "absolute",
@@ -475,8 +954,9 @@ export default function DestroyingCosmos() {
             justifyContent: "center",
             zIndex: 15,
             pointerEvents: "none",
-            opacity: textOpacity,
           }}
+          animate={{ opacity: phase >= 1 ? 0 : 1 }}
+          transition={{ duration: 0.4 }}
         >
           <motion.h2
             style={{
@@ -490,13 +970,13 @@ export default function DestroyingCosmos() {
               MozOsxFontSmoothing: "grayscale",
               margin: 0,
               textAlign: "center",
+              x: textX,
+              y: textY,
+              display: "inline-block",
+              willChange: "filter, opacity, transform",
             }}
-            initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
-            animate={
-              showTitle
-                ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                : undefined
-            }
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: "blur(6px)" }}
+            animate={showTitle ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
             transition={{
               duration: 0.9,
               ease: EASE_OUT_QUINT,
@@ -506,14 +986,14 @@ export default function DestroyingCosmos() {
             Destroying
           </motion.h2>
 
-          <div style={{ minHeight: isMobile ? "52px" : "66px", marginTop: "2px" }}>
+          <div style={{ minHeight: isMobile ? "52px" : "66px", marginTop: "4px" }}>
             <AnimatePresence mode="wait">
               {showSubtitle && (
                 <motion.p
                   key={subtitleIndex}
                   style={{
                     fontFamily: "var(--font-playfair), serif",
-                    fontSize: isMobile ? "36px" : "48px",
+                    fontSize: isMobile ? "40px" : "56px",
                     fontWeight: 400,
                     lineHeight: "110%",
                     letterSpacing: "-0.02em",
@@ -523,8 +1003,9 @@ export default function DestroyingCosmos() {
                     margin: 0,
                     textAlign: "center",
                     whiteSpace: "nowrap",
+                    willChange: "filter, opacity, transform",
                   }}
-                  initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: "blur(6px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
                   transition={{
