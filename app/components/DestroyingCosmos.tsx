@@ -700,7 +700,7 @@ export default function DestroyingCosmos() {
   const pSlot = slots.find((s) => s.id === palisadesId)!;
 
   return (
-    <div ref={outerRef} style={{ height: "700vh" }}>
+    <div id="destruction" ref={outerRef} style={{ height: "700vh" }}>
       <div
         ref={stickyRef}
         onMouseMove={handleMouseMove}

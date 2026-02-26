@@ -4,11 +4,11 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 const NAV_ITEMS = [
-  "DESTRUCTION",
-  "IT\u2019S PERSONAL",
-  "AMBITION",
-  "PROCESS ARCHIVE",
-  "FUTURE",
+  { label: "DESTRUCTION", href: "#destruction" },
+  { label: "IT\u2019S PERSONAL", href: "#its-personal" },
+  { label: "AMBITION", href: "#" },
+  { label: "PROCESS ARCHIVE", href: "#" },
+  { label: "FUTURE", href: "#" },
 ];
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
@@ -142,12 +142,18 @@ function useMovieState() {
   return playing;
 }
 
-function NavItem({ label, delay, isDark }: { label: string; delay: number; isDark: boolean }) {
+function NavItem({ label, href, delay, isDark }: { label: string; href: string; delay: number; isDark: boolean }) {
   const shouldReduceMotion = useReducedMotion();
   return (
     <motion.a
-      href="#"
+      href={href}
       className="header-nav-item"
+      onClick={(e) => {
+        if (href !== "#") {
+          e.preventDefault();
+          document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+        }
+      }}
       onMouseEnter={() => playTick(4800, 0.025, 0.04)}
       style={{
         fontFamily: "'Alte Haas Grotesk', sans-serif",
@@ -239,7 +245,7 @@ export default function Header() {
           }}
         >
           {NAV_ITEMS.map((item, i) => (
-            <NavItem key={item} label={item} delay={0.15 + i * 0.07} isDark={isDark} />
+            <NavItem key={item.label} label={item.label} href={item.href} delay={0.15 + i * 0.07} isDark={isDark} />
           ))}
         </nav>
       </header>

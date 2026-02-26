@@ -150,6 +150,7 @@ export default function StorySection() {
 
   return (
     <section
+      id="its-personal"
       ref={containerRef}
       style={{ height: "500vh", position: "relative" }}
     >
