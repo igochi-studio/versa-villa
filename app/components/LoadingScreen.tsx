@@ -23,8 +23,9 @@ function LineReveal({ children, delay }: { children: string; delay: number }) {
           letterSpacing: "-0.02em",
           lineHeight: 1.15,
           fontSynthesis: "none",
+          fontFamily: "var(--font-playfair), serif",
+          color: "#F8F2E4",
         }}
-        className="font-serif text-[#F7F5F0]"
         initial={{ y: shouldReduceMotion ? 0 : "108%" }}
         animate={{ y: 0 }}
         transition={{
@@ -67,11 +68,6 @@ export default function LoadingScreen() {
       return () => clearTimeout(t);
     }
 
-    // t=0:       text lines start revealing (staggered 0.1s / 0.3s)
-    // t=0.9s:    fully revealed, hold
-    // t=1.55s:   text fades + drifts up (0.38s)
-    // t=1.85s:   text gone → bg curtain lifts (0.72s)
-    // t=2.65s:   done
     const t1 = setTimeout(() => setPhase("hold"),     900);
     const t2 = setTimeout(() => setPhase("textExit"), 1550);
     const t3 = setTimeout(() => setPhase("bgExit"),   1860);
@@ -85,10 +81,9 @@ export default function LoadingScreen() {
   const isTextExiting = phase === "textExit" || phase === "bgExit";
 
   return (
-    // Outer: the green curtain — slides up during bgExit
     <motion.div
       className="fixed inset-0 z-50 flex items-start justify-center pt-[400px]"
-      style={{ backgroundColor: "#414833", overflow: "hidden" }}
+      style={{ backgroundColor: "#616D45", overflow: "hidden" }}
       animate={phase === "bgExit" ? { y: "-100%" } : { y: "0%" }}
       transition={
         phase === "bgExit"
@@ -96,7 +91,6 @@ export default function LoadingScreen() {
           : { duration: 0 }
       }
     >
-      {/* Inner: the text group — fades + floats up before the curtain lifts */}
       <motion.div
         className="flex flex-col items-center text-center select-none"
         animate={

@@ -40,8 +40,8 @@ export default function AmbitionSection() {
         >
           <span
             style={{
-              fontFamily:    "var(--font-inter), sans-serif",
-              fontSize:      "14px",
+              fontFamily:    "'Alte Haas Grotesk', sans-serif",
+              fontSize:      "18px",
               fontWeight:    400,
               color:         "#fff",
               letterSpacing: "0.2em",
@@ -56,7 +56,7 @@ export default function AmbitionSection() {
       {/* ── Ambition text + illustration ── */}
       <div
         style={{
-          backgroundColor: "#F7F5F0",
+          backgroundColor: "#F8F2E4",
           padding:         "100px 80px 140px 100px",
           display:         "flex",
           flexDirection:   "row",
@@ -72,9 +72,9 @@ export default function AmbitionSection() {
           {/* [AMBITION] label */}
           <span
             style={{
-              fontFamily:    "var(--font-inter), sans-serif",
-              fontSize:      "14px",
-              fontWeight:    600,
+              fontFamily:    "'Alte Haas Grotesk', sans-serif",
+              fontSize:      "18px",
+              fontWeight:    700,
               color:         "#B8965A",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
@@ -88,8 +88,8 @@ export default function AmbitionSection() {
           {/* Body text */}
           <p
             style={{
-              fontFamily:          "var(--font-inter), sans-serif",
-              fontSize:            "28px",
+              fontFamily:          "'Alte Haas Grotesk', sans-serif",
+              fontSize:            "32px",
               fontWeight:          400,
               color:               "#1a1a1a",
               lineHeight:          "130%",

@@ -4,7 +4,7 @@ export default function ConstructionSection() {
   return (
     <section
       style={{
-        backgroundColor: "#F7F5F0",
+        backgroundColor: "#F8F2E4",
         padding: "80px 60px",
       }}
     >
@@ -18,7 +18,7 @@ export default function ConstructionSection() {
       >
         <p
           style={{
-            fontFamily: "var(--font-inter), sans-serif",
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
             fontSize: "32px",
             fontWeight: 400,
             color: "#4A3C24",

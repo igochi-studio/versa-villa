@@ -1,4 +1,5 @@
 import Hero from "./components/Hero";
+import Header from "./components/Header";
 import DestroyingSection from "./components/DestroyingSection";
 import AmbitionSection from "./components/AmbitionSection";
 import SystemSection from "./components/SystemSection";
@@ -12,6 +13,7 @@ import LandscapeSection from "./components/LandscapeSection";
 export default function Home() {
   return (
     <main>
+      <Header />
       <Hero />
       <div style={{ position: "relative", zIndex: 2 }}>
         <DestroyingSection />

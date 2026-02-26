@@ -11,7 +11,7 @@ export default function SystemSection() {
   return (
     <section
       style={{
-        backgroundColor: "#F7F5F0",
+        backgroundColor: "#F8F2E4",
         position:        "relative",
       }}
     >
@@ -24,9 +24,9 @@ export default function SystemSection() {
       >
         <span
           style={{
-            fontFamily:    "var(--font-inter), sans-serif",
-            fontSize:      "24px",
-            fontWeight:    600,
+            fontFamily:    "'Alte Haas Grotesk', sans-serif",
+            fontSize:      "18px",
+            fontWeight:    700,
             color:         "#B8965A",
             letterSpacing: "3.84px",
             textTransform: "uppercase",
@@ -79,8 +79,8 @@ export default function SystemSection() {
               {item.label && (
                 <span
                   style={{
-                    fontFamily:    "var(--font-inter), sans-serif",
-                    fontSize:      "16px",
+                    fontFamily:    "'Alte Haas Grotesk', sans-serif",
+                    fontSize:      "18px",
                     fontWeight:    500,
                     color:         "#4A3C24",
                     lineHeight:    "110%",
@@ -120,10 +120,10 @@ export default function SystemSection() {
         <a
           href="#"
           style={{
-            fontFamily:      "var(--font-inter), sans-serif",
-            fontSize:        "44px",
+            fontFamily:      "'Alte Haas Grotesk', sans-serif",
+            fontSize:        "32px",
             fontWeight:      400,
-            color:           "#414833",
+            color:           "#616D45",
             textDecoration:  "none",
             display:         "inline-flex",
             alignItems:      "center",
@@ -133,7 +133,7 @@ export default function SystemSection() {
           }}
         >
           View Process Archive
-          <span style={{ color: "#B8965A", fontSize: "44px" }}>→</span>
+          <span style={{ color: "#B8965A", fontSize: "32px" }}>→</span>
         </a>
       </div>
     </section>

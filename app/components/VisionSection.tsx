@@ -4,7 +4,7 @@ export default function VisionSection() {
   return (
     <section
       style={{
-        backgroundColor: "#F7F5F0",
+        backgroundColor: "#F8F2E4",
         padding: "120px 60px",
         display: "flex",
         alignItems: "center",
@@ -28,7 +28,7 @@ export default function VisionSection() {
       <div style={{ flex: 1, minWidth: 0 }}>
         <p
           style={{
-            fontFamily: "var(--font-inter), sans-serif",
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
             fontSize: "32px",
             fontWeight: 400,
             color: "#4A3C24",

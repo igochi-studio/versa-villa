@@ -99,12 +99,12 @@ function ModelCard({ model, index }: { model: Model; index: number }) {
             justifyContent: "space-between",
             alignItems:     "baseline",
             marginBottom:   "12px",
-            fontFamily:     "var(--font-inter), sans-serif",
+            fontFamily:     "'Alte Haas Grotesk', sans-serif",
           }}
         >
           <span
             style={{
-              fontSize:      "20px",
+              fontSize:      "18px",
               fontWeight:    700,
               color:         "#4A3C24",
               textTransform: "uppercase",
@@ -115,7 +115,7 @@ function ModelCard({ model, index }: { model: Model; index: number }) {
           </span>
           <span
             style={{
-              fontSize:      "14px",
+              fontSize:      "18px",
               fontWeight:    400,
               color:         "#4A3C24",
               textTransform: "uppercase",
@@ -157,12 +157,12 @@ function ModelCard({ model, index }: { model: Model; index: number }) {
             justifyContent: "space-between",
             alignItems:     "baseline",
             marginTop:      "12px",
-            fontFamily:     "var(--font-inter), sans-serif",
+            fontFamily:     "'Alte Haas Grotesk', sans-serif",
           }}
         >
           <span
             style={{
-              fontSize:      "14px",
+              fontSize:      "18px",
               fontWeight:    400,
               color:         "#4A3C24",
               textTransform: "uppercase",
@@ -173,7 +173,7 @@ function ModelCard({ model, index }: { model: Model; index: number }) {
           </span>
           <span
             style={{
-              fontSize:      "20px",
+              fontSize:      "18px",
               fontWeight:    700,
               color:         "#B8965A",
               textTransform: "uppercase",
@@ -194,7 +194,7 @@ export default function ModelsSection() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section style={{ backgroundColor: "#F7F5F0", padding: "80px 60px 0" }}>
+    <section style={{ backgroundColor: "#F8F2E4", padding: "80px 60px 0" }}>
       {/* Intro text — slides up on scroll */}
       <motion.div
         style={{
@@ -209,7 +209,7 @@ export default function ModelsSection() {
       >
         <p
           style={{
-            fontFamily:          "var(--font-inter), sans-serif",
+            fontFamily:          "'Alte Haas Grotesk', sans-serif",
             fontSize:            "32px",
             fontWeight:          400,
             color:               "#4A3C24",

@@ -285,7 +285,7 @@ export default function NeighborhoodsSection() {
     <section ref={sectionRef} style={{ height: "600vh" }}>
       <div
         className="sticky top-0 overflow-hidden"
-        style={{ height: "100vh", backgroundColor: "#F7F5F0" }}
+        style={{ height: "100vh", backgroundColor: "#F8F2E4" }}
       >
 
         {/* ── Burn canvas (full viewport, fades in to replace CSS image) ──── */}
@@ -334,7 +334,7 @@ export default function NeighborhoodsSection() {
             <p
               style={{
                 fontFamily: "var(--font-playfair), serif",
-                fontSize: "52px",
+                fontSize: "56px",
                 fontWeight: 400,
                 fontStyle: "italic",
                 color: "#4A3C24",
@@ -349,7 +349,7 @@ export default function NeighborhoodsSection() {
             <p
               style={{
                 fontFamily: "var(--font-playfair), serif",
-                fontSize: "52px",
+                fontSize: "56px",
                 fontWeight: 400,
                 color: "#4A3C24",
                 letterSpacing: "-0.02em",

@@ -72,7 +72,7 @@ export default function LandscapeSection() {
         position: "relative",
         height: "100vh",
         overflow: "hidden",
-        backgroundColor: "#F7F5F0",
+        backgroundColor: "#F8F2E4",
       }}
     >
       {/* Logo — top center, fades in + drops down like Hero */}
@@ -119,7 +119,7 @@ export default function LandscapeSection() {
         <h2
           style={{
             fontFamily: "var(--font-playfair), serif",
-            fontSize: "52px",
+            fontSize: "56px",
             fontWeight: 400,
             lineHeight: 1.15,
             letterSpacing: "-0.02em",

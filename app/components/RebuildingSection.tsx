@@ -13,9 +13,6 @@ const IMAGES = [
 const AUTO_INTERVAL = 4000;
 
 export default function RebuildingSection() {
-  // offset controls which image is the hero.
-  // hero = IMAGES[offset % 5]
-  // thumbnails = next 4 in order: (offset+1)%5, (offset+2)%5, (offset+3)%5, (offset+4)%5
   const [offset, setOffset] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -37,7 +34,6 @@ export default function RebuildingSection() {
   }, [resetTimer]);
 
   const handleThumbClick = (thumbPosition: number) => {
-    // thumbPosition 0–3 → advance by (thumbPosition + 1) steps
     setOffset((prev) => prev + thumbPosition + 1);
     resetTimer();
   };
@@ -45,7 +41,7 @@ export default function RebuildingSection() {
   return (
     <section
       style={{
-        backgroundColor: "#F7F5F0",
+        backgroundColor: "#F8F2E4",
         padding:         "80px 60px 80px 60px",
       }}
     >
@@ -60,7 +56,7 @@ export default function RebuildingSection() {
       >
         <p
           style={{
-            fontFamily:          "var(--font-inter), sans-serif",
+            fontFamily:          "'Alte Haas Grotesk', sans-serif",
             fontSize:            "32px",
             fontWeight:          400,
             color:               "#4A3C24",
@@ -76,9 +72,9 @@ export default function RebuildingSection() {
 
         <span
           style={{
-            fontFamily:    "var(--font-inter), sans-serif",
-            fontSize:      "24px",
-            fontWeight:    600,
+            fontFamily:    "'Alte Haas Grotesk', sans-serif",
+            fontSize:      "18px",
+            fontWeight:    700,
             color:         "#B8965A",
             letterSpacing: "3.84px",
             textTransform: "uppercase",

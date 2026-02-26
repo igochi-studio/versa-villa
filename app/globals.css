@@ -1,20 +1,36 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("/fonts/AlteHaasGroteskRegular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("/fonts/AlteHaasGroteskBold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
   /* Fonts */
-  --font-sans: var(--font-inter);
+  --font-sans: "Alte Haas Grotesk", sans-serif;
   --font-serif: var(--font-playfair);
 
   /* Colors */
-  --color-forest:    #414833;
-  --color-offwhite:  #F7F5F0;
+  --color-forest:    #616D45;
+  --color-offwhite:  #F8F2E4;
   --color-gold:      #B8965A;
   --color-brown:     #4A3C24;
 }
 
 html,
 body {
-  background-color: #F7F5F0;
+  background-color: #F8F2E4;
   color: #4A3C24;
-  font-family: var(--font-inter), sans-serif;
+  font-family: "Alte Haas Grotesk", sans-serif;
 }

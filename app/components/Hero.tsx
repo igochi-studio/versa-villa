@@ -1,240 +1,338 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useDialKit } from "dialkit";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 
-const TREE_SPRING = {
-  type: "spring" as const,
-  stiffness: 140,
-  damping: 100,
-  mass: 2,
-  delay: 2.7,
-};
+// ── Timing — sync with LoadingScreen ────────────────────────────────────────
+// bgExit at 1860ms, curtain gone ~2650ms. Content reveals as curtain lifts.
+const LOAD_OFFSET = 2.0;
 
-// ── Word-by-word blur reveal (time-based, not scroll) ─────
-// Inspired by @jh3yy's CSS scroll-to-unblur pattern,
-// adapted to fire on mount with staggered delays.
-const LINES = [["Wildfires", "swept", "through"], ["Los", "Angeles,"]];
-
-// ease-out-quart: fast start, gentle settle — perfect for reveals
+// ── Easing ──────────────────────────────────────────────────────────────────
+// ease-out-quint: stronger deceleration, classier settle
+const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
-function WordReveal({ params, skipDelay }: { params: ReturnType<typeof useWordRevealDials>; skipDelay?: boolean }) {
-  const shouldReduceMotion = useReducedMotion();
-  const t = params.timing as { startDelay: number; stagger: number; duration: number };
-  const fx = params.effect as { blur: number; enterY: number };
-  const baseDelay = skipDelay ? 0 : t.startDelay;
-  let wordIndex = 0;
+// ── Heading word-by-word blur reveal ────────────────────────────────────────
+const HEADING_WORDS = [
+  { text: "Born", line: 0 },
+  { text: "from", line: 0 },
+  { text: "resilience,", line: 0 },
+  { text: "built", line: 1 },
+  { text: "for", line: 1 },
+  { text: "the", line: 1 },
+  { text: "future.", line: 1 },
+];
 
-  return (
-    <>
-      {LINES.map((line, lineIdx) => (
-        <span key={lineIdx} style={{ display: "block", whiteSpace: "nowrap" }}>
-          {line.map((word, wi) => {
-            const delay = baseDelay + wordIndex * t.stagger;
-            wordIndex++;
-            return (
-              <motion.span
-                key={wi}
-                aria-hidden="true"
-                style={{ display: "inline-block", willChange: "filter, opacity" }}
-                initial={shouldReduceMotion ? false : {
-                  opacity: 0,
-                  filter: `blur(${fx.blur}px)`,
-                  y: fx.enterY,
-                }}
-                animate={{
-                  opacity: 1,
-                  filter: "blur(0px)",
-                  y: 0,
-                }}
-                transition={{
-                  duration: t.duration,
-                  ease: EASE_OUT_QUART,
-                  delay,
-                }}
-              >
-                {word}{wi < line.length - 1 ? "\u00A0" : null}
-              </motion.span>
-            );
-          })}
-        </span>
-      ))}
-    </>
-  );
-}
+// ── Close cursor — Cross icon as SVG data-URL ──────────────────────────────
+const CLOSE_CURSOR =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='rgba(0,0,0,0.4)' stroke='rgba(255,255,255,0.6)' stroke-width='1.5'/%3E%3Cpath d='M14 14L26 26M26 14L14 26' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E\") 20 20, pointer";
 
-// ── DialKit: tune word blur reveal in real time ───────────
-function useWordRevealDials(onReplay: () => void) {
-  return useDialKit("Word Blur Reveal", {
-    timing: {
-      startDelay: [2.7, 0, 5],       // seconds — wait for loading screen
-      stagger:    [0.18, 0.02, 0.5],  // seconds between words
-      duration:   [0.7, 0.1, 2.0],    // seconds per word transition
-    },
-    effect: {
-      blur:   [20, 0, 40],            // px — starting blur amount
-      enterY: [8, 0, 30],             // px — vertical slide distance
-    },
-    replay: { type: "action" as const },
-  }, {
-    onAction: (action: string) => {
-      if (action === "replay") onReplay();
-    },
-  });
+// ── Haptic sound — subtle tick via Web Audio API ────────────────────────────
+let audioCtx: AudioContext | null = null;
+
+function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch {
+    // Audio not available — silent fallback
+  }
 }
 
 export default function Hero() {
   const shouldReduceMotion = useReducedMotion();
-  const [replayKey, setReplayKey] = useState(0);
-  const wordRevealParams = useWordRevealDials(() => setReplayKey((k) => k + 1));
+  const bgVideoRef = useRef<HTMLVideoElement>(null);
+  const mainVideoRef = useRef<HTMLVideoElement>(null);
+  const [isMoviePlaying, setIsMoviePlaying] = useState(false);
 
-  // Background color transition: start with LoadingScreen's green, fade to cream after loading completes
-  const [bgColor, setBgColor] = useState("#414833"); // Matches LoadingScreen green
   useEffect(() => {
-    // Start transition exactly when LoadingScreen bgExit begins (t=1860ms),
-    // so the Hero background fades to cream in sync with the curtain sliding up.
-    const timer = setTimeout(() => setBgColor("#F7F5F0"), 1860);
-    return () => clearTimeout(timer);
+    const video = bgVideoRef.current;
+    if (!video) return;
+    video.play().catch(() => {});
   }, []);
 
-  // Measure viewport height once on mount so we can define the bird parallax range in pixels.
-  // Birds animate from scrollY=0 to scrollY=viewportH (one full viewport of scroll).
-  // Using global scrollY bypasses the sticky-element tracking bug in Framer Motion:
-  // useScroll({ target: sticky-element }) stalls because the element never moves in the viewport.
-  const [viewportH, setViewportH] = useState(800);
-  useEffect(() => {
-    const update = () => setViewportH(window.innerHeight);
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+  const handleWatchMovie = useCallback(() => {
+    playTick(3800, 0.04, 0.08);
+    setIsMoviePlaying(true);
+    window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: true } }));
+    setTimeout(() => {
+      const mainVideo = mainVideoRef.current;
+      if (!mainVideo) return;
+      mainVideo.muted = false;
+      mainVideo.currentTime = 0;
+      mainVideo.play().catch(() => {
+        mainVideo.muted = true;
+        mainVideo.play().catch(() => {});
+      });
+    }, 600);
   }, []);
 
-  const { scrollY } = useScroll();
-
-  // Parallax depth from pixel distance: left bird travels further = feels faster
-  const leftBirdX  = useTransform(scrollY, [0, viewportH], [0,  410]);
-  const leftBirdY  = useTransform(scrollY, [0, viewportH], [0, -100]);
-  const rightBirdX = useTransform(scrollY, [0, viewportH], [0, -205]);
-  const rightBirdY = useTransform(scrollY, [0, viewportH], [0, -215]);
+  const handleCloseMovie = useCallback(() => {
+    playTick(3200, 0.035, 0.06);
+    const mainVideo = mainVideoRef.current;
+    if (mainVideo) {
+      mainVideo.pause();
+      mainVideo.currentTime = 0;
+    }
+    setIsMoviePlaying(false);
+    window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: false } }));
+  }, []);
 
   return (
-    <motion.section
+    <section
       className="relative overflow-hidden"
       style={{ height: "100vh", position: "sticky", top: 0, zIndex: 1 }}
-      animate={{ backgroundColor: bgColor }}
-      transition={{ duration: 0.72, ease: [0.86, 0, 0.07, 1] }}
     >
+      {/* Background video */}
+      <video
+        ref={bgVideoRef}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          zIndex: 0,
+        }}
+      >
+        <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
+      </video>
 
-        {/* Versa Villa logo — top center */}
+      {/* Black overlay */}
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "#000",
+          zIndex: 1,
+        }}
+        animate={{ opacity: isMoviePlaying ? 0 : 0.6 }}
+        transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+      />
+
+      {/* Main movie — click-to-close */}
+      <AnimatePresence>
+        {isMoviePlaying && (
+          <motion.div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              cursor: CLOSE_CURSOR,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            onClick={handleCloseMovie}
+          >
+            <video
+              ref={mainVideoRef}
+              playsInline
+              preload="auto"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            >
+              <source src="/versa-villa-intro-movie.mp4" type="video/mp4" />
+            </video>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* UI Layer */}
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 5,
+          pointerEvents: isMoviePlaying ? "none" : "auto",
+        }}
+        animate={{ opacity: isMoviePlaying ? 0 : 1 }}
+        transition={{ duration: 0.5, ease: EASE_OUT_QUART }}
+      >
+        {/* Center content */}
         <div
-          className="absolute left-1/2 pointer-events-none"
-          style={{ top: "28px", transform: "translateX(-50%)" }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/versa-villa-logo-dark.svg"
-            alt="Versa Villa by Arya"
-            style={{ width: "200px", height: "auto", display: "block" }}
-          />
-        </div>
-
-        {/* Left tree — bottom-left, raised 4vh from bottom */}
-        <motion.div
-          className="absolute"
-          style={{ bottom: "8vh", left: "-10px", willChange: "transform" }}
-          initial={shouldReduceMotion ? false : { x: "-110%" }}
-          animate={{ x: 0 }}
-          transition={TREE_SPRING}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/left-tree.svg"
-            alt=""
-            style={{ height: "44vh", width: "auto", display: "block" }}
-          />
-        </motion.div>
-
-        {/* Right tree — lowered to show top edge clearly */}
-        <motion.div
-          className="absolute"
-          style={{ top: "30px", right: "-80px", willChange: "transform" }}
-          initial={shouldReduceMotion ? false : { x: "110%" }}
-          animate={{ x: 0 }}
-          transition={TREE_SPRING}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/right-tree.svg"
-            alt=""
-            style={{ height: "94vh", width: "auto", display: "block" }}
-          />
-        </motion.div>
-
-        {/* Left bird — parallax toward top-center */}
-        <motion.div
-          className="absolute"
           style={{
-            top: "27%",
-            left: "14%",
-            x: leftBirdX,
-            y: leftBirdY,
-            willChange: "transform",
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.7, duration: 0.9, ease: [0.165, 0.84, 0.44, 1] }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/left-bird.svg" alt="" style={{ width: "120px", height: "auto" }} />
-        </motion.div>
-
-        {/* Right bird — parallax toward top-center */}
-        <motion.div
-          className="absolute"
-          style={{
-            top: "37%",
-            right: "22%",
-            x: rightBirdX,
-            y: rightBirdY,
-            willChange: "transform",
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.8, duration: 0.9, ease: [0.165, 0.84, 0.44, 1] }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/right-bird.svg" alt="" style={{ width: "108px", height: "auto" }} />
-        </motion.div>
-
-        {/* Hero text — true center */}
-        <div
-          className="absolute text-center pointer-events-none select-none"
-          style={{
+            position: "absolute",
             top: "400px",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "640px",
+            textAlign: "center",
           }}
         >
+          {/* Heading — cinematic word-by-word blur reveal */}
           <h1
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: "64px",
+              fontSize: "56px",
               fontWeight: 400,
-              lineHeight: 1.1,
+              lineHeight: "110%",
               letterSpacing: "-0.02em",
-              color: "#4A3C24",
+              color: "#F8F2E4",
               WebkitFontSmoothing: "antialiased",
               MozOsxFontSmoothing: "grayscale",
-              fontSynthesis: "none",
+              whiteSpace: "nowrap",
             }}
           >
-            <WordReveal key={replayKey} params={wordRevealParams} skipDelay={replayKey > 0} />
+            {[0, 1].map((lineIdx) => {
+              const words = HEADING_WORDS.filter((w) => w.line === lineIdx);
+              return (
+                <span key={lineIdx} style={{ display: "block" }}>
+                  {words.map((w, wi) => {
+                    // Global word index across both lines for continuous stagger
+                    const globalIdx = lineIdx === 0 ? wi : 3 + wi;
+                    return (
+                      <motion.span
+                        key={w.text}
+                        style={{
+                          display: "inline-block",
+                          willChange: "filter, opacity, transform",
+                        }}
+                        initial={
+                          shouldReduceMotion
+                            ? false
+                            : { opacity: 0, y: 18, filter: "blur(8px)" }
+                        }
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{
+                          // Opacity + y: ease-out-quint, deliberate settle
+                          duration: 0.9,
+                          ease: EASE_OUT_QUINT,
+                          delay: LOAD_OFFSET + 0.4 + globalIdx * 0.12,
+                          // Blur clears slower — cinematic rack-focus
+                          filter: {
+                            duration: 1.1,
+                            ease: EASE_OUT_QUINT,
+                            delay: LOAD_OFFSET + 0.4 + globalIdx * 0.12,
+                          },
+                        }}
+                      >
+                        {w.text}
+                        {wi < words.length - 1 ? "\u00A0" : null}
+                      </motion.span>
+                    );
+                  })}
+                </span>
+              );
+            })}
           </h1>
-        </div>
 
-    </motion.section>
+          {/* WATCH MOVIE button */}
+          <motion.div
+            style={{ marginTop: "28px", display: "inline-block" }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: LOAD_OFFSET + 1.3 }}
+          >
+            {/* CSS transitions for hover — 150ms ease, no spring linger */}
+            <button
+              onClick={handleWatchMovie}
+              onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+              className="hero-watch-btn"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "4px 6px 4px 6px",
+                borderBottom: "1.5px solid #B8965A",
+                borderRadius: 0,
+                position: "relative",
+                overflow: "hidden",
+                color: "#F8F2E4",
+                // Transition on the button itself for color
+                transition: "color 150ms ease",
+              }}
+            >
+              {/* Background fill — CSS transition, not spring */}
+              <span
+                className="hero-watch-btn-bg"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundColor: "#F8F2E4",
+                  transformOrigin: "bottom center",
+                  transform: "scaleY(0)",
+                  transition: "transform 180ms ease",
+                  zIndex: 0,
+                }}
+              />
+
+              {/* Text */}
+              <span
+                className="hero-watch-btn-text"
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: "32px",
+                  fontWeight: 400,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  position: "relative",
+                  zIndex: 1,
+                  color: "inherit",
+                  transition: "color 150ms ease",
+                }}
+              >
+                WATCH MOVIE
+              </span>
+
+              {/* Arrow */}
+              <span
+                className="hero-watch-btn-arrow"
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#B8965A",
+                  transition: "color 150ms ease, transform 150ms ease",
+                }}
+              >
+                <ArrowRightIcon width={28} height={28} />
+              </span>
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Hover styles — CSS for instant enter + instant leave (no spring linger) */}
+      <style>{`
+        .hero-watch-btn:hover {
+          color: #1a1a1a;
+        }
+        .hero-watch-btn:hover .hero-watch-btn-bg {
+          transform: scaleY(1);
+        }
+        .hero-watch-btn:hover .hero-watch-btn-arrow {
+          color: #1a1a1a;
+          transform: translateX(4px);
+        }
+        .hero-watch-btn:active {
+          transform: scale(0.97);
+          transition: transform 80ms ease;
+        }
+      `}</style>
+    </section>
   );
 }

@@ -325,7 +325,7 @@ export default function DestroyingSection() {
   const revealedMaskRef = useRef(0);
   const [textVisible,   setTextVisible]   = useState(false);
   const [imgsReady,     setImgsReady]     = useState(false);
-  const [bgColor,       setBgColor]       = useState("#414833");
+  const [bgColor,       setBgColor]       = useState("#616D45");
   const [isMuted,       setIsMuted]       = useState(false);
 
   // Refs for direct DOM manipulation of continuous values (no re-renders)
@@ -335,7 +335,7 @@ export default function DestroyingSection() {
   const beforeClipRef    = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setBgColor("#F7F5F0"), 2600);
+    const timer = setTimeout(() => setBgColor("#F8F2E4"), 2600);
     return () => clearTimeout(timer);
   }, []);
 
@@ -692,10 +692,10 @@ export default function DestroyingSection() {
             >
               <p
                 style={{
-                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontFamily:          "'Alte Haas Grotesk', sans-serif",
                   fontSize:            isMobile ? "22px" : "32px",
                   fontWeight:          400,
-                  color:               "#F7F5F0",
+                  color:               "#F8F2E4",
                   lineHeight:          "120%",
                   letterSpacing:       isMobile ? "-0.44px" : "-0.64px",
                   textAlign:           "justify",
@@ -705,7 +705,7 @@ export default function DestroyingSection() {
                 <span
                   style={{
                     fontFamily:    "var(--font-playfair), serif",
-                    fontSize:      isMobile ? "26px" : "40px",
+                    fontSize:      isMobile ? "26px" : "32px",
                     fontStyle:     "italic",
                     fontWeight:    400,
                     lineHeight:    "110%",
@@ -719,7 +719,7 @@ export default function DestroyingSection() {
                   fontFamily:          "var(--font-playfair), serif",
                   fontSize:            isMobile ? "20px" : "32px",
                   fontWeight:          400,
-                  color:               "#F7F5F0",
+                  color:               "#F8F2E4",
                   lineHeight:          "110%",
                   letterSpacing:       isMobile ? "-0.4px" : "-0.64px",
                   marginTop:           "1.2em",
@@ -935,10 +935,10 @@ export default function DestroyingSection() {
             >
               <span
                 style={{
-                  fontFamily:    "var(--font-inter), sans-serif",
+                  fontFamily:    "'Alte Haas Grotesk', sans-serif",
                   fontSize:      isMobile ? "16px" : "24px",
                   fontWeight:    600,
-                  color:         "#F7F5F0",
+                  color:         "#F8F2E4",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                 }}
@@ -975,7 +975,7 @@ export default function DestroyingSection() {
               top:             0,
               width:           "100vw",
               height:          "100vh",
-              backgroundColor: "#F7F5F0",
+              backgroundColor: "#F8F2E4",
               display:         "flex",
               flexDirection:   "column",
             }}
@@ -995,7 +995,7 @@ export default function DestroyingSection() {
               <div style={{ flex: "0 0 auto", width: isMobile ? "40%" : "45%", paddingTop: "4px" }}>
                 <span
                   style={{
-                    fontFamily:    "var(--font-inter), sans-serif",
+                    fontFamily:    "'Alte Haas Grotesk', sans-serif",
                     fontSize:      isMobile ? "16px" : "24px",
                     fontWeight:    600,
                     color:         "#B8965A",
@@ -1012,7 +1012,7 @@ export default function DestroyingSection() {
               <div style={{ flex: "1 1 auto" }}>
                 <p
                   style={{
-                    fontFamily:          "var(--font-inter), sans-serif",
+                    fontFamily:          "'Alte Haas Grotesk', sans-serif",
                     fontSize:            isMobile ? "22px" : "32px",
                     fontWeight:          400,
                     color:               "#1a1a1a",
@@ -1072,7 +1072,7 @@ export default function DestroyingSection() {
               top:             0,
               width:           "165vw",
               height:          "100vh",
-              backgroundColor: "#F7F5F0",
+              backgroundColor: "#F8F2E4",
             }}
           >
             {/* "The disaster revealed..." — aligns with c-3 */}
@@ -1087,7 +1087,7 @@ export default function DestroyingSection() {
             >
               <p
                 style={{
-                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontFamily:          "'Alte Haas Grotesk', sans-serif",
                   fontSize:            "32px",
                   fontWeight:          400,
                   color:               "#1a1a1a",
@@ -1112,9 +1112,9 @@ export default function DestroyingSection() {
             >
               <span
                 style={{
-                  fontFamily:    "var(--font-inter), sans-serif",
-                  fontSize:      "24px",
-                  fontWeight:    600,
+                  fontFamily:    "'Alte Haas Grotesk', sans-serif",
+                  fontSize:      "18px",
+                  fontWeight:    700,
                   color:         "#B8965A",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -1142,7 +1142,7 @@ export default function DestroyingSection() {
                 <p
                   key={i}
                   style={{
-                    fontFamily:          "var(--font-inter), sans-serif",
+                    fontFamily:          "'Alte Haas Grotesk', sans-serif",
                     fontSize:            "32px",
                     fontWeight:          400,
                     color:               "#1a1a1a",
@@ -1215,7 +1215,7 @@ export default function DestroyingSection() {
               top:             0,
               width:           "100vw",
               height:          "100vh",
-              backgroundColor: "#F7F5F0",
+              backgroundColor: "#F8F2E4",
             }}
           >
             {/* [THE ANSWER] caption — top left */}
@@ -1229,9 +1229,9 @@ export default function DestroyingSection() {
             >
               <span
                 style={{
-                  fontFamily:    "var(--font-inter), sans-serif",
-                  fontSize:      "24px",
-                  fontWeight:    600,
+                  fontFamily:    "'Alte Haas Grotesk', sans-serif",
+                  fontSize:      "18px",
+                  fontWeight:    700,
                   color:         "#B8965A",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -1255,7 +1255,7 @@ export default function DestroyingSection() {
             >
               <p
                 style={{
-                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontFamily:          "'Alte Haas Grotesk', sans-serif",
                   fontSize:            "32px",
                   fontWeight:          400,
                   color:               "#4A3C24",
@@ -1268,7 +1268,7 @@ export default function DestroyingSection() {
                 <span
                   style={{
                     fontFamily: "var(--font-playfair), serif",
-                    fontSize:   "40px",
+                    fontSize:   "32px",
                     fontStyle:  "italic",
                     fontWeight: 400,
                     lineHeight: "110%",

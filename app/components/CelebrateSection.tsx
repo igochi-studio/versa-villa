@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useScroll, useTransform, motion } from "motion/react";
 
-const OLIVE = "#414833";
+const OLIVE = "#616D45";
 
 const cyclingImages = [
   "/community-1.webp",
@@ -73,10 +73,10 @@ export default function CelebrateSection() {
             {/* Tag line — small gap before image */}
             <p
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "14px",
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: "18px",
                 fontWeight: 500,
-                color: "#F7F5F0",
+                color: "#F8F2E4",
                 textTransform: "uppercase",
                 letterSpacing: "0.15em",
                 margin: "0 0 40px 0",
@@ -100,10 +100,10 @@ export default function CelebrateSection() {
 
             <p
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "28px",
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: "32px",
                 fontWeight: 400,
-                color: "#F7F5F0",
+                color: "#F8F2E4",
                 lineHeight: "120%",
                 letterSpacing: "-0.56px",
                 textAlign: "justify",
@@ -134,10 +134,10 @@ export default function CelebrateSection() {
             {/* Top left text */}
             <p
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
-                fontSize: "28px",
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: "32px",
                 fontWeight: 400,
-                color: "#F7F5F0",
+                color: "#F8F2E4",
                 lineHeight: "120%",
                 letterSpacing: "-0.56px",
                 textAlign: "justify",
@@ -161,10 +161,10 @@ export default function CelebrateSection() {
             >
               <p
                 style={{
-                  fontFamily: "var(--font-inter), sans-serif",
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
                   fontSize: "32px",
                   fontWeight: 400,
-                  color: "#F7F5F0",
+                  color: "#F8F2E4",
                   lineHeight: "120%",
                   letterSpacing: "-0.64px",
                   textAlign: "justify",
@@ -175,7 +175,7 @@ export default function CelebrateSection() {
                 <span
                   style={{
                     fontFamily: "var(--font-playfair), serif",
-                    fontSize: "40px",
+                    fontSize: "32px",
                     fontStyle: "italic",
                     fontWeight: 400,
                     lineHeight: "110%",
@@ -191,7 +191,7 @@ export default function CelebrateSection() {
                   fontFamily: "var(--font-playfair), serif",
                   fontSize: "32px",
                   fontWeight: 400,
-                  color: "#F7F5F0",
+                  color: "#F8F2E4",
                   lineHeight: "110%",
                   letterSpacing: "-0.64px",
                   marginTop: "1.2em",

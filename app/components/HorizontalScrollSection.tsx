@@ -90,7 +90,6 @@ export default function HorizontalScrollSection() {
     if (!video) return;
 
     return scrollYProgress.on("change", (v) => {
-      // Panel 2 is ~50% in view at scrollYProgress ~0.5
       if (v > 0.3 && v < 0.55 && video.paused) {
         video.currentTime = 0;
         video.muted = false;
@@ -98,12 +97,10 @@ export default function HorizontalScrollSection() {
           .play()
           .then(() => setIsMuted(false))
           .catch(() => {
-            // Browser blocked unmuted autoplay — fall back to muted
             video.muted = true;
             video.play().then(() => setIsMuted(true)).catch(() => {});
           });
       }
-      // Pause when scrolling away from Panel 2
       if ((v < 0.1 || v > 0.7) && !video.paused) {
         video.pause();
         if (v < 0.1) video.currentTime = 0;
@@ -202,10 +199,10 @@ export default function HorizontalScrollSection() {
             >
               <p
                 style={{
-                  fontFamily:          "var(--font-inter), sans-serif",
+                  fontFamily:          "'Alte Haas Grotesk', sans-serif",
                   fontSize:            "32px",
                   fontWeight:          400,
-                  color:               "#F7F5F0",
+                  color:               "#F8F2E4",
                   lineHeight:          "120%",
                   letterSpacing:       "-0.64px",
                   textAlign:           "justify",
@@ -215,7 +212,7 @@ export default function HorizontalScrollSection() {
                 <span
                   style={{
                     fontFamily:    "var(--font-playfair), serif",
-                    fontSize:      "40px",
+                    fontSize:      "32px",
                     fontStyle:     "italic",
                     fontWeight:    400,
                     lineHeight:    "110%",
@@ -231,7 +228,7 @@ export default function HorizontalScrollSection() {
                   fontFamily:          "var(--font-playfair), serif",
                   fontSize:            "32px",
                   fontWeight:          400,
-                  color:               "#F7F5F0",
+                  color:               "#F8F2E4",
                   lineHeight:          "110%",
                   letterSpacing:       "-0.64px",
                   marginTop:           "1.2em",
@@ -286,8 +283,8 @@ export default function HorizontalScrollSection() {
             >
               <span
                 style={{
-                  fontFamily:    "var(--font-inter), sans-serif",
-                  fontSize:      "14px",
+                  fontFamily:    "'Alte Haas Grotesk', sans-serif",
+                  fontSize:      "18px",
                   fontWeight:    400,
                   color:         "#fff",
                   letterSpacing: "0.08em",
@@ -305,7 +302,7 @@ export default function HorizontalScrollSection() {
               height:          "100vh",
               flexShrink:      0,
               position:        "relative",
-              backgroundColor: "#F7F5F0",
+              backgroundColor: "#F8F2E4",
               display:         "flex",
               flexDirection:   "column",
             }}
@@ -326,9 +323,9 @@ export default function HorizontalScrollSection() {
               <div style={{ flex: "0 0 auto", paddingTop: "8px" }}>
                 <span
                   style={{
-                    fontFamily:    "var(--font-inter), sans-serif",
-                    fontSize:      "14px",
-                    fontWeight:    600,
+                    fontFamily:    "'Alte Haas Grotesk', sans-serif",
+                    fontSize:      "18px",
+                    fontWeight:    700,
                     color:         "#B8965A",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
@@ -343,7 +340,7 @@ export default function HorizontalScrollSection() {
               <div style={{ maxWidth: "540px" }}>
                 <p
                   style={{
-                    fontFamily:          "var(--font-inter), sans-serif",
+                    fontFamily:          "'Alte Haas Grotesk', sans-serif",
                     fontSize:            "32px",
                     fontWeight:          400,
                     color:               "#1a1a1a",
