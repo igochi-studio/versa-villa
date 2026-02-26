@@ -171,8 +171,12 @@ export default function Header() {
 
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), LOAD_OFFSET * 1000);
-    return () => clearTimeout(timer);
+    let done = false;
+    const minTimer = new Promise<void>((r) => setTimeout(r, LOAD_OFFSET * 1000));
+    Promise.all([minTimer, document.fonts.ready]).then(() => {
+      if (!done) setLoaded(true);
+    });
+    return () => { done = true; };
   }, []);
 
   if (!loaded) return null;

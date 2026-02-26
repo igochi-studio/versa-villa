@@ -26,6 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Preload local fonts so they're ready before hero animations fire */}
+        <link rel="preload" href="/fonts/AlteHaasGroteskRegular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className={`${playfair.variable} antialiased`}>
         <ScrollToTop />
         <LoadingScreen />

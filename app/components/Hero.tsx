@@ -6,7 +6,9 @@ import { ArrowRightIcon } from "@radix-ui/react-icons";
 
 // ── Timing — sync with LoadingScreen ────────────────────────────────────────
 // bgExit at 1860ms, curtain gone ~2650ms. Content reveals as curtain lifts.
-const LOAD_OFFSET = 2.0;
+// LOAD_OFFSET is the minimum wait; we also wait for fonts to be ready so
+// the blur reveal doesn't stutter from a late font swap.
+const LOAD_MIN_MS = 2000;
 
 // ── Easing ──────────────────────────────────────────────────────────────────
 // ease-out-quint: stronger deceleration, classier settle
@@ -49,8 +51,29 @@ function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
   }
 }
 
+// ── Wait for loading screen + fonts before revealing ────────────────────────
+function useHeroReady() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let done = false;
+
+    const minTimer = new Promise<void>((r) => setTimeout(r, LOAD_MIN_MS));
+    const fontsReady = document.fonts.ready;
+
+    Promise.all([minTimer, fontsReady]).then(() => {
+      if (!done) setReady(true);
+    });
+
+    return () => { done = true; };
+  }, []);
+
+  return ready;
+}
+
 export default function Hero() {
   const shouldReduceMotion = useReducedMotion();
+  const ready = useHeroReady();
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
@@ -93,13 +116,13 @@ export default function Hero() {
       className="relative overflow-hidden"
       style={{ height: "100vh", position: "sticky", top: 0, zIndex: 1 }}
     >
-      {/* Background video */}
+      {/* Background video — metadata preload so fonts get priority */}
       <video
         ref={bgVideoRef}
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         style={{
           position: "absolute",
           inset: 0,
@@ -198,8 +221,8 @@ export default function Hero() {
               return (
                 <span key={lineIdx} style={{ display: "block" }}>
                   {words.map((w, wi) => {
-                    // Global word index across both lines for continuous stagger
                     const globalIdx = lineIdx === 0 ? wi : 3 + wi;
+                    const wordDelay = 0.4 + globalIdx * 0.12;
                     return (
                       <motion.span
                         key={w.text}
@@ -210,19 +233,21 @@ export default function Hero() {
                         initial={
                           shouldReduceMotion
                             ? false
-                            : { opacity: 0, y: 18, filter: "blur(8px)" }
+                            : { opacity: 0, y: 18, filter: "blur(6px)" }
                         }
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        animate={
+                          ready
+                            ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                            : undefined
+                        }
                         transition={{
-                          // Opacity + y: ease-out-quint, deliberate settle
                           duration: 0.9,
                           ease: EASE_OUT_QUINT,
-                          delay: LOAD_OFFSET + 0.4 + globalIdx * 0.12,
-                          // Blur clears slower — cinematic rack-focus
+                          delay: wordDelay,
                           filter: {
                             duration: 1.1,
                             ease: EASE_OUT_QUINT,
-                            delay: LOAD_OFFSET + 0.4 + globalIdx * 0.12,
+                            delay: wordDelay,
                           },
                         }}
                       >
@@ -240,8 +265,8 @@ export default function Hero() {
           <motion.div
             style={{ marginTop: "28px", display: "inline-block" }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: LOAD_OFFSET + 1.3 }}
+            animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 1.3 }}
           >
             {/* CSS transitions for hover — 150ms ease, no spring linger */}
             <button
