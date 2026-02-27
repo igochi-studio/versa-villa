@@ -13,7 +13,9 @@ export default function Home() {
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "200px", backgroundColor: "#F8F2E4" }}>
         <DestroyingCosmos />
         <DestroyingSection />
-        <SystemSection />
+        <div style={{ position: "relative", zIndex: 3, marginTop: "calc(-100vh - 200px)" }}>
+          <SystemSection />
+        </div>
         <LandscapeSection />
       </div>
     </main>

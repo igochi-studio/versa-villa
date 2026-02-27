@@ -57,7 +57,7 @@ const SOURCES = [
   "blaze-1", "blaze-2", "blaze-3",
   "community-1", "community-2", "community-3", "community-4",
   "community-5", "community-6", "community-7",
-  "rebuild-1", "rebuild-2", "rebuild-3", "rebuild-4", "rebuild-5",
+  "rebuild-2", "rebuild-4", "rebuild-5",
 ];
 
 interface Slot {
@@ -89,7 +89,7 @@ const DESKTOP_SLOTS: Slot[] = [
   { id: 12, src: "blaze-3",           top: "88%", left: "88%", width: 135, height: 85,  delay: 0.3,  revealGroup: 0, depth: 0.05,  floatY: -10, floatDur: 5 },
   { id: 13, src: "community-3",       top: "38%", left: "88%", width: 75,  height: 115, delay: 1.4,  revealGroup: 3, depth: 0.065, floatY: -10, floatDur: 6 },
   { id: 14, src: "streets-4",         top: "58%", left: "8%",  width: 95,  height: 95,  delay: 1.0,  revealGroup: 2, depth: 0.08,  floatY: -10, floatDur: 5 },
-  { id: 15, src: "rebuild-1",         top: "8%",  left: "8%",  width: 80,  height: 80,  delay: 0.6,  revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 4 },
+  { id: 15, src: "ruins-3",           top: "8%",  left: "8%",  width: 80,  height: 80,  delay: 0.6,  revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 4 },
   { id: 16, src: "blaze-2",           top: "85%", left: "25%", width: 90,  height: 90,  delay: 0.85, revealGroup: 2, depth: 0.035, floatY: -10, floatDur: 5 },
 ];
 

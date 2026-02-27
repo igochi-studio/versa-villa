@@ -7,8 +7,8 @@ import { useIsMobile } from "../hooks/useIsMobile";
 const NAV_ITEMS = [
   { label: "DESTRUCTION", href: "#destruction" },
   { label: "IT\u2019S PERSONAL", href: "#its-personal" },
-  { label: "AMBITION", href: "#" },
-  { label: "PROCESS ARCHIVE", href: "#" },
+  { label: "AMBITION", href: "#ambition" },
+  { label: "PROCESS ARCHIVE", href: "/process-archive" },
   { label: "FUTURE", href: "/future" },
 ];
 
@@ -198,7 +198,16 @@ function NavMenuItem({
       onClick={(e) => {
         e.preventDefault();
         if (href.startsWith("#") && href !== "#") {
-          document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+          // If we're on the homepage, smooth scroll; otherwise navigate to /{hash}
+          if (window.location.pathname === "/") {
+            const el = document.querySelector(href);
+            if (el) {
+              const top = el.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({ top, behavior: "smooth" });
+            }
+          } else {
+            window.location.href = "/" + href;
+          }
         } else if (href.startsWith("/")) {
           window.location.href = href;
         }
@@ -540,6 +549,14 @@ export default function Header() {
         }
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+        onClick={() => {
+          if (window.location.pathname === "/") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            window.location.href = "/";
+          }
+        }}
+        style={{ cursor: "pointer" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

@@ -349,48 +349,11 @@ const wordVariants = {
 };
 
 // ── Staggered 3-column questions ────────────────────────────────────────────
-function QuestionsGrid({ isMobile }: { isMobile: boolean }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [revealedCount, setRevealedCount] = useState(0);
-
-  // Trigger staggered reveal each time section enters viewport
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Reset and replay staggered reveal
-          setRevealedCount(0);
-          for (let i = 0; i < QUESTIONS.length; i++) {
-            timers.push(
-              setTimeout(() => {
-                setRevealedCount((prev) => Math.max(prev, i + 1));
-              }, i * COLUMN_STAGGER)
-            );
-          }
-        } else {
-          // Clear pending timers and reset on exit
-          timers.forEach(clearTimeout);
-          timers.length = 0;
-          setRevealedCount(0);
-        }
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => {
-      timers.forEach(clearTimeout);
-      observer.disconnect();
-    };
-  }, []);
-
+function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; revealedCount: number }) {
   const svgSize = isMobile ? 56 : 72;
 
   return (
     <div
-      ref={sectionRef}
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
@@ -444,6 +407,7 @@ function QuestionsGrid({ isMobile }: { isMobile: boolean }) {
                 flexWrap: "wrap",
                 justifyContent: "flex-start",
                 gap: isMobile ? "0 6px" : "0 8px",
+                maxWidth: isMobile ? "280px" : "320px",
               }}
             >
               {words.map((word, i) => (
@@ -478,15 +442,79 @@ function QuestionsGrid({ isMobile }: { isMobile: boolean }) {
   );
 }
 
+// ── Scroll-locked questions section ──────────────────────────────────────────
+function QuestionsScrollSection({ isMobile }: { isMobile: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [inView, setInView] = useState(false);
+  const stickyRef = useRef<HTMLDivElement>(null);
+
+  // Detect when the sticky section is in view
+  useEffect(() => {
+    const el = stickyRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-reveal questions one after another when in view
+  useEffect(() => {
+    if (!inView) return;
+    if (revealedCount >= 3) return;
+
+    // First one reveals immediately, then stagger every 1.2s
+    const delay = revealedCount === 0 ? 300 : 1200;
+    const timer = setTimeout(() => {
+      setRevealedCount((c) => Math.min(c + 1, 3));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [inView, revealedCount]);
+
+  return (
+    <div ref={containerRef} style={{ height: "300vh", position: "relative" }}>
+      <div
+        ref={stickyRef}
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          backgroundColor: "#F8F2E4",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Questions — vertically centered */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+          <QuestionsGrid isMobile={isMobile} revealedCount={revealedCount} />
+        </div>
+
+        {/* Community photos marquee — anchored to bottom */}
+        <div style={{ padding: isMobile ? "0 24px 0" : "0 80px 0" }}>
+          <CommunityMarquee isMobile={isMobile} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Villa Reveal — full-bleed image → card split with text ──────────────────
 
 const VILLA_IMAGES = [
-  "/versa-villa-evening.jpeg",
-  "/rebuild-1.webp",
-  "/rebuild-2.webp",
-  "/rebuild-3.webp",
-  "/rebuild-4.webp",
-  "/rebuild-5.webp",
+  "/villa-image-0.webp",
+  "/villa-image-1.jpeg",
+  "/villa-image-2.jpeg",
+  "/villa-image-3.jpeg",
+  "/villa-image-4.jpeg",
+  "/villa-image-5.jpeg",
 ];
 const VILLA_CYCLE_MS = 4000;
 const EASE_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
@@ -503,41 +531,47 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
 
   // Phase 0→0.5: full-bleed image scrolls up as card
   // Phase 0.5→1: image shrinks to right, text reveals on left
-  const imageWidth = useTransform(
-    scrollYProgress,
-    isMobile ? [0, 0.4, 0.7, 1] : [0, 0.4, 0.7, 1],
-    isMobile ? ["100%", "100%", "100%", "100%"] : ["100%", "100%", "55%", "55%"],
-  );
-  const imageX = useTransform(
+  // Use left% to position the image — left:0 = full-bleed, left:40% = right-aligned
+  const imageLeft = useTransform(
     scrollYProgress,
     isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
     isMobile ? ["0%", "0%"] : ["0%", "0%", "45%", "45%"],
   );
+  const imageRight = useTransform(
+    scrollYProgress,
+    isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
+    isMobile ? ["0px", "0px"] : ["0px", "0px", "0px", "0px"],
+  );
   const imageHeight = useTransform(
     scrollYProgress,
-    [0, 0.4, 0.7, 1],
-    ["100vh", "100vh", "85vh", "85vh"],
+    isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
+    isMobile ? ["100vh", "100vh"] : ["100vh", "100vh", "100vh", "100vh"],
+  );
+  const imageTop = useTransform(
+    scrollYProgress,
+    isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
+    isMobile ? ["0px", "0px"] : ["0px", "0px", "0px", "0px"],
   );
   const imageBorderRadius = useTransform(
     scrollYProgress,
     isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
-    isMobile ? ["0px", "0px"] : ["0px", "0px", "8px", "8px"],
+    isMobile ? ["0px", "0px"] : ["0px", "0px", "0px", "0px"],
   );
   const textOpacity = useTransform(
     scrollYProgress,
-    isMobile ? [0, 0.75, 0.9] : [0, 0.6, 0.8],
+    isMobile ? [0, 0.5, 0.65] : [0, 0.45, 0.6],
     [0, 0, 1],
   );
   const textY = useTransform(
     scrollYProgress,
-    isMobile ? [0, 0.75, 0.9] : [0, 0.6, 0.8],
+    isMobile ? [0, 0.5, 0.65] : [0, 0.45, 0.6],
     ["40px", "40px", "0px"],
   );
 
   // Track when text should be visible for blur-reveal trigger
   useEffect(() => {
     const unsub = scrollYProgress.on("change", (v) => {
-      const threshold = isMobile ? 0.8 : 0.7;
+      const threshold = isMobile ? 0.6 : 0.55;
       setTextVisible(v >= threshold);
     });
     return unsub;
@@ -555,8 +589,9 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
   return (
     <div
       ref={containerRef}
-      style={{ height: isMobile ? "250vh" : "300vh", position: "relative" }}
+      style={{ height: isMobile ? "300vh" : "400vh", position: "relative" }}
     >
+      {/* #ambition anchor moved to StorySection */}
       <div
         style={{
           position: "sticky",
@@ -577,14 +612,26 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "flex-end",
-              padding: "0 60px 80px 60px",
+              justifyContent: "center",
+              padding: "0 60px 0 60px",
               zIndex: 1,
               opacity: textOpacity,
               y: textY,
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <span
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  color: "#B8965A",
+                  letterSpacing: "3px",
+                  textTransform: "uppercase",
+                }}
+              >
+                The Vision
+              </span>
               <h3
                 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -598,6 +645,13 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
               >
                 Developed by<br />ARYA Group,
               </h3>
+              <div
+                style={{
+                  width: "40px",
+                  height: "1px",
+                  backgroundColor: "rgba(184, 150, 90, 0.4)",
+                }}
+              />
               <p
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
@@ -614,20 +668,43 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
                 More than a structure, it is a response to what was lost and a promise
                 that communities can rebuild stronger, faster, and better than before.
               </p>
+              {/* Image indicator dots */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  alignItems: "center",
+                  marginTop: "12px",
+                }}
+              >
+                {VILLA_IMAGES.map((_, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setImgIndex(i)}
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      backgroundColor: i === imgIndex ? "#B8965A" : "transparent",
+                      border: `2px solid ${i === imgIndex ? "#B8965A" : "rgba(74, 60, 36, 0.25)"}`,
+                      transition: "all 0.4s ease",
+                      cursor: "pointer",
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* Image — starts full-bleed, morphs to right card */}
+        {/* Image column — starts full-bleed, morphs to right card + thumbnails */}
         <motion.div
           style={{
             position: "absolute",
-            top: isMobile ? 0 : "50%",
-            left: 0,
-            x: imageX,
-            width: imageWidth,
+            top: imageTop,
+            left: imageLeft,
+            right: imageRight,
             height: imageHeight,
-            y: isMobile ? 0 : "-50%",
             overflow: "hidden",
             borderRadius: imageBorderRadius,
           }}
@@ -638,6 +715,8 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
               key={src}
               src={src}
               alt={`Versa Villa ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding={i === 0 ? "sync" : "async"}
               style={{
                 position: "absolute",
                 inset: 0,
@@ -650,6 +729,18 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
               }}
             />
           ))}
+          {/* Gradient vignette at bottom */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "30%",
+              background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.2))",
+              pointerEvents: "none",
+            }}
+          />
         </motion.div>
 
         {/* Mobile text — below image */}
@@ -712,26 +803,8 @@ export default function DestroyingSection() {
 
       {/* Slides OVER the StorySection's sticky content like a card */}
       <div style={{ position: "relative", zIndex: 2, marginTop: "-100vh" }}>
-        {/* ── Panel: The Change ── */}
-        <section
-          style={{
-            backgroundColor: "#F8F2E4",
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            padding: "0",
-          }}
-        >
-          {/* Questions — vertically centered in remaining space */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-            <QuestionsGrid isMobile={isMobile} />
-          </div>
-
-          {/* Community photos marquee — anchored to bottom */}
-          <div style={{ padding: isMobile ? "0 24px 0" : "0 80px 0" }}>
-            <CommunityMarquee isMobile={isMobile} />
-          </div>
-        </section>
+        {/* ── Panel: The Change — scroll-locked question reveal ── */}
+        <QuestionsScrollSection isMobile={isMobile} />
 
         {/* ── Villa Reveal: full-bleed → card split ── */}
         <VillaReveal isMobile={isMobile} />

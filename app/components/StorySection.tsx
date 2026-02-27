@@ -117,9 +117,16 @@ export default function StorySection() {
   }, []);
 
   // ── Merge timer + scroll into activePhase ─────────────────────────────
-  const reconcilePhase = useCallback(() => {
-    const merged = Math.max(timerPhaseRef.current, scrollPhaseRef.current);
-    setActivePhase((prev) => (merged !== prev ? merged : prev));
+  const reconcilePhase = useCallback((scrollDriven?: boolean) => {
+    if (scrollDriven) {
+      // Scroll always wins — allow both forward and backward
+      const next = scrollPhaseRef.current;
+      timerPhaseRef.current = next;
+      setActivePhase((prev) => (next !== prev ? next : prev));
+    } else {
+      const merged = Math.max(timerPhaseRef.current, scrollPhaseRef.current);
+      setActivePhase((prev) => (merged !== prev ? merged : prev));
+    }
   }, []);
 
   // ── Timer-driven auto-advance ─────────────────────────────────────────
@@ -147,12 +154,8 @@ export default function StorySection() {
     const next = getPhase(v);
     if (next !== scrollPhaseRef.current) {
       scrollPhaseRef.current = next;
-      // If scroll pushed us forward past the timer, reset the timer countdown
-      if (next > timerPhaseRef.current) {
-        timerPhaseRef.current = next;
-        timerResetRef.current = Date.now();
-      }
-      reconcilePhase();
+      timerResetRef.current = Date.now();
+      reconcilePhase(true);
     }
   });
 

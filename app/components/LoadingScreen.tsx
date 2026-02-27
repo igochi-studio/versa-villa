@@ -10,36 +10,6 @@ const EASE_IN_OUT_QUINT = [0.86, 0, 0.07, 1] as const;
 
 type Phase = "in" | "hold" | "textExit" | "bgExit" | "done";
 
-function LineReveal({ children, delay }: { children: string; delay: number }) {
-  const shouldReduceMotion = useReducedMotion();
-  return (
-    // paddingBottom gives descenders (g, y, 5) room below the clip edge
-    <div style={{ overflow: "hidden", paddingBottom: "0.2em", marginBottom: "-0.2em" }}>
-      <motion.span
-        style={{
-          display: "block",
-          fontSize: "56px",
-          fontWeight: 400,
-          letterSpacing: "-0.02em",
-          lineHeight: 1.15,
-          fontSynthesis: "none",
-          fontFamily: "var(--font-playfair), serif",
-          color: "#F8F2E4",
-        }}
-        initial={{ y: shouldReduceMotion ? 0 : "108%" }}
-        animate={{ y: 0 }}
-        transition={{
-          duration: 0.6,
-          ease: EASE_OUT_QUART,
-          delay,
-        }}
-      >
-        {children}
-      </motion.span>
-    </div>
-  );
-}
-
 export default function LoadingScreen() {
   const [phase, setPhase] = useState<Phase>("in");
   const shouldReduceMotion = useReducedMotion();
@@ -104,8 +74,29 @@ export default function LoadingScreen() {
             : { duration: 0 }
         }
       >
-        <LineReveal delay={0.1}>January</LineReveal>
-        <LineReveal delay={0.28}>2025</LineReveal>
+        <div style={{ overflow: "hidden", paddingBottom: "0.2em", marginBottom: "-0.2em" }}>
+          <motion.div
+            initial={{ y: shouldReduceMotion ? 0 : "108%" }}
+            animate={{ y: 0 }}
+            transition={{
+              duration: 0.6,
+              ease: EASE_OUT_QUART,
+              delay: 0.1,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/tree-blowing.svg"
+              alt=""
+              style={{
+                height: "120px",
+                width: "auto",
+                display: "block",
+                filter: "brightness(0) invert(0.95) sepia(0.1) saturate(0.3)",
+              }}
+            />
+          </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );

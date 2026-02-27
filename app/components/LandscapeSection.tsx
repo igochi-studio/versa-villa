@@ -93,6 +93,7 @@ export default function LandscapeSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.15 });
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   return (
     <section
@@ -400,6 +401,7 @@ export default function LandscapeSection() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={() => {
+              if (isSubmitted) return;
               playTick(3200, 0.035, 0.06);
               setIsFormOpen(false);
             }}
@@ -430,166 +432,261 @@ export default function LandscapeSection() {
               }}
             >
               {/* Close button */}
-              <button
-                onClick={() => {
-                  playTick(3200, 0.035, 0.06);
-                  setIsFormOpen(false);
-                }}
-                style={{
-                  position: "absolute",
-                  top: "16px",
-                  right: "16px",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#4A3C24",
-                  padding: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Cross2Icon width={20} height={20} />
-              </button>
+              {!isSubmitted && (
+                <button
+                  onClick={() => {
+                    playTick(3200, 0.035, 0.06);
+                    setIsFormOpen(false);
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: "16px",
+                    right: "16px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#4A3C24",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Cross2Icon width={20} height={20} />
+                </button>
+              )}
 
-              <h3
-                style={{
-                  fontFamily: "var(--font-playfair), serif",
-                  fontSize: "32px",
-                  fontWeight: 400,
-                  color: "#4A3C24",
-                  marginBottom: "32px",
-                  textAlign: "center",
-                }}
-              >
-                Join Our Family
-              </h3>
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  playTick(3800, 0.04, 0.08);
-                  setIsFormOpen(false);
-                }}
-                style={{ display: "flex", flexDirection: "column", gap: "24px" }}
-              >
-                {[
-                  { label: "Name", type: "text", name: "name", autoComplete: "name" },
-                  { label: "Email", type: "email", name: "email", autoComplete: "email" },
-                  { label: "Phone", type: "tel", name: "phone", autoComplete: "tel" },
-                ].map((field) => (
-                  <label
-                    key={field.name}
+              <AnimatePresence mode="wait">
+                {isSubmitted ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.5, ease: EASE_OUT_QUINT }}
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "6px",
+                      alignItems: "center",
+                      gap: "20px",
+                      padding: "24px 0",
+                      textAlign: "center",
                     }}
                   >
-                    <span
+                    {/* Checkmark */}
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, ease: EASE_OUT_QUINT, delay: 0.15 }}
                       style={{
-                        fontFamily: "'Alte Haas Grotesk', sans-serif",
-                        fontSize: "11px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        color: "#8C7B5E",
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "50%",
+                        border: "2px solid #B8965A",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      {field.label}
-                    </span>
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      autoComplete={field.autoComplete}
-                      required
+                      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <motion.path
+                          d="M5 11.5L9.5 16L17 6"
+                          stroke="#B8965A"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.5, ease: EASE_OUT_QUINT, delay: 0.35 }}
+                        />
+                      </svg>
+                    </motion.div>
+
+                    <motion.h3
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, ease: EASE_OUT_QUINT, delay: 0.3 }}
                       style={{
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "1px solid #C4B8A0",
-                        padding: "8px 0",
+                        fontFamily: "var(--font-playfair), serif",
+                        fontSize: "32px",
+                        fontWeight: 400,
+                        color: "#4A3C24",
+                        margin: 0,
+                        lineHeight: "120%",
+                      }}
+                    >
+                      Welcome to the family.
+                    </motion.h3>
+
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      style={{
                         fontFamily: "'Alte Haas Grotesk', sans-serif",
                         fontSize: "16px",
+                        fontWeight: 400,
+                        color: "#8C7B5E",
+                        margin: 0,
+                        lineHeight: "155%",
+                        maxWidth: "300px",
+                      }}
+                    >
+                      We&apos;ll be in touch soon. Something special is on its way.
+                    </motion.p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <h3
+                      style={{
+                        fontFamily: "var(--font-playfair), serif",
+                        fontSize: "32px",
+                        fontWeight: 400,
                         color: "#4A3C24",
-                        outline: "none",
-                        borderRadius: 0,
-                        transition: "border-color 150ms ease",
+                        marginBottom: "32px",
+                        textAlign: "center",
                       }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderBottomColor = "#B8965A";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderBottomColor = "#C4B8A0";
-                      }}
-                    />
-                  </label>
-                ))}
+                    >
+                      Join Our Family
+                    </h3>
 
-                <button
-                  type="submit"
-                  className="landscape-cta-btn"
-                  onMouseEnter={() => playTick(4000, 0.03, 0.05)}
-                  style={{
-                    marginTop: "8px",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "10px",
-                    padding: "8px 6px",
-                    borderBottom: "1.5px solid #B8965A",
-                    borderRadius: 0,
-                    position: "relative",
-                    overflow: "hidden",
-                    color: "#4A3C24",
-                    alignSelf: "center",
-                    transition: "color 150ms ease",
-                  }}
-                >
-                  <span
-                    className="landscape-cta-btn-bg"
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundColor: "#4A3C24",
-                      transformOrigin: "bottom center",
-                      transform: "scaleY(0)",
-                      transition: "transform 180ms ease",
-                      zIndex: 0,
-                    }}
-                  />
-                  <span
-                    className="landscape-cta-btn-text"
-                    style={{
-                      fontFamily: "'Alte Haas Grotesk', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: 400,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      position: "relative",
-                      zIndex: 1,
-                      color: "inherit",
-                      transition: "color 150ms ease",
-                    }}
-                  >
-                    SUBMIT
-                  </span>
-                  <span
-                    className="landscape-cta-btn-arrow"
-                    style={{
-                      position: "relative",
-                      zIndex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#B8965A",
-                      transition: "color 150ms ease, transform 150ms ease",
-                    }}
-                  >
-                    <ArrowRightIcon width={18} height={18} />
-                  </span>
-                </button>
-              </form>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        playTick(3800, 0.04, 0.08);
+                        setIsSubmitted(true);
+                        setTimeout(() => {
+                          setIsFormOpen(false);
+                          setIsSubmitted(false);
+                        }, 3500);
+                      }}
+                      style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+                    >
+                      {[
+                        { label: "Name", type: "text", name: "name", autoComplete: "name" },
+                        { label: "Email", type: "email", name: "email", autoComplete: "email" },
+                        { label: "Phone", type: "tel", name: "phone", autoComplete: "tel" },
+                      ].map((field) => (
+                        <label
+                          key={field.name}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "'Alte Haas Grotesk', sans-serif",
+                              fontSize: "11px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.1em",
+                              color: "#8C7B5E",
+                            }}
+                          >
+                            {field.label}
+                          </span>
+                          <input
+                            type={field.type}
+                            name={field.name}
+                            autoComplete={field.autoComplete}
+                            required
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              borderBottom: "1px solid #C4B8A0",
+                              padding: "8px 0",
+                              fontFamily: "'Alte Haas Grotesk', sans-serif",
+                              fontSize: "16px",
+                              color: "#4A3C24",
+                              outline: "none",
+                              borderRadius: 0,
+                              transition: "border-color 150ms ease",
+                            }}
+                            onFocus={(e) => {
+                              e.currentTarget.style.borderBottomColor = "#B8965A";
+                            }}
+                            onBlur={(e) => {
+                              e.currentTarget.style.borderBottomColor = "#C4B8A0";
+                            }}
+                          />
+                        </label>
+                      ))}
+
+                      <button
+                        type="submit"
+                        className="landscape-cta-btn"
+                        onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+                        style={{
+                          marginTop: "8px",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "10px",
+                          padding: "8px 6px",
+                          borderBottom: "1.5px solid #B8965A",
+                          borderRadius: 0,
+                          position: "relative",
+                          overflow: "hidden",
+                          color: "#4A3C24",
+                          alignSelf: "center",
+                          transition: "color 150ms ease",
+                        }}
+                      >
+                        <span
+                          className="landscape-cta-btn-bg"
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            backgroundColor: "#4A3C24",
+                            transformOrigin: "bottom center",
+                            transform: "scaleY(0)",
+                            transition: "transform 180ms ease",
+                            zIndex: 0,
+                          }}
+                        />
+                        <span
+                          className="landscape-cta-btn-text"
+                          style={{
+                            fontFamily: "'Alte Haas Grotesk', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: 400,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            position: "relative",
+                            zIndex: 1,
+                            color: "inherit",
+                            transition: "color 150ms ease",
+                          }}
+                        >
+                          SUBMIT
+                        </span>
+                        <span
+                          className="landscape-cta-btn-arrow"
+                          style={{
+                            position: "relative",
+                            zIndex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            color: "#B8965A",
+                            transition: "color 150ms ease, transform 150ms ease",
+                          }}
+                        >
+                          <ArrowRightIcon width={18} height={18} />
+                        </span>
+                      </button>
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}
