@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
-import { ArrowRightIcon, Cross2Icon } from "@radix-ui/react-icons";
+import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon, TwitterLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
 
@@ -135,7 +135,7 @@ export default function LandscapeSection() {
       <div
         style={{
           position: "absolute",
-          top: "38%",
+          top: "28%",
           left: 0,
           right: 0,
           display: "flex",
@@ -271,30 +271,124 @@ export default function LandscapeSection() {
         </motion.div>
       </div>
 
-      {/* Landscape SVG — slides up from bottom like Hero trees */}
+      {/* Flower animation — rises from bottom, full-width presence */}
       <motion.div
+        style={{
+          position: "absolute",
+          bottom: "36px",
+          left: 0,
+          right: 0,
+          zIndex: 1,
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+        initial={shouldReduceMotion ? false : { y: "25%", opacity: 0 }}
+        animate={inView ? { y: 0, opacity: 1 } : undefined}
+        transition={{ ...TREE_SPRING, delay: ANIM_DELAY }}
+      >
+        <video
+          muted
+          autoPlay
+          loop
+          playsInline
+          preload="auto"
+          style={{
+            width: "85vw",
+            maxWidth: "1200px",
+            height: "auto",
+            maxHeight: "50vh",
+            objectFit: "contain",
+          }}
+        >
+          <source src="/flower-animation-transparent.webm" type="video/webm" />
+          <source src="/flower-animation.mp4" type="video/mp4" />
+        </video>
+      </motion.div>
+
+      {/* Footer bar */}
+      <div
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
-          width: "100%",
-          zIndex: 1,
+          right: 0,
+          zIndex: 3,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 40px",
         }}
-        initial={shouldReduceMotion ? false : { y: "40%" }}
-        animate={inView ? { y: 0 } : undefined}
-        transition={{ ...TREE_SPRING, delay: ANIM_DELAY }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/landscape.svg"
-          alt="Pacific Palisades landscape illustration"
+        {/* Social icons — bottom left */}
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          {[
+            { Icon: InstagramLogoIcon, href: "#" },
+            { Icon: TwitterLogoIcon, href: "#" },
+            { Icon: LinkedInLogoIcon, href: "#" },
+          ].map(({ Icon, href }, i) => (
+            <a
+              key={i}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "#4A3C24",
+                opacity: 0.6,
+                transition: "opacity 150ms ease",
+                display: "flex",
+                alignItems: "center",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; }}
+            >
+              <Icon width={18} height={18} />
+            </a>
+          ))}
+        </div>
+
+        {/* Copyright — bottom center */}
+        <span
           style={{
-            width: "100%",
-            height: "auto",
-            display: "block",
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontSize: "12px",
+            color: "#4A3C24",
+            opacity: 0.6,
+            letterSpacing: "0.05em",
           }}
-        />
-      </motion.div>
+        >
+          &copy; VersaVilla 2026
+        </span>
+
+        {/* Site credit — bottom right */}
+        <span
+          style={{
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontSize: "12px",
+            color: "#4A3C24",
+            opacity: 0.6,
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+          }}
+        >
+          SITE BY{" "}
+          <a
+            href="https://www.igochi.studio/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "inherit",
+              textDecoration: "none",
+              borderBottom: "1px solid currentColor",
+              transition: "opacity 150ms ease",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          >
+            IGOCHI STUDIO
+          </a>
+        </span>
+      </div>
 
       {/* Form Modal */}
       <AnimatePresence>

@@ -587,13 +587,8 @@ export default function DestroyingCosmos() {
       }
     }
 
-    // Phase 2: complete — backward reverse trigger
-    if (p === 2) {
-      if (v < REVERSE_TRIGGER) {
-        goPhase(1); // quote hides, reverse burn starts
-        startReverseBurn();
-      }
-    }
+    // Phase 2: burn complete + quote visible — no reverse allowed
+    // Once the burn finishes and the quote appears, the transition is permanent.
   });
 
   // ── Palisades expand/collapse completion handler ────────────────────────

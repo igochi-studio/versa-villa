@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import {
   motion,
   AnimatePresence,
@@ -84,6 +84,8 @@ const TREE_SPRING = {
   mass: 0.8,
 };
 
+const TIMER_INTERVAL = 4000; // ms between auto-advances
+
 export default function StorySection() {
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
@@ -91,18 +93,22 @@ export default function StorySection() {
   const stickyRef = useRef<HTMLDivElement>(null);
   const [activePhase, setActivePhase] = useState(0);
   const [inView, setInView] = useState(false);
+  const [hasEnteredOnce, setHasEnteredOnce] = useState(false);
   const hasRevealedOnce = useRef(false);
 
-  // ── Detect when section enters viewport ───────────────────────────────
+  // Refs for hybrid timer+scroll logic
+  const timerPhaseRef = useRef(0);
+  const scrollPhaseRef = useRef(0);
+  const timerResetRef = useRef(0); // timestamp of last scroll-driven change
+
+  // ── Detect when section enters/leaves viewport (persistent) ───────────
   useEffect(() => {
     const el = stickyRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
+        setInView(entry.isIntersecting);
+        if (entry.isIntersecting) setHasEnteredOnce(true);
       },
       { threshold: 0.1 }
     );
@@ -110,15 +116,44 @@ export default function StorySection() {
     return () => observer.disconnect();
   }, []);
 
+  // ── Merge timer + scroll into activePhase ─────────────────────────────
+  const reconcilePhase = useCallback(() => {
+    const merged = Math.max(timerPhaseRef.current, scrollPhaseRef.current);
+    setActivePhase((prev) => (merged !== prev ? merged : prev));
+  }, []);
+
+  // ── Timer-driven auto-advance ─────────────────────────────────────────
+  useEffect(() => {
+    if (!inView) return;
+    const id = setInterval(() => {
+      // Skip tick if a scroll-driven change happened within 80% of interval
+      if (Date.now() - timerResetRef.current < TIMER_INTERVAL * 0.8) return;
+      timerPhaseRef.current = Math.min(
+        timerPhaseRef.current + 1,
+        PHRASES.length - 1
+      );
+      reconcilePhase();
+    }, TIMER_INTERVAL);
+    return () => clearInterval(id);
+  }, [inView, reconcilePhase]);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // ── Track active phase ──────────────────────────────────────────────────
+  // ── Scroll-driven phase tracking ──────────────────────────────────────
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const next = getPhase(v);
-    setActivePhase((prev) => (prev !== next ? next : prev));
+    if (next !== scrollPhaseRef.current) {
+      scrollPhaseRef.current = next;
+      // If scroll pushed us forward past the timer, reset the timer countdown
+      if (next > timerPhaseRef.current) {
+        timerPhaseRef.current = next;
+        timerResetRef.current = Date.now();
+      }
+      reconcilePhase();
+    }
   });
 
   // Birds: converge toward top-center. Left bird moves MORE.
@@ -146,13 +181,13 @@ export default function StorySection() {
   const words = PHRASES[activePhase].split(" ");
   const variants = prefersReducedMotion ? reducedMotionVariants : wordVariants;
   const isFirstReveal = !hasRevealedOnce.current;
-  if (inView) hasRevealedOnce.current = true;
+  if (hasEnteredOnce) hasRevealedOnce.current = true;
 
   return (
     <section
       id="its-personal"
       ref={containerRef}
-      style={{ height: "500vh", position: "relative" }}
+      style={{ height: "650vh", position: "relative" }}
     >
       <div
         ref={stickyRef}
@@ -173,7 +208,7 @@ export default function StorySection() {
             position: "absolute",
             bottom: 0,
             left: "-2vw",
-            width: isMobile ? "40vw" : "30vw",
+            width: isMobile ? "35vw" : "22vw",
             pointerEvents: "none",
           }}
         >
@@ -182,22 +217,21 @@ export default function StorySection() {
             alt=""
             loading="lazy"
             initial={prefersReducedMotion ? false : { x: "-120%" }}
-            animate={inView ? { x: "0%" } : undefined}
+            animate={hasEnteredOnce ? { x: "0%" } : undefined}
             transition={TREE_SPRING}
             style={{ width: "100%", height: "auto", display: "block" }}
           />
         </motion.div>
 
-        {/* ── Right tree — clipped so it doesn't overlap header/nav zone ── */}
+        {/* ── Right tree — pinned top to bottom of viewport ── */}
         <motion.div
           style={{
             position: "absolute",
-            top: "15vh",
+            top: 0,
             bottom: 0,
             right: 0,
-            display: "flex",
-            alignItems: "stretch",
             pointerEvents: "none",
+            overflow: "hidden",
           }}
         >
           <motion.img
@@ -205,12 +239,14 @@ export default function StorySection() {
             alt=""
             loading="lazy"
             initial={prefersReducedMotion ? false : { x: "120%" }}
-            animate={inView ? { x: "0%" } : undefined}
+            animate={hasEnteredOnce ? { x: "0%" } : undefined}
             transition={TREE_SPRING}
             style={{
               height: "100%",
               width: "auto",
               display: "block",
+              objectFit: "cover",
+              objectPosition: "left top",
             }}
           />
         </motion.div>
@@ -229,7 +265,7 @@ export default function StorySection() {
             x: prefersReducedMotion ? 0 : leftBirdX,
             y: prefersReducedMotion ? 0 : leftBirdY,
             pointerEvents: "none",
-            opacity: inView ? 1 : 0,
+            opacity: hasEnteredOnce ? 1 : 0,
             transition: "opacity 1s ease-out 0.6s",
           }}
         />
@@ -248,7 +284,7 @@ export default function StorySection() {
             x: prefersReducedMotion ? 0 : rightBirdX,
             y: prefersReducedMotion ? 0 : rightBirdY,
             pointerEvents: "none",
-            opacity: inView ? 1 : 0,
+            opacity: hasEnteredOnce ? 1 : 0,
             transition: "opacity 1s ease-out 0.9s",
           }}
         />
@@ -264,7 +300,7 @@ export default function StorySection() {
           }}
         >
           <AnimatePresence mode="wait">
-            {inView && (
+            {hasEnteredOnce && (
               <motion.p
                 key={activePhase}
                 style={{
