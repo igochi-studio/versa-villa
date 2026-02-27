@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 // ── Timing — sync with LoadingScreen ────────────────────────────────────────
 // bgExit at 1860ms, curtain gone ~2650ms. Content reveals as curtain lifts.
@@ -74,6 +75,7 @@ function useHeroReady() {
 export default function Hero() {
   const shouldReduceMotion = useReducedMotion();
   const ready = useHeroReady();
+  const isMobile = useIsMobile();
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
@@ -197,24 +199,25 @@ export default function Hero() {
         <div
           style={{
             position: "absolute",
-            top: "400px",
+            top: isMobile ? "35%" : "400px",
             left: "50%",
-            transform: "translateX(-50%)",
+            transform: isMobile ? "translate(-50%, -50%)" : "translateX(-50%)",
             textAlign: "center",
+            width: isMobile ? "90%" : "auto",
           }}
         >
           {/* Heading — cinematic word-by-word blur reveal */}
           <h1
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: "56px",
+              fontSize: isMobile ? "32px" : "56px",
               fontWeight: 400,
               lineHeight: "110%",
               letterSpacing: "-0.02em",
               color: "#F8F2E4",
               WebkitFontSmoothing: "antialiased",
               MozOsxFontSmoothing: "grayscale",
-              whiteSpace: "nowrap",
+              whiteSpace: isMobile ? "normal" : "nowrap",
             }}
           >
             {[0, 1].map((lineIdx) => {
@@ -310,7 +313,7 @@ export default function Hero() {
                 className="hero-watch-btn-text"
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: "32px",
+                  fontSize: isMobile ? "20px" : "32px",
                   fontWeight: 400,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
@@ -335,7 +338,7 @@ export default function Hero() {
                   transition: "color 150ms ease, transform 150ms ease",
                 }}
               >
-                <ArrowRightIcon width={28} height={28} />
+                <ArrowRightIcon width={isMobile ? 20 : 28} height={isMobile ? 20 : 28} />
               </span>
             </button>
           </motion.div>

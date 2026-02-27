@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
 import { ArrowRightIcon, Cross2Icon } from "@radix-ui/react-icons";
 import Header from "../components/Header";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 /* ─── Haptic sound ─── */
 let audioCtx: AudioContext | null = null;
@@ -51,7 +52,7 @@ const MODELS: Model[] = [
 ];
 
 /* ─── Single model block ─── */
-function ModelBlock({ model }: { model: Model }) {
+function ModelBlock({ model, isMobile }: { model: Model; isMobile: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.15 });
   const shouldReduceMotion = useReducedMotion();
@@ -62,7 +63,7 @@ function ModelBlock({ model }: { model: Model }) {
       initial={shouldReduceMotion ? false : { opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : undefined}
       transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
-      style={{ marginBottom: "120px" }}
+      style={{ marginBottom: isMobile ? "60px" : "120px" }}
     >
       {/* Image */}
       <div style={{ overflow: "hidden", borderRadius: "4px" }}>
@@ -81,12 +82,14 @@ function ModelBlock({ model }: { model: Model }) {
       <div
         style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "baseline",
+          alignItems: isMobile ? "flex-start" : "baseline",
+          gap: isMobile ? "6px" : "0",
           padding: "16px 0",
           borderBottom: "1px solid rgba(74, 60, 36, 0.1)",
           fontFamily: "'Alte Haas Grotesk', sans-serif",
-          fontSize: "18px",
+          fontSize: isMobile ? "13px" : "18px",
           color: "#4A3C24",
           letterSpacing: "0.05em",
           textTransform: "uppercase",
@@ -108,6 +111,7 @@ function ModelBlock({ model }: { model: Model }) {
 
 /* ─── Page ─── */
 export default function FuturePage() {
+  const isMobile = useIsMobile();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -119,9 +123,9 @@ export default function FuturePage() {
       <Header />
 
       {/* Models list */}
-      <section style={{ padding: "120px 60px 0" }}>
+      <section style={{ padding: isMobile ? "80px 20px 0" : "120px 60px 0" }}>
         {MODELS.map((model) => (
-          <ModelBlock key={model.number} model={model} />
+          <ModelBlock key={model.number} model={model} isMobile={isMobile} />
         ))}
       </section>
 
@@ -129,7 +133,7 @@ export default function FuturePage() {
       <section
         ref={ctaRef}
         style={{
-          padding: "80px 60px 120px",
+          padding: isMobile ? "60px 20px 80px" : "80px 60px 120px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -142,7 +146,7 @@ export default function FuturePage() {
           transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
           style={{
             fontFamily: "var(--font-playfair), 'Playfair Display', serif",
-            fontSize: "48px",
+            fontSize: isMobile ? "32px" : "48px",
             fontWeight: 400,
             color: "#4A3C24",
             textAlign: "center",
@@ -260,9 +264,9 @@ export default function FuturePage() {
               style={{
                 background: "#F8F2E4",
                 borderRadius: "4px",
-                padding: "48px 40px 40px",
+                padding: isMobile ? "32px 24px 28px" : "48px 40px 40px",
                 width: "100%",
-                maxWidth: "440px",
+                maxWidth: isMobile ? "92vw" : "440px",
                 position: "relative",
                 boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
               }}

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
 import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon, TwitterLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
 
@@ -90,6 +91,7 @@ function CharReveal({
 
 export default function LandscapeSection() {
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.15 });
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -127,7 +129,7 @@ export default function LandscapeSection() {
           <img
             src="/versa-villa-logo-dark.svg"
             alt="Versa Villa by Arya"
-            style={{ width: "200px", height: "auto", display: "block" }}
+            style={{ width: isMobile ? "140px" : "200px", height: "auto", display: "block" }}
           />
         </motion.div>
       </div>
@@ -136,7 +138,7 @@ export default function LandscapeSection() {
       <div
         style={{
           position: "absolute",
-          top: "28%",
+          top: isMobile ? "22%" : "28%",
           left: 0,
           right: 0,
           display: "flex",
@@ -150,7 +152,7 @@ export default function LandscapeSection() {
         <h2
           style={{
             fontFamily: "var(--font-playfair), serif",
-            fontSize: "56px",
+            fontSize: isMobile ? "32px" : "56px",
             fontWeight: 400,
             lineHeight: 1.15,
             letterSpacing: "-0.02em",
@@ -173,7 +175,7 @@ export default function LandscapeSection() {
                 key={lineIndex}
                 style={{
                   display: "block",
-                  whiteSpace: "nowrap",
+                  whiteSpace: isMobile ? "normal" : "nowrap",
                   willChange: "filter",
                 }}
                 initial={shouldReduceMotion ? false : { filter: "blur(8px)" }}
@@ -242,7 +244,7 @@ export default function LandscapeSection() {
               className="landscape-cta-btn-text"
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: "24px",
+                fontSize: isMobile ? "18px" : "24px",
                 fontWeight: 400,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
@@ -295,10 +297,10 @@ export default function LandscapeSection() {
           playsInline
           preload="auto"
           style={{
-            width: "85vw",
+            width: isMobile ? "95vw" : "85vw",
             maxWidth: "1200px",
             height: "auto",
-            maxHeight: "50vh",
+            maxHeight: isMobile ? "35vh" : "50vh",
             objectFit: "contain",
           }}
         >
@@ -318,7 +320,7 @@ export default function LandscapeSection() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "20px 40px",
+          padding: isMobile ? "16px 20px" : "20px 40px",
         }}
       >
         {/* Social icons — bottom left */}
@@ -352,7 +354,7 @@ export default function LandscapeSection() {
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: "12px",
+            fontSize: isMobile ? "10px" : "12px",
             color: "#4A3C24",
             opacity: 0.6,
             letterSpacing: "0.05em",
@@ -365,7 +367,7 @@ export default function LandscapeSection() {
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: "12px",
+            fontSize: isMobile ? "10px" : "12px",
             color: "#4A3C24",
             opacity: 0.6,
             letterSpacing: "0.05em",
@@ -424,9 +426,9 @@ export default function LandscapeSection() {
               style={{
                 background: "#F8F2E4",
                 borderRadius: "4px",
-                padding: "48px 40px 40px",
+                padding: isMobile ? "32px 24px 28px" : "48px 40px 40px",
                 width: "100%",
-                maxWidth: "440px",
+                maxWidth: isMobile ? "92vw" : "440px",
                 position: "relative",
                 boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
               }}

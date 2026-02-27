@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 // ease-out-quart: for entrances — jumps into place, settles naturally
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
@@ -13,6 +14,7 @@ type Phase = "in" | "hold" | "textExit" | "bgExit" | "done";
 export default function LoadingScreen() {
   const [phase, setPhase] = useState<Phase>("in");
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
 
   // Lock scroll during the loading animation so impatient scrolling
   // doesn't skip past the Hero while the curtain is still playing.
@@ -52,7 +54,7 @@ export default function LoadingScreen() {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[400px]"
+      className={`fixed inset-0 z-50 flex items-start justify-center ${isMobile ? "pt-[200px]" : "pt-[400px]"}`}
       style={{ backgroundColor: "#616D45", overflow: "hidden" }}
       animate={phase === "bgExit" ? { y: "-100%" } : { y: "0%" }}
       transition={
@@ -89,7 +91,7 @@ export default function LoadingScreen() {
               src="/tree-blowing.svg"
               alt=""
               style={{
-                height: "120px",
+                height: isMobile ? "80px" : "120px",
                 width: "auto",
                 display: "block",
                 filter: "brightness(0) invert(0.95) sepia(0.1) saturate(0.3)",

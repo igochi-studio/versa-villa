@@ -172,7 +172,7 @@ function CommunityMarquee({ isMobile }: { isMobile: boolean }) {
               alignItems: "center",
               justifyContent: "center",
               cursor: CLOSE_CURSOR,
-              padding: "60px",
+              padding: isMobile ? "20px" : "60px",
             }}
           >
             <motion.img
