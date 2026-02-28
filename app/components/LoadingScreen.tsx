@@ -54,7 +54,7 @@ export default function LoadingScreen() {
 
   return (
     <motion.div
-      className={`fixed inset-0 z-50 flex items-start justify-center ${isMobile ? "pt-[200px]" : "pt-[400px]"}`}
+      className={`fixed inset-0 z-50 flex ${isMobile ? "items-center" : "items-start pt-[400px]"} justify-center`}
       style={{ backgroundColor: "#616D45", overflow: "hidden" }}
       animate={phase === "bgExit" ? { y: "-100%" } : { y: "0%" }}
       transition={

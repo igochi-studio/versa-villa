@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
@@ -579,6 +580,8 @@ export default function Header() {
           onClick={() => setMenuOpen((v) => !v)}
         />
 
+        {/* Desktop: render inline. Mobile: portal to body to escape transform containing block */}
+        {(isMobile ? createPortal : (c: React.ReactNode) => c)(
         <AnimatePresence>
           {menuOpen && (
             <>
@@ -831,6 +834,7 @@ export default function Header() {
             </>
           )}
         </AnimatePresence>
+        , document.body)}
       </div>
     </header>
   );

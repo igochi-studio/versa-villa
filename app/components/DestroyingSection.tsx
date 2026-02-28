@@ -544,8 +544,8 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
   );
   const imageHeight = useTransform(
     scrollYProgress,
-    isMobile ? [0, 1] : [0, 0.4, 0.7, 1],
-    isMobile ? ["100vh", "100vh"] : ["100vh", "100vh", "100vh", "100vh"],
+    isMobile ? [0, 0.3, 0.5, 1] : [0, 0.4, 0.7, 1],
+    isMobile ? ["100vh", "100vh", "50vh", "50vh"] : ["100vh", "100vh", "100vh", "100vh"],
   );
   const imageTop = useTransform(
     scrollYProgress,
@@ -743,50 +743,86 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
           />
         </motion.div>
 
-        {/* Mobile text — below image */}
+        {/* Mobile: image top half, text bottom half — no overlap */}
         {isMobile && (
-          <motion.div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: "28px 24px 32px",
-              zIndex: 1,
-              opacity: textOpacity,
-              y: textY,
-              background: "linear-gradient(to top, rgba(248, 242, 228, 0.98) 60%, rgba(248, 242, 228, 0.85) 100%)",
-            }}
-          >
-            <h3
+          <>
+            {/* Cream background fills below image */}
+            <motion.div
               style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "28px",
-                fontWeight: 400,
-                color: "#616D45",
-                lineHeight: "120%",
-                letterSpacing: "-0.02em",
-                margin: "0 0 12px",
+                position: "absolute",
+                top: "50vh",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "#F8F2E4",
+                zIndex: 1,
+                opacity: textOpacity,
+              }}
+            />
+            <motion.div
+              style={{
+                position: "absolute",
+                top: "50vh",
+                left: 0,
+                right: 0,
+                padding: "20px 24px 32px",
+                zIndex: 2,
+                opacity: textOpacity,
+                y: textY,
               }}
             >
-              Developed by ARYA Group,
-            </h3>
-            <p
-              style={{
-                fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: "16px",
-                fontWeight: 400,
-                color: "#4A3C24",
-                lineHeight: "155%",
-                margin: 0,
-              }}
-            >
-              VersaVilla is a first-of-its-kind residence that combines luxury
-              architecture with advanced resilience, completed in under 6 months.
-              More than a structure, it is a response to what was lost and a promise
-              that communities can rebuild stronger, faster, and better than before.
-            </p>
-          </motion.div>
+              <span
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: "11px",
+                  fontWeight: 400,
+                  color: "#B8965A",
+                  letterSpacing: "3px",
+                  textTransform: "uppercase",
+                  display: "block",
+                  marginBottom: "12px",
+                }}
+              >
+                The Vision
+              </span>
+              <h3
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "28px",
+                  fontWeight: 400,
+                  color: "#616D45",
+                  lineHeight: "120%",
+                  letterSpacing: "-0.02em",
+                  margin: "0 0 12px",
+                }}
+              >
+                Developed by ARYA Group,
+              </h3>
+              <div
+                style={{
+                  width: "32px",
+                  height: "1px",
+                  backgroundColor: "rgba(184, 150, 90, 0.4)",
+                  marginBottom: "12px",
+                }}
+              />
+              <p
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: "15px",
+                  fontWeight: 400,
+                  color: "#4A3C24",
+                  lineHeight: "155%",
+                  margin: 0,
+                }}
+              >
+                VersaVilla is a first-of-its-kind residence that combines luxury
+                architecture with advanced resilience, completed in under 6 months.
+                More than a structure, it is a response to what was lost and a promise
+                that communities can rebuild stronger, faster, and better than before.
+              </p>
+            </motion.div>
+          </>
         )}
       </div>
     </div>

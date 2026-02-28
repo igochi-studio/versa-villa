@@ -259,7 +259,7 @@ export default function LandscapeSection() {
       <motion.div
         style={{
           position: "absolute",
-          bottom: isMobile ? "28px" : "36px",
+          bottom: isMobile ? "30px" : "20px",
           left: 0,
           right: 0,
           zIndex: 1,
@@ -279,10 +279,10 @@ export default function LandscapeSection() {
           playsInline
           preload="auto"
           style={{
-            width: isMobile ? "100vw" : "85vw",
-            maxWidth: isMobile ? "none" : "1200px",
+            width: isMobile ? "250vw" : "130vw",
+            maxWidth: "none",
             height: "auto",
-            maxHeight: isMobile ? "45vh" : "50vh",
+            maxHeight: "none",
             objectFit: "contain",
           }}
         >
@@ -300,11 +300,10 @@ export default function LandscapeSection() {
           right: 0,
           zIndex: 3,
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: isMobile ? "center" : "space-between",
-          gap: isMobile ? "6px" : "0",
-          padding: isMobile ? "12px 20px" : "20px 40px",
+          justifyContent: "space-between",
+          padding: isMobile ? "10px 16px" : "20px 40px",
         }}
       >
         {/* Instagram — bottom left */}
@@ -315,7 +314,7 @@ export default function LandscapeSection() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "5px",
             color: "#4A3C24",
             opacity: 0.6,
             transition: "opacity 150ms ease",
@@ -324,11 +323,11 @@ export default function LandscapeSection() {
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; }}
         >
-          <InstagramLogoIcon width={18} height={18} />
+          <InstagramLogoIcon width={isMobile ? 14 : 18} height={isMobile ? 14 : 18} />
           <span
             style={{
               fontFamily: "'Alte Haas Grotesk', sans-serif",
-              fontSize: isMobile ? "13px" : "14px",
+              fontSize: isMobile ? "11px" : "14px",
               fontWeight: 400,
               letterSpacing: "0.02em",
             }}
@@ -337,14 +336,14 @@ export default function LandscapeSection() {
           </span>
         </a>
 
-        {/* Copyright — bottom center */}
+        {/* Copyright — center */}
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "12px" : "14px",
+            fontSize: isMobile ? "10px" : "14px",
             color: "#4A3C24",
             opacity: 0.6,
-            letterSpacing: "0.05em",
+            letterSpacing: "0.03em",
           }}
         >
           &copy; VersaVilla 2026
@@ -354,10 +353,10 @@ export default function LandscapeSection() {
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "12px" : "14px",
+            fontSize: isMobile ? "10px" : "14px",
             color: "#4A3C24",
             opacity: 0.6,
-            letterSpacing: "0.05em",
+            letterSpacing: "0.03em",
             textTransform: "uppercase",
           }}
         >

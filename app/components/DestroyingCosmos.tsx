@@ -751,7 +751,7 @@ export default function DestroyingCosmos() {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            filter: "brightness(0.4)",
+            filter: "brightness(0.55)",
             opacity: 0,
             pointerEvents: "none",
             willChange: "opacity",
