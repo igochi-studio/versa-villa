@@ -784,13 +784,13 @@ export default function DestroyingCosmos() {
             alignItems: "center",
             justifyContent: "center",
             pointerEvents: "none",
-            padding: isMobile ? "0 24px" : "0 80px",
+            padding: isMobile ? "0 clamp(24px, 6vw, 80px)" : "0 80px",
             opacity: 0,
             clipPath: "inset(100% 0 0 0)",
             willChange: "clip-path, opacity",
           }}
         >
-          <div style={{ maxWidth: isMobile ? "clamp(100%, 85vw, 680px)" : "780px", textAlign: "center" }}>
+          <div style={{ maxWidth: isMobile ? "min(85vw, 600px)" : "780px", textAlign: "center" }}>
             {/* Large quotation mark */}
             <span
               style={{
