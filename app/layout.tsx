@@ -15,8 +15,23 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Versa Villa",
-  description: "Versa Villa",
+  title: "Versa Villa by ARYA",
+  description:
+    "Born from resilience, built for the future. A first-of-its-kind residence combining luxury architecture with advanced resilience.",
+  openGraph: {
+    title: "Versa Villa by ARYA",
+    description:
+      "Born from resilience, built for the future. A first-of-its-kind residence combining luxury architecture with advanced resilience.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Versa Villa by ARYA",
+    description:
+      "Born from resilience, built for the future. A first-of-its-kind residence combining luxury architecture with advanced resilience.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
