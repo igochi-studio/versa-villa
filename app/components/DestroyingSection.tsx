@@ -350,14 +350,14 @@ const wordVariants = {
 
 // ── Staggered 3-column questions ────────────────────────────────────────────
 function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; revealedCount: number }) {
-  const svgSize = isMobile ? 56 : 72;
+  const svgSize = isMobile ? 44 : 72;
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
-        gap: isMobile ? "48px" : "0",
+        gap: isMobile ? "28px" : "0",
         padding: isMobile ? "60px 24px 0" : "0 80px",
         width: "100%",
       }}
@@ -377,7 +377,7 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
-              gap: "20px",
+              gap: isMobile ? "10px" : "20px",
               padding: isMobile ? "0" : "0 40px 0 0",
               ...(isMobile || colIndex === QUESTIONS.length - 1
                 ? {}
@@ -421,7 +421,7 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
                     display: "inline-block",
                     willChange: "filter, opacity, transform",
                     fontFamily: "'Alte Haas Grotesk', sans-serif",
-                    fontSize: isMobile ? "22px" : "32px",
+                    fontSize: isMobile ? "18px" : "32px",
                     fontStyle: "normal",
                     fontWeight: 400,
                     color: "#4A3C24",
