@@ -12,10 +12,10 @@ const IMAGES: { src: string; orientation: "portrait" | "landscape" }[] = [
   { src: "/process-2.webp", orientation: "landscape" },
   { src: "/process-3.webp", orientation: "landscape" },
   { src: "/process-4.webp", orientation: "landscape" },
-  { src: "/process-5.webp", orientation: "landscape" },
+  { src: "/process-5.webp", orientation: "portrait" },
   { src: "/process-6.webp", orientation: "landscape" },
-  { src: "/process-7.webp", orientation: "landscape" },
-  { src: "/process-8.webp", orientation: "landscape" },
+  { src: "/process-7.webp", orientation: "portrait" },
+  { src: "/process-8.webp", orientation: "portrait" },
   { src: "/process-9.webp", orientation: "landscape" },
   { src: "/process-10.webp", orientation: "landscape" },
   { src: "/process-11.webp", orientation: "portrait" },
@@ -27,7 +27,7 @@ const IMAGES: { src: string; orientation: "portrait" | "landscape" }[] = [
   { src: "/process-17.webp", orientation: "portrait" },
   { src: "/process-18.webp", orientation: "landscape" },
   { src: "/process-19.webp", orientation: "portrait" },
-  { src: "/process-20.webp", orientation: "landscape" },
+  { src: "/process-20.webp", orientation: "portrait" },
 ];
 
 const GAP = 6;
