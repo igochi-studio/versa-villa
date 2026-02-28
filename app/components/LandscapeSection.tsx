@@ -288,7 +288,7 @@ export default function LandscapeSection() {
           }}
         >
           <source src="/flower-animation-transparent.webm" type="video/webm" />
-          <source src="/flower-animation.mp4" type="video/mp4" />
+          <source src="/flower-animation-baked.mp4" type="video/mp4" />
         </video>
       </motion.div>
 
