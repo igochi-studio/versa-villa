@@ -279,7 +279,7 @@ export default function LandscapeSection() {
           playsInline
           preload="auto"
           style={{
-            width: isMobile ? "250vw" : "130vw",
+            width: isMobile ? "250vw" : "45vw",
             maxWidth: "none",
             height: "auto",
             maxHeight: "none",
