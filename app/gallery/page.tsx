@@ -10,41 +10,41 @@ const EASE_OUT_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 // Curated & reordered: duplicates removed, similar subjects spread apart
 const IMAGES: { src: string; orientation: "portrait" | "landscape" }[] = [
   // Exterior day → interior → portrait → render → different interior → exterior night…
-  { src: "/003_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // front exterior day
-  { src: "/014_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // interior detail
+  { src: "/003_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // front exterior day
+  { src: "/014_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // interior detail
   { src: "/villa-type-1.webp", orientation: "landscape" },                        // render
-  { src: "/010_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "portrait" },    // portrait entry
-  { src: "/012_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // living room bookshelf
+  { src: "/010_Bienvenida 1241_by mrbarcelo.webp", orientation: "portrait" },    // portrait entry
+  { src: "/012_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // living room bookshelf
   { src: "/villa-dawn.webp", orientation: "landscape" },                          // dawn exterior
-  { src: "/037_Bienvenida 1241_by mrbarcelo copy.jpeg", orientation: "landscape" }, // bathroom/detail
+  { src: "/037_Bienvenida 1241_by mrbarcelo copy.webp", orientation: "landscape" }, // bathroom/detail
   { src: "/villa-type-3.webp", orientation: "landscape" },                        // render
-  { src: "/019_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // kitchen
-  { src: "/041_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "portrait" },    // portrait staircase
-  { src: "/065_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // backyard day
+  { src: "/019_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // kitchen
+  { src: "/041_Bienvenida 1241_by mrbarcelo.webp", orientation: "portrait" },    // portrait staircase
+  { src: "/065_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // backyard day
   { src: "/villa-type-5.webp", orientation: "landscape" },                        // render
-  { src: "/033_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // master bedroom
-  { src: "/005_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // exterior angle 2
-  { src: "/080_Bienvenida 1241_by mrbarcelo copy.jpeg", orientation: "landscape" }, // living room night
+  { src: "/033_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // master bedroom
+  { src: "/005_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // exterior angle 2
+  { src: "/080_Bienvenida 1241_by mrbarcelo copy.webp", orientation: "landscape" }, // living room night
   { src: "/villa-type-7.webp", orientation: "landscape" },                        // render
-  { src: "/022_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // dining room
-  { src: "/070_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // twilight front
+  { src: "/022_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // dining room
+  { src: "/070_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // twilight front
   { src: "/villa-construction.webp", orientation: "landscape" },                  // construction
-  { src: "/038_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // detail/fixture
-  { src: "/006_Bienvenida 1241 Portraits_by mrbarcelo.jpeg", orientation: "landscape" }, // family portrait
+  { src: "/038_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // detail/fixture
+  { src: "/006_Bienvenida 1241 Portraits_by mrbarcelo.webp", orientation: "landscape" }, // family portrait
   { src: "/villa-type-2.webp", orientation: "landscape" },                        // render
-  { src: "/043_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // pool/patio
-  { src: "/013_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // interior hallway
+  { src: "/043_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // pool/patio
+  { src: "/013_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // interior hallway
   { src: "/villa-evening.webp", orientation: "landscape" },                       // evening exterior
-  { src: "/083_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // wide living room
+  { src: "/083_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // wide living room
   { src: "/villa-type-4.webp", orientation: "landscape" },                        // render
-  { src: "/035_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // bedroom 2
-  { src: "/074_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // twilight side
-  { src: "/081_Bienvenida 1241_by mrbarcelo copy.jpeg", orientation: "landscape" }, // living fireplace
+  { src: "/035_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // bedroom 2
+  { src: "/074_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // twilight side
+  { src: "/081_Bienvenida 1241_by mrbarcelo copy.webp", orientation: "landscape" }, // living fireplace
   { src: "/villa-type-6.webp", orientation: "landscape" },                        // render
-  { src: "/061_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // outdoor detail
-  { src: "/094_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // exterior dusk
+  { src: "/061_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // outdoor detail
+  { src: "/094_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // exterior dusk
   { src: "/villa-type-8.webp", orientation: "landscape" },                        // render
-  { src: "/099_Bienvenida 1241_by mrbarcelo.jpeg", orientation: "landscape" },   // aerial/wide
+  { src: "/099_Bienvenida 1241_by mrbarcelo.webp", orientation: "landscape" },   // aerial/wide
 ];
 
 const GAP = 6;

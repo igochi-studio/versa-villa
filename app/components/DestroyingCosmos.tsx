@@ -845,6 +845,27 @@ export default function DestroyingCosmos() {
           </div>
         </div>
 
+        {/* Source attribution — visible during burn transition (phase >= 1) */}
+        <motion.span
+          animate={{ opacity: phase >= 1 ? 0.6 : 0 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            position: "absolute",
+            bottom: isMobile ? "16px" : "24px",
+            left: isMobile ? "16px" : "32px",
+            zIndex: 36,
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontSize: isMobile ? "11px" : "13px",
+            fontWeight: 400,
+            letterSpacing: "0.06em",
+            color: "#F8F2E4",
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          Source — Nearmap.com
+        </motion.span>
+
         {/* Center text — "Destroying [subtitle]" — visible in phase 0 only */}
         <motion.div
           style={{

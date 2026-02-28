@@ -45,7 +45,7 @@ const FEATURES = [
     cost: "$325,000",
     label: "FIRE DETECTION SYSTEM",
     cue: "Detection",
-    media: { src: "/detection system.jpeg", type: "image" as const },
+    media: { src: "/detection system.webp", type: "image" as const },
   },
   {
     number: "02",
@@ -54,7 +54,7 @@ const FEATURES = [
     cost: "$300,000",
     label: "STEEL FRAME",
     cue: "Steel",
-    media: { src: "/steel.jpeg", type: "image" as const },
+    media: { src: "/steel.webp", type: "image" as const },
   },
   {
     number: "03",
@@ -63,7 +63,7 @@ const FEATURES = [
     cost: "$400,000",
     label: "FIRE-RATED WALLS",
     cue: "Walls",
-    media: { src: "/010_Bienvenida 1241_by mrbarcelo.jpeg", type: "image" as const },
+    media: { src: "/010_Bienvenida 1241_by mrbarcelo.webp", type: "image" as const },
   },
   {
     number: "04",
@@ -90,7 +90,7 @@ const FEATURES = [
     cost: null,
     label: "NONCOMBUSTIBLE ENVELOPE",
     cue: "Envelope",
-    media: { src: "/envelope.jpeg", type: "image" as const },
+    media: { src: "/envelope.webp", type: "image" as const },
   },
 ];
 
@@ -301,7 +301,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/coverage by wall street journal.png"
+          src="/coverage by wall street journal.webp"
           alt="Coverage by Wall Street Journal"
           style={{
             width: "100%",
@@ -344,7 +344,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/coverage by wall street journal.png"
+              src="/coverage by wall street journal.webp"
               alt="Coverage by Wall Street Journal"
               style={{
                 width: "100%",

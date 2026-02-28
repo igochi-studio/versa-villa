@@ -510,11 +510,11 @@ function QuestionsScrollSection({ isMobile }: { isMobile: boolean }) {
 
 const VILLA_IMAGES = [
   "/villa-image-0.webp",
-  "/villa-image-1.jpeg",
-  "/villa-image-2.jpeg",
-  "/villa-image-3.jpeg",
-  "/villa-image-4.jpeg",
-  "/villa-image-5.jpeg",
+  "/villa-image-1.webp",
+  "/villa-image-2.webp",
+  "/villa-image-3.webp",
+  "/villa-image-4.webp",
+  "/villa-image-5.webp",
 ];
 const VILLA_CYCLE_MS = 4000;
 const EASE_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
