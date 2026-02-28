@@ -18,6 +18,12 @@ export default function LoadingScreen() {
 
   // Lock scroll during the loading animation so impatient scrolling
   // doesn't skip past the Hero while the curtain is still playing.
+  // Hide the SSR loading screen now that React has hydrated
+  useEffect(() => {
+    const ssrEl = document.getElementById("ssr-loading");
+    if (ssrEl) ssrEl.style.display = "none";
+  }, []);
+
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
