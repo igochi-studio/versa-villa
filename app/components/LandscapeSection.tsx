@@ -119,7 +119,7 @@ export default function LandscapeSection() {
       <div
         style={{
           position: "absolute",
-          top: isMobile ? "30%" : "28%",
+          top: isMobile ? "15%" : "28%",
           left: 0,
           right: 0,
           display: "flex",
@@ -259,7 +259,7 @@ export default function LandscapeSection() {
       <motion.div
         style={{
           position: "absolute",
-          bottom: isMobile ? "30px" : "20px",
+          bottom: isMobile ? "40px" : "20px",
           left: 0,
           right: 0,
           zIndex: 1,
@@ -284,6 +284,7 @@ export default function LandscapeSection() {
             height: "auto",
             maxHeight: "none",
             objectFit: "contain",
+            mixBlendMode: "multiply",
           }}
         >
           <source src="/flower-animation-transparent.webm" type="video/webm" />

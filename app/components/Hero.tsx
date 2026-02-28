@@ -321,7 +321,7 @@ export default function Hero() {
                 right: 0,
                 pointerEvents: controlsVisible ? "auto" : "none",
                 background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
-                padding: isMobile ? "60px 20px 24px" : "80px 40px 32px",
+                padding: isMobile ? "60px 20px 80px" : "80px 40px 32px",
                 display: "flex",
                 flexDirection: "column",
                 gap: isMobile ? "12px" : "16px",

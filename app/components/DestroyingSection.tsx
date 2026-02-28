@@ -357,8 +357,8 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
-        gap: isMobile ? "36px" : "0",
-        padding: isMobile ? "80px 24px 0" : "0 80px",
+        gap: isMobile ? "48px" : "0",
+        padding: isMobile ? "60px 24px 0" : "0 80px",
         width: "100%",
       }}
     >
