@@ -52,52 +52,6 @@ const MODELS: Model[] = [
   { number: "008", image: "/villa-type-6.webp", icon: "/model 008.svg", stories: "3", bedrooms: "4", bathrooms: "6", area: "7,400", style: "CAPE COD" },
 ];
 
-/* ─── Mobile: scrolling model blocks ─── */
-function ModelBlock({ model }: { model: Model }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.15 });
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 40 }}
-      animate={inView ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
-      style={{ marginBottom: "60px" }}
-    >
-      <div style={{ overflow: "hidden", borderRadius: "4px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={model.image}
-          alt={`VersaVilla Model ${model.number}`}
-          style={{ width: "100%", display: "block" }}
-        />
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "6px",
-          padding: "16px 0",
-          borderBottom: "1px solid rgba(74, 60, 36, 0.1)",
-          fontFamily: "'Alte Haas Grotesk', sans-serif",
-          fontSize: "13px",
-          color: "#4A3C24",
-          letterSpacing: "0.05em",
-          textTransform: "uppercase",
-        }}
-      >
-        <span style={{ fontWeight: 400 }}>
-          {model.stories} STORIES : {model.bedrooms} BEDROOMS, {model.bathrooms} BATHROOMS
-        </span>
-        <span style={{ fontWeight: 700, color: "#B8965A" }}>{model.style}</span>
-        <span style={{ fontWeight: 400 }}>GROSS AREA : APPROX. {model.area} SF</span>
-      </div>
-    </motion.div>
-  );
-}
-
 /* ─── Desktop: fullscreen gallery with SVG icon selector ─── */
 function DesktopModelGallery() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -201,7 +155,7 @@ function DesktopModelGallery() {
           left: 0,
           right: 0,
           zIndex: 2,
-          padding: "0 60px 48px",
+          padding: "0 clamp(24px, 4vw, 60px) clamp(32px, 3vh, 48px)",
           display: "flex",
           flexDirection: "column",
           gap: "28px",
@@ -228,7 +182,7 @@ function DesktopModelGallery() {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  padding: "8px 12px",
+                  padding: "8px clamp(6px, 1vw, 12px)",
                   position: "relative",
                   display: "flex",
                   flexDirection: "column",
@@ -243,7 +197,7 @@ function DesktopModelGallery() {
                   src={m.icon}
                   alt={`Model ${m.number}`}
                   style={{
-                    height: isActive ? "52px" : "40px",
+                    height: isActive ? "clamp(36px, 4vw, 52px)" : "clamp(28px, 3vw, 40px)",
                     width: "auto",
                     display: "block",
                     opacity: isActive ? 1 : 0.55,
@@ -291,10 +245,12 @@ function DesktopModelGallery() {
             justifyContent: "space-between",
             alignItems: "center",
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: "13px",
+            fontSize: "clamp(11px, 1vw, 13px)",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             color: "rgba(255,255,255,0.75)",
+            flexWrap: "wrap",
+            gap: "8px 0",
           }}
         >
           <AnimatePresence mode="wait">
