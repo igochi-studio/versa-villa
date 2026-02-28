@@ -306,7 +306,7 @@ export default function Hero() {
                 backgroundColor: "#000",
               }}
             >
-              <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
+              <source src="/versa-villa-intro-movie.mp4" type="video/mp4" />
             </video>
 
             {/* Controls overlay */}
