@@ -11,7 +11,7 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500"],
   style: ["normal", "italic"],
-  display: "block",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,8 +42,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload local fonts so they're ready before hero animations fire */}
+        {/* Preload critical assets — font + hero bg video */}
         <link rel="preload" href="/fonts/AlteHaasGroteskRegular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/tree-blowing-loading.webp" as="image" />
+        <link rel="preload" href="/hero-bg.mp4" as="video" type="video/mp4" />
       </head>
       <body className={`${playfair.variable} antialiased`}>
         {/* SSR loading screen — visible instantly before JS hydrates */}
@@ -61,7 +63,7 @@ export default function RootLayout({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/tree-blowing.svg"
+            src="/tree-blowing-loading.webp"
             alt=""
             style={{
               height: "100px",

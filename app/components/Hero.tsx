@@ -17,7 +17,7 @@ import { useIsMobile } from "../hooks/useIsMobile";
 // bgExit at 1860ms, curtain gone ~2650ms. Content reveals as curtain lifts.
 // LOAD_OFFSET is the minimum wait; we also wait for fonts to be ready so
 // the blur reveal doesn't stutter from a late font swap.
-const LOAD_MIN_MS = 2000;
+const LOAD_MIN_MS = 1400;
 
 // ── Easing ──────────────────────────────────────────────────────────────────
 // ease-out-quint: stronger deceleration, classier settle

@@ -19,7 +19,7 @@ const NAV_MORE = [
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
 
-const LOAD_OFFSET = 2.0;
+const LOAD_OFFSET = 1.4;
 const SCROLL_THRESHOLD = 80;
 const MOUSE_REVEAL_ZONE = 60;
 

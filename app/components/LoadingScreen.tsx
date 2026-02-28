@@ -46,10 +46,10 @@ export default function LoadingScreen() {
       return () => clearTimeout(t);
     }
 
-    const t1 = setTimeout(() => setPhase("hold"),     900);
-    const t2 = setTimeout(() => setPhase("textExit"), 1550);
-    const t3 = setTimeout(() => setPhase("bgExit"),   1860);
-    const t4 = setTimeout(() => setPhase("done"),     2650);
+    const t1 = setTimeout(() => setPhase("hold"),     600);
+    const t2 = setTimeout(() => setPhase("textExit"), 1100);
+    const t3 = setTimeout(() => setPhase("bgExit"),   1350);
+    const t4 = setTimeout(() => setPhase("done"),     2050);
 
     return () => [t1, t2, t3, t4].forEach(clearTimeout);
   }, [shouldReduceMotion]);
