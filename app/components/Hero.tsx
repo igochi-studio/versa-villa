@@ -89,6 +89,14 @@ export default function Hero() {
   const isMobile = useIsMobile();
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
+  // Use portrait videos only on narrow (phone) screens, landscape on tablets+
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
 
   // Movie controls state
@@ -246,7 +254,7 @@ export default function Hero() {
         loop
         playsInline
         preload="metadata"
-        key={isMobile ? "bg-mobile" : "bg-desktop"}
+        key={isNarrow ? "bg-mobile" : "bg-desktop"}
         style={{
           position: "absolute",
           inset: 0,
@@ -257,7 +265,7 @@ export default function Hero() {
           zIndex: 0,
         }}
       >
-        <source src={isMobile ? "/versa-villa-bg-mobile.mp4" : "/versa-villa-bg-desktop.mp4"} type="video/mp4" />
+        <source src={isNarrow ? "/versa-villa-bg-mobile.mp4" : "/versa-villa-bg-desktop.mp4"} type="video/mp4" />
       </video>
 
       {/* Black overlay */}
@@ -298,16 +306,16 @@ export default function Hero() {
               ref={mainVideoRef}
               playsInline
               preload="auto"
-              key={isMobile ? "movie-mobile" : "movie-desktop"}
+              key={isNarrow ? "movie-mobile" : "movie-desktop"}
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: isMobile ? "contain" : "cover",
+                objectFit: isNarrow ? "contain" : "cover",
                 display: "block",
                 backgroundColor: "#000",
               }}
             >
-              <source src={isMobile ? "/versa-villa-movie-mobile.mp4" : "/versa-villa-movie-desktop.mp4"} type="video/mp4" />
+              <source src={isNarrow ? "/versa-villa-movie-mobile.mp4" : "/versa-villa-movie-desktop.mp4"} type="video/mp4" />
             </video>
 
             {/* Controls overlay */}
