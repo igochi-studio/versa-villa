@@ -566,7 +566,7 @@ export default function Header() {
         <img
           src={isDark ? "/versa-villa-logo.svg" : "/versa-villa-logo-dark.svg"}
           alt="Versa Villa by Arya"
-          style={{ height: "52px", width: "auto", display: "block" }}
+          style={{ height: isMobile ? "36px" : "52px", width: "auto", display: "block" }}
         />
       </motion.div>
 
@@ -656,9 +656,9 @@ export default function Header() {
                   borderRadius: isMobile ? 0 : 24,
                   border: isMobile ? "none" : panelBorder,
                   boxShadow: isMobile ? "none" : panelShadow,
-                  padding: isMobile ? "120px 40px 40px" : "36px 44px 40px",
+                  padding: isMobile ? "100px 32px 32px" : "36px 44px 40px",
                   transformOrigin: "top right",
-                  overflow: "hidden",
+                  overflow: isMobile ? "auto" : "hidden",
                   display: "flex",
                   flexDirection: "column",
                   transition:

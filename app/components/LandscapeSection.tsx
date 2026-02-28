@@ -119,7 +119,7 @@ export default function LandscapeSection() {
       <div
         style={{
           position: "absolute",
-          top: isMobile ? "22%" : "28%",
+          top: isMobile ? "30%" : "28%",
           left: 0,
           right: 0,
           display: "flex",
@@ -259,7 +259,7 @@ export default function LandscapeSection() {
       <motion.div
         style={{
           position: "absolute",
-          bottom: "36px",
+          bottom: isMobile ? "28px" : "36px",
           left: 0,
           right: 0,
           zIndex: 1,
@@ -279,10 +279,10 @@ export default function LandscapeSection() {
           playsInline
           preload="auto"
           style={{
-            width: isMobile ? "95vw" : "85vw",
-            maxWidth: "1200px",
+            width: isMobile ? "100vw" : "85vw",
+            maxWidth: isMobile ? "none" : "1200px",
             height: "auto",
-            maxHeight: isMobile ? "35vh" : "50vh",
+            maxHeight: isMobile ? "45vh" : "50vh",
             objectFit: "contain",
           }}
         >
@@ -300,9 +300,11 @@ export default function LandscapeSection() {
           right: 0,
           zIndex: 3,
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: isMobile ? "16px 20px" : "20px 40px",
+          justifyContent: isMobile ? "center" : "space-between",
+          gap: isMobile ? "6px" : "0",
+          padding: isMobile ? "12px 20px" : "20px 40px",
         }}
       >
         {/* Instagram — bottom left */}

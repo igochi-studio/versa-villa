@@ -301,8 +301,9 @@ export default function Hero() {
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
+                objectFit: isMobile ? "contain" : "cover",
                 display: "block",
+                backgroundColor: "#000",
               }}
             >
               <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
@@ -543,7 +544,7 @@ export default function Hero() {
         <div
           style={{
             position: "absolute",
-            top: isMobile ? "35%" : "400px",
+            top: isMobile ? "45%" : "400px",
             left: "50%",
             transform: isMobile ? "translate(-50%, -50%)" : "translateX(-50%)",
             textAlign: "center",

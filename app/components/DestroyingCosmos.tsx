@@ -94,15 +94,15 @@ const DESKTOP_SLOTS: Slot[] = [
 ];
 
 const MOBILE_SLOTS: Slot[] = [
-  { id: 1,  src: "ruins-1",           top: "8%",  left: "5%",  width: 80,  height: 100, delay: 0.1,  revealGroup: 0, depth: 0.03,  floatY: -8, floatDur: 5 },
-  { id: 2,  src: "community-1",       top: "6%",  left: "65%", width: 90,  height: 90,  delay: 0.3,  revealGroup: 0, depth: 0.04,  floatY: -8, floatDur: 5 },
-  { id: 3,  src: "streets-3",         top: "25%", left: "2%",  width: 85,  height: 70,  delay: 0.5,  revealGroup: 1, depth: 0.05,  floatY: -8, floatDur: 6 },
-  { id: 4,  src: "families-2",        top: "28%", left: "72%", width: 80,  height: 100, delay: 0.7,  revealGroup: 1, depth: 0.035, floatY: -8, floatDur: 5 },
-  { id: 5,  src: "blaze-1",           top: "48%", left: "5%",  width: 90,  height: 70,  delay: 0.9,  revealGroup: 2, depth: 0.04,  floatY: -8, floatDur: 5 },
-  { id: 6,  src: "streets-1",         top: "50%", left: "75%", width: 75,  height: 95,  delay: 1.1,  revealGroup: 2, depth: 0.05,  floatY: -8, floatDur: 6 },
-  { id: 7,  src: "community-3",       top: "70%", left: "8%",  width: 85,  height: 85,  delay: 1.3,  revealGroup: 3, depth: 0.03,  floatY: -8, floatDur: 5 },
-  { id: 8,  src: "palisades-before",  top: "75%", left: "40%", width: 80,  height: 110, delay: 1.0,  revealGroup: 2, depth: 0.02,  floatY: -6, floatDur: 6 },
-  { id: 9,  src: "ruins-2",           top: "72%", left: "70%", width: 90,  height: 75,  delay: 1.5,  revealGroup: 3, depth: 0.04,  floatY: -8, floatDur: 5 },
+  { id: 1,  src: "ruins-1",           top: "4%",  left: "3%",  width: 65,  height: 80,  delay: 0.1,  revealGroup: 0, depth: 0.03,  floatY: -6, floatDur: 5 },
+  { id: 2,  src: "community-1",       top: "3%",  left: "68%", width: 70,  height: 70,  delay: 0.3,  revealGroup: 0, depth: 0.04,  floatY: -6, floatDur: 5 },
+  { id: 3,  src: "streets-3",         top: "22%", left: "0%",  width: 70,  height: 55,  delay: 0.5,  revealGroup: 1, depth: 0.05,  floatY: -6, floatDur: 6 },
+  { id: 4,  src: "families-2",        top: "24%", left: "75%", width: 65,  height: 80,  delay: 0.7,  revealGroup: 1, depth: 0.035, floatY: -6, floatDur: 5 },
+  { id: 5,  src: "blaze-1",           top: "55%", left: "2%",  width: 70,  height: 55,  delay: 0.9,  revealGroup: 2, depth: 0.04,  floatY: -6, floatDur: 5 },
+  { id: 6,  src: "streets-1",         top: "56%", left: "78%", width: 60,  height: 75,  delay: 1.1,  revealGroup: 2, depth: 0.05,  floatY: -6, floatDur: 6 },
+  { id: 7,  src: "community-3",       top: "74%", left: "5%",  width: 70,  height: 70,  delay: 1.3,  revealGroup: 3, depth: 0.03,  floatY: -6, floatDur: 5 },
+  { id: 8,  src: "palisades-before",  top: "78%", left: "38%", width: 65,  height: 90,  delay: 1.0,  revealGroup: 2, depth: 0.02,  floatY: -5, floatDur: 6 },
+  { id: 9,  src: "ruins-2",           top: "76%", left: "72%", width: 70,  height: 60,  delay: 1.5,  revealGroup: 3, depth: 0.04,  floatY: -6, floatDur: 5 },
 ];
 
 const PALISADES_ID_DESKTOP = 10;
@@ -884,7 +884,7 @@ export default function DestroyingCosmos() {
           <motion.h2
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: isMobile ? "40px" : "56px",
+              fontSize: isMobile ? "28px" : "56px",
               fontWeight: 400,
               lineHeight: "110%",
               letterSpacing: "-0.02em",
@@ -909,14 +909,14 @@ export default function DestroyingCosmos() {
             Destroying
           </motion.h2>
 
-          <div style={{ minHeight: isMobile ? "52px" : "66px", marginTop: "4px" }}>
+          <div style={{ minHeight: isMobile ? "38px" : "66px", marginTop: "4px" }}>
             <AnimatePresence mode="wait">
               {showSubtitle && (
                 <motion.p
                   key={subtitleIndex}
                   style={{
                     fontFamily: "var(--font-playfair), serif",
-                    fontSize: isMobile ? "40px" : "56px",
+                    fontSize: isMobile ? "28px" : "56px",
                     fontWeight: 400,
                     lineHeight: "110%",
                     letterSpacing: "-0.02em",
@@ -925,7 +925,7 @@ export default function DestroyingCosmos() {
                     MozOsxFontSmoothing: "grayscale",
                     margin: 0,
                     textAlign: "center",
-                    whiteSpace: "nowrap",
+                    whiteSpace: isMobile ? "normal" : "nowrap",
                     willChange: "filter, opacity, transform",
                   }}
                   initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: "blur(6px)" }}

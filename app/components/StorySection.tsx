@@ -75,10 +75,10 @@ export default function StorySection() {
   });
 
   // Birds: converge toward top-center
-  const leftBirdX = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 100] : [0, 200]);
-  const leftBirdY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -120] : [0, -240]);
-  const rightBirdX = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -50] : [0, -100]);
-  const rightBirdY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -60] : [0, -120]);
+  const leftBirdX = useTransform(scrollYProgress, [0, 1], isMobile ? [0, 40] : [0, 200]);
+  const leftBirdY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -50] : [0, -240]);
+  const rightBirdX = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -20] : [0, -100]);
+  const rightBirdY = useTransform(scrollYProgress, [0, 1], isMobile ? [0, -30] : [0, -120]);
 
   return (
     <section
@@ -105,7 +105,7 @@ export default function StorySection() {
             position: "absolute",
             bottom: 0,
             left: "-2vw",
-            width: isMobile ? "35vw" : "22vw",
+            width: isMobile ? "28vw" : "22vw",
             pointerEvents: "none",
           }}
         >
@@ -155,9 +155,9 @@ export default function StorySection() {
           loading="lazy"
           style={{
             position: "absolute",
-            top: "30%",
-            left: "22%",
-            width: isMobile ? "80px" : "140px",
+            top: isMobile ? "18%" : "30%",
+            left: isMobile ? "10%" : "22%",
+            width: isMobile ? "50px" : "140px",
             height: "auto",
             x: prefersReducedMotion ? 0 : leftBirdX,
             y: prefersReducedMotion ? 0 : leftBirdY,
@@ -174,9 +174,9 @@ export default function StorySection() {
           loading="lazy"
           style={{
             position: "absolute",
-            top: "24%",
-            right: "30%",
-            width: isMobile ? "65px" : "110px",
+            top: isMobile ? "15%" : "24%",
+            right: isMobile ? "12%" : "30%",
+            width: isMobile ? "40px" : "110px",
             height: "auto",
             x: prefersReducedMotion ? 0 : rightBirdX,
             y: prefersReducedMotion ? 0 : rightBirdY,
@@ -199,7 +199,7 @@ export default function StorySection() {
           <p
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? "28px" : "48px",
+              fontSize: isMobile ? "22px" : "48px",
               fontWeight: 400,
               color: "#616D45",
               lineHeight: isMobile ? "140%" : "145%",

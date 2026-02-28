@@ -275,7 +275,7 @@ const reducedVariants = {
 
 function WSJCoverage({ isMobile }: { isMobile: boolean }) {
   const [hovered, setHovered] = useState(false);
-  const imgSize = isMobile ? 44 : 52;
+  const imgSize = isMobile ? 32 : 52;
 
   return (
     <div
@@ -283,7 +283,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "10px",
-        marginBottom: isMobile ? "16px" : "20px",
+        marginBottom: isMobile ? "12px" : "20px",
         position: "relative",
       }}
     >
@@ -453,7 +453,7 @@ export default function SystemSection() {
             flex: 1,
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
-            padding: isMobile ? "40px 24px 0" : "0",
+            padding: isMobile ? "72px 24px 0" : "0",
             minHeight: 0,
           }}
         >
@@ -587,24 +587,6 @@ export default function SystemSection() {
                   ))}
                 </motion.p>
 
-                {/* Cost */}
-                {feature.cost && (
-                  <motion.span
-                    custom={18}
-                    variants={variants}
-                    style={{
-                      display: "inline-block",
-                      fontFamily: "'Alte Haas Grotesk', sans-serif",
-                      fontSize: isMobile ? "16px" : "18px",
-                      fontWeight: 700,
-                      color: "#B8965A",
-                      letterSpacing: "2px",
-                      willChange: "filter, opacity, transform",
-                    }}
-                  >
-                    {feature.cost}
-                  </motion.span>
-                )}
 
               </motion.div>
             </AnimatePresence>

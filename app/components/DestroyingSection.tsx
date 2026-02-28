@@ -357,8 +357,8 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
-        gap: isMobile ? "40px" : "0",
-        padding: isMobile ? "0 24px" : "0 80px",
+        gap: isMobile ? "36px" : "0",
+        padding: isMobile ? "80px 24px 0" : "0 80px",
         width: "100%",
       }}
     >
@@ -589,7 +589,7 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
   return (
     <div
       ref={containerRef}
-      style={{ height: isMobile ? "300vh" : "400vh", position: "relative" }}
+      style={{ height: isMobile ? "350vh" : "400vh", position: "relative" }}
     >
       {/* #ambition anchor moved to StorySection */}
       <div
@@ -751,11 +751,11 @@ function VillaReveal({ isMobile }: { isMobile: boolean }) {
               bottom: 0,
               left: 0,
               right: 0,
-              padding: "24px",
+              padding: "28px 24px 32px",
               zIndex: 1,
               opacity: textOpacity,
               y: textY,
-              backgroundColor: "rgba(248, 242, 228, 0.95)",
+              background: "linear-gradient(to top, rgba(248, 242, 228, 0.98) 60%, rgba(248, 242, 228, 0.85) 100%)",
             }}
           >
             <h3
