@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
 import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon, TwitterLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
@@ -94,8 +94,16 @@ export default function LandscapeSection() {
   const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.15 });
+  const flowerVideoRef = useRef<HTMLVideoElement>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // iOS Safari needs explicit .play() for autoplay
+  useEffect(() => {
+    const video = flowerVideoRef.current;
+    if (!video) return;
+    video.play().catch(() => {});
+  }, []);
 
   return (
     <section
@@ -291,6 +299,7 @@ export default function LandscapeSection() {
         transition={{ ...TREE_SPRING, delay: ANIM_DELAY }}
       >
         <video
+          ref={flowerVideoRef}
           muted
           autoPlay
           loop

@@ -653,6 +653,7 @@ export default function SystemSection() {
                       muted
                       loop
                       playsInline
+                      ref={(el) => { if (el) el.play().catch(() => {}); }}
                       style={{
                         position: "absolute",
                         inset: 0,

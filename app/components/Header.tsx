@@ -509,10 +509,10 @@ export default function Header() {
   const isVisible = headerShown && !moviePlaying;
   const padding = isMobile ? "24px" : "80px";
 
-  // Panel glass
-  const panelBg = isDark
-    ? "rgba(20, 18, 15, 0.75)"
-    : "rgba(248, 242, 228, 0.82)";
+  // Panel glass — fully opaque on mobile for readability
+  const panelBg = isMobile
+    ? (isDark ? "rgb(20, 18, 15)" : "rgb(248, 242, 228)")
+    : (isDark ? "rgba(20, 18, 15, 0.75)" : "rgba(248, 242, 228, 0.82)");
   const panelBorder = isDark
     ? "1px solid rgba(184, 150, 90, 0.12)"
     : "1px solid rgba(184, 150, 90, 0.15)";

@@ -121,6 +121,7 @@ export default function Hero() {
       {/* Background video — metadata preload so fonts get priority */}
       <video
         ref={bgVideoRef}
+        autoPlay
         muted
         loop
         playsInline
