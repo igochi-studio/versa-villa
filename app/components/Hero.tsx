@@ -238,7 +238,7 @@ export default function Hero() {
       className="relative overflow-hidden"
       style={{ height: "100vh", position: "sticky", top: 0, zIndex: 1 }}
     >
-      {/* Background video — metadata preload so fonts get priority */}
+      {/* Background video — separate for desktop/mobile */}
       <video
         ref={bgVideoRef}
         autoPlay
@@ -246,6 +246,7 @@ export default function Hero() {
         loop
         playsInline
         preload="metadata"
+        key={isMobile ? "bg-mobile" : "bg-desktop"}
         style={{
           position: "absolute",
           inset: 0,
@@ -256,8 +257,7 @@ export default function Hero() {
           zIndex: 0,
         }}
       >
-        <source src="/hero-bg.webm" type="video/webm" />
-        <source src="/hero-bg.mp4" type="video/mp4" />
+        <source src={isMobile ? "/versa-villa-bg-mobile.mp4" : "/versa-villa-bg-desktop.mp4"} type="video/mp4" />
       </video>
 
       {/* Black overlay */}
@@ -298,6 +298,7 @@ export default function Hero() {
               ref={mainVideoRef}
               playsInline
               preload="auto"
+              key={isMobile ? "movie-mobile" : "movie-desktop"}
               style={{
                 width: "100%",
                 height: "100%",
@@ -306,7 +307,7 @@ export default function Hero() {
                 backgroundColor: "#000",
               }}
             >
-              <source src="/versa-villa-intro-movie.mp4" type="video/mp4" />
+              <source src={isMobile ? "/versa-villa-movie-mobile.mp4" : "/versa-villa-movie-desktop.mp4"} type="video/mp4" />
             </video>
 
             {/* Controls overlay */}
@@ -321,7 +322,7 @@ export default function Hero() {
                 right: 0,
                 pointerEvents: controlsVisible ? "auto" : "none",
                 background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
-                padding: isMobile ? "60px 20px 80px" : "80px 40px 32px",
+                padding: isMobile ? "60px 20px 120px" : "80px 40px 32px",
                 display: "flex",
                 flexDirection: "column",
                 gap: isMobile ? "12px" : "16px",
@@ -353,12 +354,45 @@ export default function Hero() {
                   window.addEventListener("mousemove", onMove);
                   window.addEventListener("mouseup", onUp);
                 }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  setIsScrubbing(true);
+                  const touch = e.touches[0];
+                  const video = mainVideoRef.current;
+                  const timeline = timelineRef.current;
+                  if (video && timeline && duration) {
+                    const rect = timeline.getBoundingClientRect();
+                    const ratio = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+                    video.currentTime = ratio * duration;
+                    setCurrentTime(video.currentTime);
+                  }
+
+                  const onTouchMove = (ev: TouchEvent) => {
+                    ev.preventDefault();
+                    const t = ev.touches[0];
+                    const vid = mainVideoRef.current;
+                    const tl = timelineRef.current;
+                    if (!vid || !tl || !duration) return;
+                    const rect = tl.getBoundingClientRect();
+                    const ratio = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width));
+                    vid.currentTime = ratio * duration;
+                    setCurrentTime(vid.currentTime);
+                  };
+                  const onTouchEnd = () => {
+                    setIsScrubbing(false);
+                    window.removeEventListener("touchmove", onTouchMove);
+                    window.removeEventListener("touchend", onTouchEnd);
+                  };
+                  window.addEventListener("touchmove", onTouchMove, { passive: false });
+                  window.addEventListener("touchend", onTouchEnd);
+                }}
                 style={{
                   width: "100%",
-                  height: "20px",
+                  height: "32px",
                   display: "flex",
                   alignItems: "center",
                   cursor: "pointer",
+                  touchAction: "none",
                 }}
               >
                 <div
@@ -386,11 +420,11 @@ export default function Hero() {
                     <div
                       style={{
                         position: "absolute",
-                        right: "-6px",
+                        right: isMobile ? "-8px" : "-6px",
                         top: "50%",
                         transform: "translateY(-50%)",
-                        width: "12px",
-                        height: "12px",
+                        width: isMobile ? "16px" : "12px",
+                        height: isMobile ? "16px" : "12px",
                         borderRadius: "50%",
                         backgroundColor: "#F8F2E4",
                         boxShadow: "0 0 8px rgba(0,0,0,0.4)",
