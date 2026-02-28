@@ -421,7 +421,7 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
                     display: "inline-block",
                     willChange: "filter, opacity, transform",
                     fontFamily: "'Alte Haas Grotesk', sans-serif",
-                    fontSize: isMobile ? "18px" : "32px",
+                    fontSize: isMobile ? "clamp(18px, 2.5vw, 28px)" : "32px",
                     fontStyle: "normal",
                     fontWeight: 400,
                     color: "#4A3C24",

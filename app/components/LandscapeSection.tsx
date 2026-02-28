@@ -133,7 +133,7 @@ export default function LandscapeSection() {
         <h2
           style={{
             fontFamily: "var(--font-playfair), serif",
-            fontSize: isMobile ? "32px" : "56px",
+            fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
             fontWeight: 400,
             lineHeight: 1.15,
             letterSpacing: "-0.02em",
@@ -225,7 +225,7 @@ export default function LandscapeSection() {
               className="landscape-cta-btn-text"
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: isMobile ? "18px" : "24px",
+                fontSize: isMobile ? "clamp(18px, 2.5vw, 22px)" : "24px",
                 fontWeight: 400,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",

@@ -199,7 +199,7 @@ export default function StorySection() {
           <p
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? "22px" : "48px",
+              fontSize: isMobile ? "clamp(22px, 3.5vw, 40px)" : "48px",
               fontWeight: 400,
               color: "#616D45",
               lineHeight: isMobile ? "140%" : "145%",

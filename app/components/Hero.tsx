@@ -597,7 +597,7 @@ export default function Hero() {
           <h1
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: isMobile ? "32px" : "56px",
+              fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
               fontWeight: 400,
               lineHeight: "110%",
               letterSpacing: "-0.02em",
@@ -700,7 +700,7 @@ export default function Hero() {
                 className="hero-watch-btn-text"
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "20px" : "32px",
+                  fontSize: isMobile ? "clamp(20px, 3vw, 28px)" : "32px",
                   fontWeight: 400,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",

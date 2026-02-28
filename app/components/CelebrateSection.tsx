@@ -67,13 +67,13 @@ export default function CelebrateSection() {
         <p
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "22px" : "32px",
+            fontSize: isMobile ? "clamp(22px, 3vw, 28px)" : "32px",
             fontWeight: 400,
             color: "#F8F2E4",
             lineHeight: "120%",
             letterSpacing: "-0.56px",
             textAlign: "justify",
-            maxWidth: "640px",
+            maxWidth: isMobile ? "clamp(100%, 85vw, 580px)" : "640px",
             marginTop: "28px",
             WebkitFontSmoothing: "antialiased",
           }}
@@ -99,7 +99,7 @@ export default function CelebrateSection() {
         <p
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "22px" : "32px",
+            fontSize: isMobile ? "clamp(22px, 3vw, 28px)" : "32px",
             fontWeight: 400,
             color: "#F8F2E4",
             lineHeight: "120%",
@@ -127,7 +127,7 @@ export default function CelebrateSection() {
             <p
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: isMobile ? "22px" : "32px",
+                fontSize: isMobile ? "clamp(22px, 3vw, 28px)" : "32px",
                 fontWeight: 400,
                 color: "#F8F2E4",
                 lineHeight: "120%",
@@ -140,7 +140,7 @@ export default function CelebrateSection() {
               <span
                 style={{
                   fontFamily: "var(--font-playfair), serif",
-                  fontSize: isMobile ? "22px" : "32px",
+                  fontSize: isMobile ? "clamp(22px, 3vw, 28px)" : "32px",
                   fontStyle: "italic",
                   fontWeight: 400,
                   lineHeight: "110%",
@@ -154,7 +154,7 @@ export default function CelebrateSection() {
             <p
               style={{
                 fontFamily: "var(--font-playfair), serif",
-                fontSize: isMobile ? "20px" : "32px",
+                fontSize: isMobile ? "clamp(20px, 2.8vw, 28px)" : "32px",
                 fontWeight: 400,
                 color: "#F8F2E4",
                 lineHeight: "110%",

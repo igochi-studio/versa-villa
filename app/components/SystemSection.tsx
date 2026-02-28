@@ -544,7 +544,7 @@ export default function SystemSection() {
                       style={{
                         display: "inline-block",
                         fontFamily: "'Playfair Display', serif",
-                        fontSize: isMobile ? "32px" : "56px",
+                        fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
                         fontWeight: 400,
                         color: "#4A3C24",
                         lineHeight: "110%",
@@ -575,7 +575,7 @@ export default function SystemSection() {
                       style={{
                         display: "inline-block",
                         fontFamily: "'Alte Haas Grotesk', sans-serif",
-                        fontSize: isMobile ? "16px" : "22px",
+                        fontSize: isMobile ? "clamp(16px, 2vw, 20px)" : "22px",
                         fontWeight: 400,
                         color: "#4A3C24",
                         lineHeight: "160%",

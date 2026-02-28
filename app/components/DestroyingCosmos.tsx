@@ -790,13 +790,13 @@ export default function DestroyingCosmos() {
             willChange: "clip-path, opacity",
           }}
         >
-          <div style={{ maxWidth: isMobile ? "100%" : "780px", textAlign: "center" }}>
+          <div style={{ maxWidth: isMobile ? "clamp(100%, 85vw, 680px)" : "780px", textAlign: "center" }}>
             {/* Large quotation mark */}
             <span
               style={{
                 display: "block",
                 fontFamily: "var(--font-playfair), serif",
-                fontSize: isMobile ? "60px" : "80px",
+                fontSize: isMobile ? "clamp(48px, 7vw, 70px)" : "80px",
                 fontWeight: 400,
                 color: "#F8F2E4",
                 lineHeight: 1,
@@ -810,7 +810,7 @@ export default function DestroyingCosmos() {
             <p
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: isMobile ? "24px" : "40px",
+                fontSize: isMobile ? "clamp(20px, 3vw, 34px)" : "40px",
                 fontWeight: 400,
                 color: "#F8F2E4",
                 lineHeight: "100%",
@@ -828,7 +828,7 @@ export default function DestroyingCosmos() {
             <p
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: isMobile ? "14px" : "18px",
+                fontSize: isMobile ? "clamp(13px, 1.6vw, 17px)" : "18px",
                 fontWeight: 700,
                 color: "#F8F2E4",
                 lineHeight: "100%",
@@ -884,7 +884,7 @@ export default function DestroyingCosmos() {
           <motion.h2
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: isMobile ? "28px" : "56px",
+              fontSize: isMobile ? "clamp(28px, 4.5vw, 48px)" : "56px",
               fontWeight: 400,
               lineHeight: "110%",
               letterSpacing: "-0.02em",
@@ -909,14 +909,14 @@ export default function DestroyingCosmos() {
             Destroying
           </motion.h2>
 
-          <div style={{ minHeight: isMobile ? "38px" : "66px", marginTop: "4px" }}>
+          <div style={{ minHeight: isMobile ? "clamp(38px, 5.5vw, 56px)" : "66px", marginTop: "4px" }}>
             <AnimatePresence mode="wait">
               {showSubtitle && (
                 <motion.p
                   key={subtitleIndex}
                   style={{
                     fontFamily: "var(--font-playfair), serif",
-                    fontSize: isMobile ? "28px" : "56px",
+                    fontSize: isMobile ? "clamp(28px, 4.5vw, 48px)" : "56px",
                     fontWeight: 400,
                     lineHeight: "110%",
                     letterSpacing: "-0.02em",
