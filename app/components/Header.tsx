@@ -2,14 +2,18 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
-const NAV_ITEMS = [
-  { label: "DESTRUCTION", href: "#destruction" },
-  { label: "IT\u2019S PERSONAL", href: "#its-personal" },
-  { label: "AMBITION", href: "#ambition" },
+const NAV_MAIN = [
+  { label: "OUR STORY", href: "#destruction" },
+  { label: "FIRE FEATURES", href: "#fire-features" },
+];
+
+const NAV_MORE = [
   { label: "PROCESS ARCHIVE", href: "/process-archive" },
-  { label: "FUTURE", href: "/future" },
+  { label: "GALLERY", href: "/gallery" },
+  { label: "MODELS", href: "/future" },
 ];
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
@@ -243,7 +247,7 @@ function NavMenuItem({
         padding: isMobile ? "22px 0" : "26px 0",
         textDecoration: "none",
         cursor: "pointer",
-        borderBottom: index < NAV_ITEMS.length - 1 ? `1px solid ${dividerColor}` : "none",
+        borderBottom: `1px solid ${dividerColor}`,
         transform: hovered ? "translateX(8px)" : "translateX(0px)",
         transition: "transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
       }}
@@ -506,7 +510,7 @@ export default function Header() {
 
   if (!loaded) return null;
 
-  const isVisible = headerShown && !moviePlaying;
+  const isVisible = !moviePlaying;
   const padding = isMobile ? "24px" : "80px";
 
   // Panel glass — fully opaque on mobile for readability
@@ -709,8 +713,8 @@ export default function Header() {
                   </div>
                 )}
 
-                {/* Nav items */}
-                {NAV_ITEMS.map((item, i) => (
+                {/* Main nav items */}
+                {NAV_MAIN.map((item, i) => (
                   <NavMenuItem
                     key={item.label}
                     label={item.label}
@@ -721,6 +725,48 @@ export default function Header() {
                     onNavigate={handleNavigate}
                   />
                 ))}
+
+                {/* MORE INFORMATION subsection */}
+                <motion.div
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.6, ease: EASE_OUT_QUINT, delay: 0.3 }}
+                  style={{
+                    marginTop: isMobile ? "24px" : "28px",
+                    border: `1px solid ${isDark ? "rgba(184, 150, 90, 0.2)" : "rgba(184, 150, 90, 0.25)"}`,
+                    borderRadius: "12px",
+                    padding: isMobile ? "20px" : "24px",
+                    transition: "border-color 0.4s ease",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "'Alte Haas Grotesk', sans-serif",
+                      fontSize: "12px",
+                      fontWeight: 400,
+                      letterSpacing: "3px",
+                      textTransform: "uppercase",
+                      color: "#B8965A",
+                      opacity: 0.7,
+                      display: "block",
+                      marginBottom: isMobile ? "8px" : "12px",
+                    }}
+                  >
+                    MORE INFORMATION
+                  </span>
+                  {NAV_MORE.map((item, i) => (
+                    <NavMenuItem
+                      key={item.label}
+                      label={item.label}
+                      href={item.href}
+                      index={i + NAV_MAIN.length}
+                      isDark={isDark}
+                      isMobile={isMobile}
+                      onNavigate={handleNavigate}
+                    />
+                  ))}
+                </motion.div>
 
                 {/* Bottom gold accent line */}
                 <motion.div
@@ -740,6 +786,47 @@ export default function Header() {
                     transformOrigin: "left",
                   }}
                 />
+
+                {/* Instagram */}
+                <motion.a
+                  href="https://www.instagram.com/versa.villa/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: EASE_OUT_QUINT, delay: 0.45 }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "7px",
+                    marginTop: isMobile ? "16px" : "14px",
+                    textDecoration: "none",
+                    color: isDark ? "rgba(248, 242, 228, 0.5)" : "rgba(74, 60, 36, 0.45)",
+                    transition: "color 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "#B8965A";
+                    playTick(4800, 0.02, 0.03);
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = isDark
+                      ? "rgba(248, 242, 228, 0.5)"
+                      : "rgba(74, 60, 36, 0.45)";
+                  }}
+                >
+                  <InstagramLogoIcon width={isMobile ? 18 : 16} height={isMobile ? 18 : 16} />
+                  <span
+                    style={{
+                      fontFamily: "'Alte Haas Grotesk', sans-serif",
+                      fontSize: isMobile ? "16px" : "14px",
+                      fontWeight: 400,
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    @versa.villa
+                  </span>
+                </motion.a>
               </motion.nav>
             </>
           )}

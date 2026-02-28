@@ -184,6 +184,7 @@ export default function NeighborhoodsSection() {
   const textVisibleRef  = useRef(false);
   const imgClipRef      = useRef<HTMLDivElement>(null);
   const textElRef       = useRef<HTMLDivElement>(null);
+  const quoteElRef      = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -215,8 +216,17 @@ export default function NeighborhoodsSection() {
     const iT = lerp(INIT_T, 0,   expandP);
     const iR = lerp(8,      0,   expandP);
 
+    // Quote fades in as burn reveals the after image (60-80% of burn)
+    const burnProgress = map(cv, T.BURN_IN, T.BURN_END);
+    const quoteOp = map(burnProgress, 0.55, 0.75);
+    const quoteY  = lerp(20, 0, clamp(quoteOp, 0, 1));
+
     if (canvasRef.current) canvasRef.current.style.opacity = String(canvasOp);
     if (textElRef.current)   textElRef.current.style.opacity   = String(textOp);
+    if (quoteElRef.current) {
+      quoteElRef.current.style.opacity = String(quoteOp);
+      quoteElRef.current.style.transform = `translateY(${quoteY}px)`;
+    }
 
     if (imgClipRef.current) {
       const s = imgClipRef.current.style;
@@ -255,8 +265,9 @@ export default function NeighborhoodsSection() {
     window.addEventListener("resize", resize);
 
     const tick = () => {
-      timeRef.current += 0.016;
       const v = scrollVRef.current;
+      // Drive time from scroll progress so edge animation is scroll-locked
+      timeRef.current = v * 12;
 
       // Only draw when the canvas is (or is about to be) visible
       if (v >= T.BURN_IN - 0.05) {
@@ -324,7 +335,7 @@ export default function NeighborhoodsSection() {
           />
         </div>
 
-        {/* ── Text ─────────────────────────────────────────────────────────── */}
+        {/* ── Text (before burn) ──────────────────────────────────────────── */}
         {textVisible && (
           <div
             ref={textElRef}
@@ -361,6 +372,39 @@ export default function NeighborhoodsSection() {
             </p>
           </div>
         )}
+
+        {/* ── Quote (appears as burn reveals the after image) ─────────── */}
+        <div
+          ref={quoteElRef}
+          style={{
+            position: "absolute",
+            bottom: "12vh",
+            left: 0,
+            width: "100%",
+            textAlign: "center",
+            zIndex: 20,
+            opacity: 0,
+            pointerEvents: "none",
+            willChange: "opacity, transform",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-playfair), serif",
+              fontSize: "32px",
+              fontWeight: 400,
+              fontStyle: "italic",
+              color: "rgba(255,255,255,0.9)",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.3,
+              margin: 0,
+              textShadow: "0 2px 20px rgba(0,0,0,0.4)",
+              WebkitFontSmoothing: "antialiased",
+            }}
+          >
+            What was once home, reduced to ash.
+          </p>
+        </div>
 
       </div>
     </section>

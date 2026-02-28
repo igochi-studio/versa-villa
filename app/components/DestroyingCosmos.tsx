@@ -75,11 +75,11 @@ interface Slot {
 }
 
 const DESKTOP_SLOTS: Slot[] = [
-  { id: 1,  src: "ruins-1",           top: "12%", left: "22%", width: 80,  height: 100, delay: 0.4,  revealGroup: 0, depth: 0.035, floatY: -10, floatDur: 5 },
+  { id: 1,  src: "ruins-1",           top: "6%",  left: "18%", width: 80,  height: 100, delay: 0.4,  revealGroup: 0, depth: 0.035, floatY: -10, floatDur: 5 },
   { id: 2,  src: "community-1",       top: "28%", left: "12%", width: 90,  height: 90,  delay: 0.1,  revealGroup: 0, depth: 0.05,  floatY: -10, floatDur: 5 },
   { id: 3,  src: "streets-3",         top: "15%", left: "42%", width: 110, height: 70,  delay: 0.7,  revealGroup: 1, depth: 0.065, floatY: -10, floatDur: 6 },
   { id: 4,  src: "families-2",        top: "30%", left: "72%", width: 85,  height: 120, delay: 0.2,  revealGroup: 0, depth: 0.08,  floatY: -10, floatDur: 5 },
-  { id: 5,  src: "ruins-4",           top: "8%",  left: "88%", width: 100, height: 100, delay: 1.1,  revealGroup: 2, depth: 0.02,  floatY: -10, floatDur: 4 },
+  { id: 5,  src: "ruins-4",           top: "6%",  left: "68%", width: 100, height: 100, delay: 1.1,  revealGroup: 2, depth: 0.02,  floatY: -10, floatDur: 4 },
   { id: 6,  src: "blaze-1",           top: "45%", left: "15%", width: 130, height: 80,  delay: 0.5,  revealGroup: 1, depth: 0.035, floatY: -10, floatDur: 5 },
   { id: 7,  src: "streets-1",         top: "52%", left: "82%", width: 75,  height: 110, delay: 0.9,  revealGroup: 2, depth: 0.05,  floatY: -10, floatDur: 6 },
   { id: 8,  src: "families-3",        top: "68%", left: "28%", width: 95,  height: 95,  delay: 0.05, revealGroup: 0, depth: 0.065, floatY: -10, floatDur: 5 },
@@ -89,7 +89,7 @@ const DESKTOP_SLOTS: Slot[] = [
   { id: 12, src: "blaze-3",           top: "88%", left: "88%", width: 135, height: 85,  delay: 0.3,  revealGroup: 0, depth: 0.05,  floatY: -10, floatDur: 5 },
   { id: 13, src: "community-3",       top: "38%", left: "88%", width: 75,  height: 115, delay: 1.4,  revealGroup: 3, depth: 0.065, floatY: -10, floatDur: 6 },
   { id: 14, src: "streets-4",         top: "58%", left: "8%",  width: 95,  height: 95,  delay: 1.0,  revealGroup: 2, depth: 0.08,  floatY: -10, floatDur: 5 },
-  { id: 15, src: "ruins-3",           top: "8%",  left: "8%",  width: 80,  height: 80,  delay: 0.6,  revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 4 },
+  { id: 15, src: "ruins-3",           top: "4%",  left: "34%", width: 80,  height: 80,  delay: 0.6,  revealGroup: 1, depth: 0.02,  floatY: -10, floatDur: 4 },
   { id: 16, src: "blaze-2",           top: "85%", left: "25%", width: 90,  height: 90,  delay: 0.85, revealGroup: 2, depth: 0.035, floatY: -10, floatDur: 5 },
 ];
 
@@ -123,21 +123,20 @@ const TITLE_REVEAL_DELAY = 150;
 const GLIMMER_CYCLE_MS = 5000;
 
 // ── Quote word-by-word reveal data ───────────────────────────────────────────
-const QUOTE_WORDS = "This tragedy marks one of the most heartbreaking days of our career. Witnessing incredible buildings, cherished memories, and vibrant lives reduced to ashes is beyond devastating.".split(" ");
-const QUOTE_WORD_STAGGER = 0.07;
-const QUOTE_WORD_DURATION = 0.9;
+const QUOTE_TEXT = "This tragedy marks one of the most heartbreaking days of our career. Witnessing incredible buildings, cherished memories, and vibrant lives reduced to ashes is beyond devastating.";
 
 function isInHeaderZone(slot: Slot): boolean {
   const top = parseFloat(slot.top);
   const left = parseFloat(slot.left);
-  return (top < 25 && left > 55) || (top < 15 && left < 15);
+  // Logo zone (top-left) and menu button zone (top-right)
+  return (top < 16 && left < 16) || (top < 16 && left > 85);
 }
 
 // ── Burn helpers ──────────────────────────────────────────────────────────────
 function clamp(x: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, x)); }
 function mapR(x: number, a: number, b: number) { return clamp((x - a) / (b - a), 0, 1); }
-function eio(t: number) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
-
+function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+function easeInOutQuad(t: number) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 const P4_BURN_IN    = 0.02;
 const P4_BURN_START = 0.08;
 const P4_BURN_END   = 1.00;
@@ -219,9 +218,12 @@ void main() {
 }`;
 
 // ── Scroll thresholds ────────────────────────────────────────────────────────
-const EXPAND_TRIGGER  = 0.45; // scroll down past this → expand
-const COLLAPSE_TRIGGER = 0.35; // scroll back below this → collapse
-const REVERSE_TRIGGER  = 0.55; // scroll back below this → reverse burn + hide quote
+const EXPAND_START       = 0.30; // palisades begins expanding
+const EXPAND_END         = 0.48; // palisades fully expanded
+const COSMOS_FADE_AT     = 0.35; // cosmos images fade out (mid-expansion)
+const COLLAPSE_TRIGGER   = 0.25; // scroll back below this → collapse to cosmos
+const BURN_SCROLL_START  = 0.50; // burn begins at this scroll position
+const BURN_SCROLL_END    = 0.92; // burn completes at this scroll position
 
 // ── Single floating image card ───────────────────────────────────────────────
 function FloatingImageCard({
@@ -245,7 +247,7 @@ function FloatingImageCard({
 }) {
   const x = useTransform(smoothMouseX, (v) => v * slot.depth);
   const y = useTransform(smoothMouseY, (v) => v * slot.depth);
-  const hideForHeader = headerVisible && isInHeaderZone(slot);
+  const hideForHeader = isInHeaderZone(slot);
 
   return (
     <motion.div
@@ -330,9 +332,9 @@ export default function DestroyingCosmos() {
   const afterImgRef    = useRef<HTMLImageElement | null>(null);
   const glRef          = useRef<WebGLRenderingContext | null>(null);
   const uProgressRef   = useRef<WebGLUniformLocation | null>(null);
-  const afterImgElRef  = useRef<HTMLImageElement>(null);
-  const autoBurnRafRef = useRef<number>(0);
-  const burnDirRef     = useRef<"forward" | "reverse" | null>(null);
+  const afterImgElRef      = useRef<HTMLImageElement>(null);
+  const quoteContainerRef  = useRef<HTMLDivElement>(null);
+  const palisadesRef       = useRef<HTMLDivElement>(null);
   const [imgsReady, setImgsReady] = useState(false);
 
   // ── Smooth cursor parallax ─────────────────────────────────────────────
@@ -400,11 +402,13 @@ export default function DestroyingCosmos() {
             setGlimmeredSlots(new Set());
             setAllRevealed(false);
             goPhase(0);
-            burnDirRef.current = null;
-            if (autoBurnRafRef.current) cancelAnimationFrame(autoBurnRafRef.current);
             scrollVRef.current = 0;
             if (afterImgElRef.current) afterImgElRef.current.style.opacity = "0";
             if (canvasRef.current) canvasRef.current.style.opacity = "0";
+            if (quoteContainerRef.current) {
+              quoteContainerRef.current.style.opacity = "0";
+              quoteContainerRef.current.style.clipPath = "inset(100% 0 0 0)";
+            }
           }
         }
       },
@@ -455,7 +459,6 @@ export default function DestroyingCosmos() {
       const t = setTimeout(() => {
         if (phaseRef.current >= 1) return; // Don't play sounds during expand/burn/quote
         setRevealedGroups((prev) => { const next = new Set(prev); next.add(g); return next; });
-        playTick(3400 - g * 150, 0.04, 0.035);
         if (g === maxGroup) setTimeout(() => setAllRevealed(true), 1500);
       }, groupDelays[g] ?? groupDelays[groupDelays.length - 1] + (g - groupDelays.length + 1) * 700);
       timers.push(t);
@@ -495,69 +498,9 @@ export default function DestroyingCosmos() {
     if (canvasRef.current) canvasRef.current.style.opacity = String(layerOp);
   }, []);
 
-  // ── Burn animation functions ───────────────────────────────────────────
+  // ── Scroll-driven phase transitions + burn + quote ─────────────────────
   const { scrollYProgress } = useScroll({ target: outerRef, offset: ["start start", "end end"] });
 
-  const startForwardBurn = useCallback(() => {
-    if (burnDirRef.current) cancelAnimationFrame(autoBurnRafRef.current);
-    burnDirRef.current = "forward";
-    const duration = 5000;
-    let start = 0;
-    const from = scrollVRef.current;
-
-    const tick = (now: number) => {
-      if (!start) start = now;
-      if (burnDirRef.current !== "forward") return;
-      const t = Math.min((now - start) / duration, 1);
-      updateBurnVisuals(from + (1 - from) * eio(t));
-      if (t < 1) {
-        autoBurnRafRef.current = requestAnimationFrame(tick);
-      } else {
-        burnDirRef.current = null;
-        goPhase(2); // burn complete → show quote
-      }
-    };
-
-    // Small delay for visual settle after expand
-    setTimeout(() => {
-      if (burnDirRef.current === "forward") {
-        autoBurnRafRef.current = requestAnimationFrame(tick);
-      }
-    }, 400);
-  }, [updateBurnVisuals, goPhase]);
-
-  const startReverseBurn = useCallback(() => {
-    if (burnDirRef.current) cancelAnimationFrame(autoBurnRafRef.current);
-    burnDirRef.current = "reverse";
-    const duration = 3000; // faster reverse
-    let start = 0;
-    const from = scrollVRef.current;
-
-    const tick = (now: number) => {
-      if (!start) start = now;
-      if (burnDirRef.current !== "reverse") return;
-      const t = Math.min((now - start) / duration, 1);
-      updateBurnVisuals(from * (1 - eio(t)));
-      if (t < 1) {
-        autoBurnRafRef.current = requestAnimationFrame(tick);
-      } else {
-        burnDirRef.current = null;
-        // Reverse done: collapse if scroll is back far enough
-        const sv = scrollYProgress.get();
-        if (sv < COLLAPSE_TRIGGER) {
-          goPhase(0);
-        } else if (sv >= EXPAND_TRIGGER) {
-          // User scrolled forward again during reverse — re-burn
-          startForwardBurn();
-        }
-        // Otherwise stay at phase 1 (expanded, waiting)
-      }
-    };
-
-    autoBurnRafRef.current = requestAnimationFrame(tick);
-  }, [updateBurnVisuals, goPhase, scrollYProgress, startForwardBurn]);
-
-  // ── Scroll-driven phase transitions ────────────────────────────────────
   const isVisibleRef = useRef(false);
   useEffect(() => { isVisibleRef.current = isVisible; }, [isVisible]);
 
@@ -565,39 +508,65 @@ export default function DestroyingCosmos() {
     if (!isVisibleRef.current) return;
     const p = phaseRef.current;
 
-    // Phase 0: cosmos — subtitle advancement + forward trigger
+    // ── Palisades expansion — always driven by scroll ──────────────────
+    const expandP = easeInOutQuad(mapR(v, EXPAND_START, EXPAND_END));
+    if (palisadesRef.current) {
+      const pTop = parseFloat(pSlot.top);   // e.g. 82
+      const pLeft = parseFloat(pSlot.left); // e.g. 45
+      // Convert px slot size to vw/vh for smooth interpolation
+      const slotWvw = (pSlot.width / window.innerWidth) * 100;
+      const slotHvh = (pSlot.height / window.innerHeight) * 100;
+
+      const s = palisadesRef.current.style;
+      s.top          = `${lerp(pTop, 0, expandP)}%`;
+      s.left         = `${lerp(pLeft, 0, expandP)}%`;
+      s.width        = `${lerp(slotWvw, 100, expandP)}vw`;
+      s.height       = `${lerp(slotHvh, 100, expandP)}vh`;
+      s.borderRadius = `${lerp(16, 0, expandP)}px`;
+    }
+
+    // Phase transition: cosmos → expanded when expansion is significant
     if (p === 0) {
       const scrollIdx = Math.min(
         SUBTITLES.length - 1,
-        Math.floor((v / (EXPAND_TRIGGER - 0.05)) * SUBTITLES.length)
+        Math.floor((v / (EXPAND_START - 0.02)) * SUBTITLES.length)
       );
       setSubtitleIndex((prev) => Math.max(prev, scrollIdx));
 
-      if (v >= EXPAND_TRIGGER) {
+      if (v >= COSMOS_FADE_AT) {
         goPhase(1);
-        // Expand animation starts via phase >= 1 → motion.div animate
-        // onAnimationComplete will trigger forward burn
       }
     }
 
-    // Phase 1: expanded — backward collapse trigger
-    if (p === 1) {
-      if (v < COLLAPSE_TRIGGER && !burnDirRef.current) {
+    // Phase >= 1: expanded — drive burn + quote from scroll
+    if (p >= 1) {
+      // Backward: collapse if scrolled back far enough
+      if (v < COLLAPSE_TRIGGER) {
         goPhase(0);
+        updateBurnVisuals(0);
+        if (quoteContainerRef.current) {
+          quoteContainerRef.current.style.clipPath = "inset(100% 0 0 0)";
+          quoteContainerRef.current.style.opacity = "0";
+        }
+        return;
+      }
+
+      // Burn progress driven by scroll position
+      const burnV = mapR(v, BURN_SCROLL_START, BURN_SCROLL_END);
+      updateBurnVisuals(burnV);
+
+      // Quote reveal: clip from top, revealing bottom-up as burn sweeps downward
+      // The burn line moves top→bottom, exposing the after image below it.
+      // The quote lives on the after image, so it reveals from bottom up —
+      // only the portion below the burn line (already burned) is visible.
+      const quoteReveal = mapR(burnV, 0.25, 0.80);
+      const clipTop = (1 - quoteReveal) * 100; // 100% = fully clipped from top, 0% = fully visible
+      if (quoteContainerRef.current) {
+        quoteContainerRef.current.style.opacity = quoteReveal > 0 ? "1" : "0";
+        quoteContainerRef.current.style.clipPath = `inset(${clipTop}% 0 0 0)`;
       }
     }
-
-    // Phase 2: burn complete + quote visible — no reverse allowed
-    // Once the burn finishes and the quote appears, the transition is permanent.
   });
-
-  // ── Palisades expand/collapse completion handler ────────────────────────
-  const handlePalisadesComplete = useCallback(() => {
-    // Only start forward burn if we just expanded (phase 1, no burn running)
-    if (phaseRef.current === 1 && !burnDirRef.current && imgsReady) {
-      startForwardBurn();
-    }
-  }, [startForwardBurn, imgsReady]);
 
   // ── WebGL setup + render loop ──────────────────────────────────────────
   useEffect(() => {
@@ -734,38 +703,20 @@ export default function DestroyingCosmos() {
           })}
         </motion.div>
 
-        {/* Palisades card — smooth expand/collapse in both directions */}
-        <motion.div
+        {/* Palisades card — scroll-driven expand/collapse */}
+        <div
+          ref={palisadesRef}
           style={{
             position: "absolute",
             zIndex: 20,
             overflow: "hidden",
-          }}
-          initial={{
             top: pSlot.top,
             left: pSlot.left,
             width: pSlot.width,
             height: pSlot.height,
             borderRadius: 16,
+            willChange: "top, left, width, height, border-radius",
           }}
-          animate={phase >= 1 ? {
-            top: "0%",
-            left: "0%",
-            width: "100%",
-            height: "100%",
-            borderRadius: 0,
-          } : {
-            top: pSlot.top,
-            left: pSlot.left,
-            width: pSlot.width,
-            height: pSlot.height,
-            borderRadius: 16,
-          }}
-          transition={{
-            duration: 0.9,
-            ease: [0.23, 1, 0.32, 1],
-          }}
-          onAnimationComplete={handlePalisadesComplete}
         >
           <motion.div
             style={{ width: "100%", height: "100%", overflow: "hidden" }}
@@ -782,7 +733,7 @@ export default function DestroyingCosmos() {
               draggable={false}
             />
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* ── Burn layers ── */}
 
@@ -820,8 +771,9 @@ export default function DestroyingCosmos() {
           }}
         />
 
-        {/* Quote — centered, word-by-word blur reveal when phase >= 2 */}
+        {/* Quote — clip-path reveal from bottom, driven by scroll */}
         <div
+          ref={quoteContainerRef}
           aria-hidden
           style={{
             position: "absolute",
@@ -833,11 +785,14 @@ export default function DestroyingCosmos() {
             justifyContent: "center",
             pointerEvents: "none",
             padding: isMobile ? "0 24px" : "0 80px",
+            opacity: 0,
+            clipPath: "inset(100% 0 0 0)",
+            willChange: "clip-path, opacity",
           }}
         >
           <div style={{ maxWidth: isMobile ? "100%" : "780px", textAlign: "center" }}>
             {/* Large quotation mark */}
-            <motion.span
+            <span
               style={{
                 display: "block",
                 fontFamily: "var(--font-playfair), serif",
@@ -846,20 +801,12 @@ export default function DestroyingCosmos() {
                 color: "#F8F2E4",
                 lineHeight: 1,
                 marginBottom: isMobile ? "16px" : "24px",
-                willChange: "filter, opacity",
               }}
-              initial={{ opacity: 0, filter: "blur(6px)" }}
-              animate={phase >= 2
-                ? { opacity: 1, filter: "blur(0px)" }
-                : { opacity: 0, filter: "blur(6px)" }}
-              transition={phase >= 2
-                ? { duration: 0.8, ease: EASE_OUT_QUINT }
-                : { duration: 0.3 }}
             >
               &ldquo;
-            </motion.span>
+            </span>
 
-            {/* Quote text — word by word blur reveal (forward) / quick fade (reverse) */}
+            {/* Quote text */}
             <p
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
@@ -874,38 +821,11 @@ export default function DestroyingCosmos() {
                 margin: 0,
               }}
             >
-              {QUOTE_WORDS.map((word, i) => (
-                <motion.span
-                  key={i}
-                  style={{
-                    display: "inline-block",
-                    willChange: "filter, opacity, transform",
-                  }}
-                  initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-                  animate={phase >= 2
-                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
-                    : { opacity: 0, y: 14, filter: "blur(6px)" }}
-                  transition={phase >= 2 ? {
-                    duration: QUOTE_WORD_DURATION,
-                    ease: EASE_OUT_QUINT,
-                    delay: 0.3 + i * QUOTE_WORD_STAGGER,
-                    filter: {
-                      duration: 1.1,
-                      ease: EASE_OUT_QUINT,
-                      delay: 0.3 + i * QUOTE_WORD_STAGGER,
-                    },
-                  } : {
-                    duration: 0.3,
-                    delay: 0,
-                  }}
-                >
-                  {word}{i < QUOTE_WORDS.length - 1 ? "\u00A0" : null}
-                </motion.span>
-              ))}
+              {QUOTE_TEXT}
             </p>
 
             {/* Attribution */}
-            <motion.p
+            <p
               style={{
                 fontFamily: "'Alte Haas Grotesk', sans-serif",
                 fontSize: isMobile ? "14px" : "18px",
@@ -918,23 +838,10 @@ export default function DestroyingCosmos() {
                 marginTop: isMobile ? "24px" : "36px",
                 WebkitFontSmoothing: "antialiased",
                 MozOsxFontSmoothing: "grayscale",
-                willChange: "filter, opacity",
-              }}
-              initial={{ opacity: 0, filter: "blur(4px)" }}
-              animate={phase >= 2
-                ? { opacity: 1, filter: "blur(0px)" }
-                : { opacity: 0, filter: "blur(4px)" }}
-              transition={phase >= 2 ? {
-                duration: 0.8,
-                ease: EASE_OUT_QUINT,
-                delay: 0.3 + QUOTE_WORDS.length * QUOTE_WORD_STAGGER + 0.3,
-              } : {
-                duration: 0.3,
-                delay: 0,
               }}
             >
               ~ Ardie Tavangarian
-            </motion.p>
+            </p>
           </div>
         </div>
 

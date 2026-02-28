@@ -2,7 +2,15 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
+import {
+  ArrowRightIcon,
+  PlayIcon,
+  PauseIcon,
+  SpeakerLoudIcon,
+  SpeakerOffIcon,
+  EnterFullScreenIcon,
+  Cross2Icon,
+} from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 // ── Timing — sync with LoadingScreen ────────────────────────────────────────
@@ -26,10 +34,6 @@ const HEADING_WORDS = [
   { text: "the", line: 1 },
   { text: "future.", line: 1 },
 ];
-
-// ── Close cursor — Cross icon as SVG data-URL ──────────────────────────────
-const CLOSE_CURSOR =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='rgba(0,0,0,0.4)' stroke='rgba(255,255,255,0.6)' stroke-width='1.5'/%3E%3Cpath d='M14 14L26 26M26 14L14 26' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E\") 20 20, pointer";
 
 // ── Haptic sound — subtle tick via Web Audio API ────────────────────────────
 let audioCtx: AudioContext | null = null;
@@ -72,6 +76,13 @@ function useHeroReady() {
   return ready;
 }
 
+// ── Format time as M:SS ─────────────────────────────────────────────────────
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function Hero() {
   const shouldReduceMotion = useReducedMotion();
   const ready = useHeroReady();
@@ -79,6 +90,64 @@ export default function Hero() {
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
+
+  // Movie controls state
+  const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+
+  // Auto-hide controls after 3s of no mouse movement
+  const resetHideTimer = useCallback(() => {
+    setControlsVisible(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => {
+      if (!isScrubbing) setControlsVisible(false);
+    }, 3000);
+  }, [isScrubbing]);
+
+  // Track video time
+  useEffect(() => {
+    const video = mainVideoRef.current;
+    if (!video || !isMoviePlaying) return;
+
+    const onTimeUpdate = () => setCurrentTime(video.currentTime);
+    const onDurationChange = () => setDuration(video.duration || 0);
+    const onEnded = () => {
+      setIsMoviePlaying(false);
+      setIsPaused(false);
+      window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: false } }));
+    };
+
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("durationchange", onDurationChange);
+    video.addEventListener("loadedmetadata", onDurationChange);
+    video.addEventListener("ended", onEnded);
+
+    // Initial
+    if (video.duration) setDuration(video.duration);
+
+    return () => {
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("durationchange", onDurationChange);
+      video.removeEventListener("loadedmetadata", onDurationChange);
+      video.removeEventListener("ended", onEnded);
+    };
+  }, [isMoviePlaying]);
+
+  // Show controls on entry, start hide timer
+  useEffect(() => {
+    if (isMoviePlaying) {
+      setControlsVisible(true);
+      resetHideTimer();
+    } else {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    }
+  }, [isMoviePlaying, resetHideTimer]);
 
   useEffect(() => {
     const video = bgVideoRef.current;
@@ -89,6 +158,8 @@ export default function Hero() {
   const handleWatchMovie = useCallback(() => {
     playTick(3800, 0.04, 0.08);
     setIsMoviePlaying(true);
+    setIsPaused(false);
+    setIsMuted(false);
     window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: true } }));
     setTimeout(() => {
       const mainVideo = mainVideoRef.current;
@@ -97,6 +168,7 @@ export default function Hero() {
       mainVideo.currentTime = 0;
       mainVideo.play().catch(() => {
         mainVideo.muted = true;
+        setIsMuted(true);
         mainVideo.play().catch(() => {});
       });
     }, 600);
@@ -110,8 +182,56 @@ export default function Hero() {
       mainVideo.currentTime = 0;
     }
     setIsMoviePlaying(false);
+    setIsPaused(false);
     window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: false } }));
   }, []);
+
+  const togglePause = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = mainVideoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {});
+      setIsPaused(false);
+    } else {
+      video.pause();
+      setIsPaused(true);
+    }
+    resetHideTimer();
+  }, [resetHideTimer]);
+
+  const toggleMute = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = mainVideoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+    resetHideTimer();
+  }, [resetHideTimer]);
+
+  const handleFullscreen = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = mainVideoRef.current;
+    if (!video) return;
+    if (video.requestFullscreen) video.requestFullscreen();
+    resetHideTimer();
+  }, [resetHideTimer]);
+
+  const handleTimelineClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = mainVideoRef.current;
+    const timeline = timelineRef.current;
+    if (!video || !timeline || !duration) return;
+    const rect = timeline.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    video.currentTime = ratio * duration;
+    setCurrentTime(video.currentTime);
+    resetHideTimer();
+  }, [duration, resetHideTimer]);
+
+  const handleMouseMoveOnMovie = useCallback(() => {
+    resetHideTimer();
+  }, [resetHideTimer]);
 
   return (
     <section
@@ -152,7 +272,7 @@ export default function Hero() {
         transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
       />
 
-      {/* Main movie — click-to-close */}
+      {/* Main movie with controls */}
       <AnimatePresence>
         {isMoviePlaying && (
           <motion.div
@@ -160,13 +280,19 @@ export default function Hero() {
               position: "absolute",
               inset: 0,
               zIndex: 10,
-              cursor: CLOSE_CURSOR,
+              cursor: controlsVisible ? "auto" : "none",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
-            onClick={handleCloseMovie}
+            onMouseMove={handleMouseMoveOnMovie}
+            onClick={(e) => {
+              // Only close if clicking the video area (not controls)
+              if ((e.target as HTMLElement).tagName === "VIDEO") {
+                togglePause(e);
+              }
+            }}
           >
             <video
               ref={mainVideoRef}
@@ -181,6 +307,223 @@ export default function Hero() {
             >
               <source src="/versa-villa-intro-movie-no-text.mp4" type="video/mp4" />
             </video>
+
+            {/* Controls overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: controlsVisible ? 1 : 0 }}
+              transition={{ duration: 0.4, ease: EASE_OUT_QUINT }}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                pointerEvents: controlsVisible ? "auto" : "none",
+                background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
+                padding: isMobile ? "60px 20px 24px" : "80px 40px 32px",
+                display: "flex",
+                flexDirection: "column",
+                gap: isMobile ? "12px" : "16px",
+              }}
+            >
+              {/* Timeline */}
+              <div
+                ref={timelineRef}
+                onClick={handleTimelineClick}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  setIsScrubbing(true);
+                  handleTimelineClick(e);
+
+                  const onMove = (ev: MouseEvent) => {
+                    const video = mainVideoRef.current;
+                    const timeline = timelineRef.current;
+                    if (!video || !timeline || !duration) return;
+                    const rect = timeline.getBoundingClientRect();
+                    const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+                    video.currentTime = ratio * duration;
+                    setCurrentTime(video.currentTime);
+                  };
+                  const onUp = () => {
+                    setIsScrubbing(false);
+                    window.removeEventListener("mousemove", onMove);
+                    window.removeEventListener("mouseup", onUp);
+                  };
+                  window.addEventListener("mousemove", onMove);
+                  window.addEventListener("mouseup", onUp);
+                }}
+                style={{
+                  width: "100%",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    height: "3px",
+                    backgroundColor: "rgba(248, 242, 228, 0.2)",
+                    borderRadius: "2px",
+                    position: "relative",
+                    overflow: "visible",
+                  }}
+                >
+                  {/* Progress */}
+                  <div
+                    style={{
+                      height: "100%",
+                      width: duration > 0 ? `${(currentTime / duration) * 100}%` : "0%",
+                      backgroundColor: "#F8F2E4",
+                      borderRadius: "2px",
+                      transition: isScrubbing ? "none" : "width 0.1s linear",
+                      position: "relative",
+                    }}
+                  >
+                    {/* Scrub head */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: "-6px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "12px",
+                        height: "12px",
+                        borderRadius: "50%",
+                        backgroundColor: "#F8F2E4",
+                        boxShadow: "0 0 8px rgba(0,0,0,0.4)",
+                        opacity: controlsVisible ? 1 : 0,
+                        transition: "opacity 0.3s ease",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom row: controls + time */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* Left: play/pause + time */}
+                <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "12px" : "16px" }}>
+                  <button
+                    onClick={togglePause}
+                    aria-label={isPaused ? "Play" : "Pause"}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#F8F2E4",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0.9,
+                      transition: "opacity 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  >
+                    {isPaused ? (
+                      <PlayIcon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                    ) : (
+                      <PauseIcon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={toggleMute}
+                    aria-label={isMuted ? "Unmute" : "Mute"}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#F8F2E4",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0.9,
+                      transition: "opacity 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  >
+                    {isMuted ? (
+                      <SpeakerOffIcon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                    ) : (
+                      <SpeakerLoudIcon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                    )}
+                  </button>
+
+                  {/* Time display */}
+                  <span
+                    style={{
+                      fontFamily: "'Alte Haas Grotesk', sans-serif",
+                      fontSize: isMobile ? "12px" : "14px",
+                      fontWeight: 400,
+                      color: "rgba(248, 242, 228, 0.7)",
+                      letterSpacing: "0.05em",
+                      userSelect: "none",
+                    }}
+                  >
+                    {formatTime(currentTime)}{" "}
+                    <span style={{ opacity: 0.5 }}>/</span>{" "}
+                    {formatTime(duration)}
+                  </span>
+                </div>
+
+                {/* Right: fullscreen + close */}
+                <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "12px" : "16px" }}>
+                  <button
+                    onClick={handleFullscreen}
+                    aria-label="Fullscreen"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#F8F2E4",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0.9,
+                      transition: "opacity 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  >
+                    <EnterFullScreenIcon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                  </button>
+
+                  <button
+                    onClick={handleCloseMovie}
+                    aria-label="Close movie"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#F8F2E4",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0.9,
+                      transition: "opacity 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  >
+                    <Cross2Icon width={isMobile ? 18 : 22} height={isMobile ? 18 : 22} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

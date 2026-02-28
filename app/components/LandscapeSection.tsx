@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
-import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon, TwitterLogoIcon, LinkedInLogoIcon } from "@radix-ui/react-icons";
+import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
@@ -21,7 +21,7 @@ const CHAR_SPRING = {
   mass: 2,
 };
 
-const LINES = ["Come celebrate with our", "family and join our story."];
+const LINES = ["Come Home to", "Pacific Palisades"];
 const CHAR_STAGGER = 0.022;
 const ANIM_DELAY = 0.3;
 
@@ -115,33 +115,6 @@ export default function LandscapeSection() {
         backgroundColor: "#F8F2E4",
       }}
     >
-      {/* Logo — top center, fades in + drops down like Hero */}
-      <div
-        style={{
-          position: "absolute",
-          top: "28px",
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "center",
-          zIndex: 2,
-          pointerEvents: "none",
-        }}
-      >
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: -30 }}
-          animate={inView ? { opacity: 1, y: 0 } : undefined}
-          transition={{ ...TREE_SPRING, delay: 0.1 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/versa-villa-logo-dark.svg"
-            alt="Versa Villa by Arya"
-            style={{ width: isMobile ? "140px" : "200px", height: "auto", display: "block" }}
-          />
-        </motion.div>
-      </div>
-
       {/* Center text — char-by-char reveal matching Hero */}
       <div
         style={{
@@ -262,7 +235,7 @@ export default function LandscapeSection() {
                 transition: "color 150ms ease",
               }}
             >
-              JOIN OUR FAMILY
+              SIGN UP FOR UPDATES
             </span>
 
             <span
@@ -332,38 +305,41 @@ export default function LandscapeSection() {
           padding: isMobile ? "16px 20px" : "20px 40px",
         }}
       >
-        {/* Social icons — bottom left */}
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          {[
-            { Icon: InstagramLogoIcon, href: "#" },
-            { Icon: TwitterLogoIcon, href: "#" },
-            { Icon: LinkedInLogoIcon, href: "#" },
-          ].map(({ Icon, href }, i) => (
-            <a
-              key={i}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "#4A3C24",
-                opacity: 0.6,
-                transition: "opacity 150ms ease",
-                display: "flex",
-                alignItems: "center",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; }}
-            >
-              <Icon width={18} height={18} />
-            </a>
-          ))}
-        </div>
+        {/* Instagram — bottom left */}
+        <a
+          href="https://www.instagram.com/versa.villa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            color: "#4A3C24",
+            opacity: 0.6,
+            transition: "opacity 150ms ease",
+            textDecoration: "none",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; }}
+        >
+          <InstagramLogoIcon width={18} height={18} />
+          <span
+            style={{
+              fontFamily: "'Alte Haas Grotesk', sans-serif",
+              fontSize: isMobile ? "13px" : "14px",
+              fontWeight: 400,
+              letterSpacing: "0.02em",
+            }}
+          >
+            @versa.villa
+          </span>
+        </a>
 
         {/* Copyright — bottom center */}
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "10px" : "12px",
+            fontSize: isMobile ? "12px" : "14px",
             color: "#4A3C24",
             opacity: 0.6,
             letterSpacing: "0.05em",
@@ -376,7 +352,7 @@ export default function LandscapeSection() {
         <span
           style={{
             fontFamily: "'Alte Haas Grotesk', sans-serif",
-            fontSize: isMobile ? "10px" : "12px",
+            fontSize: isMobile ? "12px" : "14px",
             color: "#4A3C24",
             opacity: 0.6,
             letterSpacing: "0.05em",
@@ -563,7 +539,7 @@ export default function LandscapeSection() {
                         textAlign: "center",
                       }}
                     >
-                      Join Our Family
+                      Stay Updated
                     </h3>
 
                     <form

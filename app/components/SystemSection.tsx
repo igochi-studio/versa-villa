@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import {
   motion,
   AnimatePresence,
@@ -8,7 +8,7 @@ import {
   useMotionValueEvent,
   useReducedMotion,
 } from "motion/react";
-import { PauseIcon, PlayIcon } from "@radix-ui/react-icons";
+import { ExternalLinkIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 /* ─── Haptic sound ─── */
@@ -35,7 +35,6 @@ function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
 /* ─── Constants ─── */
 
 const EASE_OUT_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
-const FEATURE_DURATION = 6000;
 const SCROLL_HEIGHT = "700vh"; // enough scroll room for 6 features
 
 const FEATURES = [
@@ -64,7 +63,7 @@ const FEATURES = [
     cost: "$400,000",
     label: "FIRE-RATED WALLS",
     cue: "Walls",
-    media: { src: "/walls.jpeg", type: "image" as const },
+    media: { src: "/010_Bienvenida 1241_by mrbarcelo.jpeg", type: "image" as const },
   },
   {
     number: "04",
@@ -272,6 +271,125 @@ const reducedVariants = {
   exit: { opacity: 0, transition: { duration: 0.3 } },
 };
 
+/* ─── WSJ Coverage Easter Egg ─── */
+
+function WSJCoverage({ isMobile }: { isMobile: boolean }) {
+  const [hovered, setHovered] = useState(false);
+  const imgSize = isMobile ? 44 : 52;
+
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "10px",
+        marginBottom: isMobile ? "16px" : "20px",
+        position: "relative",
+      }}
+    >
+      {/* Thumbnail + magnify interaction */}
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          width: imgSize,
+          height: "auto",
+          flexShrink: 0,
+          cursor: "zoom-in",
+          position: "relative",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/coverage by wall street journal.png"
+          alt="Coverage by Wall Street Journal"
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+          }}
+        />
+
+        {/* Magnifying glass indicator */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: -2,
+            right: -2,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            backgroundColor: "#F8F2E4",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: hovered ? 0 : 0.8,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          <MagnifyingGlassIcon style={{ width: 11, height: 11, color: "#4A3C24" }} />
+        </div>
+
+        {/* Expanded preview on hover — no container, transparent bg */}
+        {hovered && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 8px)",
+              left: 0,
+              width: isMobile ? "140px" : "160px",
+              zIndex: 50,
+              animation: "wsj-pop 0.3s cubic-bezier(0.23, 1, 0.32, 1)",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/coverage by wall street journal.png"
+              alt="Coverage by Wall Street Journal"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Label + link */}
+      <a
+        href="https://www.wsj.com/real-estate/luxury-homes/fire-resistant-home-pacific-palisades-los-angeles-c66bff83"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          fontFamily: "'Alte Haas Grotesk', sans-serif",
+          fontSize: isMobile ? "11px" : "12px",
+          fontWeight: 500,
+          color: "#B8965A",
+          letterSpacing: "1px",
+          textTransform: "uppercase",
+          textDecoration: "none",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Coverage By WSJ
+        <ExternalLinkIcon style={{ width: 11, height: 11 }} />
+      </a>
+
+      {/* Inline keyframes for the pop animation */}
+      <style>{`
+        @keyframes wsj-pop {
+          from { opacity: 0; transform: scale(0.9) translateY(4px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /* ─── Component ─── */
 
 export default function SystemSection() {
@@ -282,124 +400,9 @@ export default function SystemSection() {
   const variants = prefersReducedMotion ? reducedVariants : wordVariants;
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [timerProgress, setTimerProgress] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [inView, setInView] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const pausedRef = useRef(false);
-  const pausedElapsedRef = useRef(0); // elapsed time when paused
 
-  // Refs for hybrid timer+scroll logic
-  const timerPhaseRef = useRef(0);
-  const scrollPhaseRef = useRef(0);
-  const timerResetRef = useRef(0); // timestamp of last scroll-driven change
-  const rafRef = useRef<number>(0);
-  const timerStartRef = useRef<number>(0);
-  const activeIndexRef = useRef(0);
-
-  activeIndexRef.current = activeIndex;
-
-  /* ── Viewport detection (persistent) ── */
-  useEffect(() => {
-    const el = stickyRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { setInView(entry.isIntersecting); },
-      { threshold: 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  /* ── Reconcile timer + scroll into activeIndex ── */
-  const reconcilePhase = useCallback((scrollDriven?: boolean) => {
-    if (scrollDriven) {
-      // Scroll always wins — allow both forward and backward
-      const next = scrollPhaseRef.current;
-      timerPhaseRef.current = next;
-      setActiveIndex((prev) => (next !== prev ? next : prev));
-    } else {
-      const merged = Math.max(timerPhaseRef.current, scrollPhaseRef.current);
-      setActiveIndex((prev) => (merged !== prev ? merged : prev));
-    }
-  }, []);
-
-  /* ── Timer engine — auto-advances + drives progress bar ── */
-  const tick = useCallback((now: number) => {
-    if (pausedRef.current) {
-      return; // Don't advance when paused
-    }
-    const elapsed = now - timerStartRef.current;
-    const p = Math.min(1, elapsed / FEATURE_DURATION);
-    setTimerProgress(p);
-    if (p >= 1) {
-      // Don't advance past last feature
-      if (timerPhaseRef.current < FEATURES.length - 1) {
-        // Skip if scroll just advanced us
-        if (Date.now() - timerResetRef.current < FEATURE_DURATION * 0.8) {
-          // Reset timer for current phase without advancing
-          timerStartRef.current = performance.now();
-          setTimerProgress(0);
-          rafRef.current = requestAnimationFrame(tick);
-          return;
-        }
-        timerPhaseRef.current = timerPhaseRef.current + 1;
-        playTick(3600, 0.03, 0.05);
-        reconcilePhase();
-      }
-      return;
-    }
-    rafRef.current = requestAnimationFrame(tick);
-  }, [reconcilePhase]);
-
-  const startTimer = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    timerStartRef.current = performance.now();
-    pausedElapsedRef.current = 0;
-    setTimerProgress(0);
-    rafRef.current = requestAnimationFrame(tick);
-  }, [tick]);
-
-  const stopTimer = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-  }, []);
-
-  const togglePause = useCallback(() => {
-    playTick(3200, 0.035, 0.06);
-    if (pausedRef.current) {
-      // Resume: adjust timerStartRef so elapsed picks up where it left off
-      pausedRef.current = false;
-      setIsPaused(false);
-      timerStartRef.current = performance.now() - pausedElapsedRef.current;
-      rafRef.current = requestAnimationFrame(tick);
-    } else {
-      // Pause: save how far we were
-      pausedRef.current = true;
-      setIsPaused(true);
-      pausedElapsedRef.current = performance.now() - timerStartRef.current;
-      cancelAnimationFrame(rafRef.current);
-    }
-  }, [tick]);
-
-  /* ── Start/stop timer based on visibility ── */
-  useEffect(() => {
-    if (inView && !pausedRef.current) {
-      startTimer();
-    } else {
-      stopTimer();
-    }
-    return stopTimer;
-  }, [inView, startTimer, stopTimer]);
-
-  /* ── Restart timer when activeIndex changes (if in view) ── */
-  useEffect(() => {
-    if (inView && !pausedRef.current) {
-      startTimer();
-    }
-    return stopTimer;
-  }, [activeIndex, inView, startTimer, stopTimer]);
-
-  /* ── Scroll tracking ── */
+  /* ── Scroll tracking (purely scroll-driven) ── */
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -407,11 +410,7 @@ export default function SystemSection() {
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const next = getPhase(v);
-    if (next !== scrollPhaseRef.current) {
-      scrollPhaseRef.current = next;
-      timerResetRef.current = Date.now();
-      reconcilePhase(true);
-    }
+    setActiveIndex((prev) => (next !== prev ? next : prev));
   });
 
   /* ── Hover/click handlers for indicator lines ── */
@@ -426,10 +425,6 @@ export default function SystemSection() {
 
   const handleIndicatorClick = useCallback((i: number) => {
     playTick(3800, 0.04, 0.08);
-    // Jump both timer and scroll phase refs to clicked index
-    timerPhaseRef.current = i;
-    scrollPhaseRef.current = i;
-    timerResetRef.current = Date.now();
     setActiveIndex(i);
     setHoveredIndex(null);
   }, []);
@@ -438,7 +433,7 @@ export default function SystemSection() {
   const IllustrationComponent = ILLUSTRATIONS[activeIndex];
 
   return (
-    <div id="ambition" ref={containerRef} style={{ height: SCROLL_HEIGHT, position: "relative" }}>
+    <div id="fire-features" ref={containerRef} style={{ height: SCROLL_HEIGHT, position: "relative" }}>
       <section
         ref={stickyRef}
         style={{
@@ -476,6 +471,8 @@ export default function SystemSection() {
               minHeight: isMobile ? "45%" : undefined,
             }}
           >
+            <WSJCoverage isMobile={isMobile} />
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={`feature-${activeIndex}`}
@@ -689,7 +686,7 @@ export default function SystemSection() {
           </div>
         </div>
 
-        {/* ── Bottom: Indicator lines with timer + cue labels ── */}
+        {/* ── Bottom: Indicator lines + cue labels ── */}
         <div
           style={{
             padding: isMobile ? "0 24px 32px" : "0 60px 48px",
@@ -768,7 +765,7 @@ export default function SystemSection() {
                       transition: "height 0.3s ease",
                     }}
                   >
-                    {/* Single fill bar — always mounted, width driven by state */}
+                    {/* Fill bar — driven by scroll position */}
                     <div
                       style={{
                         position: "absolute",
@@ -777,7 +774,7 @@ export default function SystemSection() {
                         height: "100%",
                         borderRadius: "1.5px",
                         width: isActive
-                          ? `${timerProgress * 100}%`
+                          ? "100%"
                           : isPast
                             ? "100%"
                             : "0%",
@@ -786,9 +783,7 @@ export default function SystemSection() {
                           : isPast
                             ? "rgba(74, 60, 36, 0.35)"
                             : "transparent",
-                        transition: isActive
-                          ? "none"
-                          : "width 0.4s cubic-bezier(0.23,1,0.32,1), background-color 0.3s ease",
+                        transition: "width 0.4s cubic-bezier(0.23,1,0.32,1), background-color 0.3s ease",
                       }}
                     />
                   </div>
@@ -797,12 +792,9 @@ export default function SystemSection() {
             })}
           </div>
 
-          {/* Counter + Pause/Play */}
+          {/* Counter */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
               width: isMobile ? "100%" : "45%",
               marginTop: "12px",
             }}
@@ -827,30 +819,6 @@ export default function SystemSection() {
                 {String(FEATURES.length).padStart(2, "0")}
               </motion.span>
             </AnimatePresence>
-            <button
-              onClick={togglePause}
-              aria-label={isPaused ? "Play" : "Pause"}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "4px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#4A3C24",
-                opacity: 0.4,
-                transition: "opacity 0.2s ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.4"; }}
-            >
-              {isPaused ? (
-                <PlayIcon width={16} height={16} />
-              ) : (
-                <PauseIcon width={16} height={16} />
-              )}
-            </button>
           </div>
         </div>
       </section>

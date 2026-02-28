@@ -155,7 +155,7 @@ export default function FuturePage() {
             margin: 0,
           }}
         >
-          Join our family.
+          Come Home to Pacific Palisades.
         </motion.h2>
 
         <motion.div
@@ -212,7 +212,7 @@ export default function FuturePage() {
                 transition: "color 150ms ease",
               }}
             >
-              GET IN TOUCH
+              SIGN UP FOR UPDATES
             </span>
             <span
               className="future-cta-btn-arrow"
@@ -388,7 +388,7 @@ export default function FuturePage() {
                         textAlign: "center",
                       }}
                     >
-                      Join Our Family
+                      Stay Updated
                     </h3>
                     <form
                       onSubmit={(e) => {
