@@ -97,6 +97,14 @@ export default function LandscapeSection() {
   const flowerVideoRef = useRef<HTMLVideoElement>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  // true = browser can play transparent WebM (Chrome/Firefox) → need multiply blend
+  // false = Safari/iOS falls back to baked MP4 → blend mode must be off
+  const [supportsWebM, setSupportsWebM] = useState(false);
+
+  useEffect(() => {
+    const v = document.createElement("video");
+    setSupportsWebM(v.canPlayType('video/webm; codecs="vp8"') !== "");
+  }, []);
 
   // iOS Safari needs explicit .play() for autoplay
   useEffect(() => {
@@ -284,7 +292,7 @@ export default function LandscapeSection() {
             height: "auto",
             maxHeight: "none",
             objectFit: "contain",
-            mixBlendMode: "multiply",
+            mixBlendMode: supportsWebM ? "multiply" : "normal",
           }}
         >
           <source src="/flower-animation-transparent.webm" type="video/webm" />
