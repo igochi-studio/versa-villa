@@ -178,6 +178,7 @@ export default function NeighborhoodsSection() {
   const scrollVRef  = useRef(0);
 
   const [textVisible, setTextVisible] = useState(false);
+  const [visibleLines, setVisibleLines] = useState(0); // 0, 1, or 2 lines visible
   const [imgsReady,  setImgsReady]  = useState(false);
 
   // Refs for direct DOM manipulation (no re-renders for continuous values)
@@ -200,6 +201,12 @@ export default function NeighborhoodsSection() {
       textVisibleRef.current = true;
       setTextVisible(true);
     }
+
+    // Scroll-driven line reveal — reversible on scroll-up
+    // Line 1 ("Destroying") at 0.5%, Line 2 ("entire neighborhoods.") at 4%
+    if (cv >= 0.04) setVisibleLines(2);
+    else if (cv >= 0.005) setVisibleLines(1);
+    else setVisibleLines(0);
 
     // ── Direct DOM updates for continuous values ──
     const imgFade  = map(cv, T.IMG_IN,   T.IMG_FULL);
@@ -335,7 +342,7 @@ export default function NeighborhoodsSection() {
           />
         </div>
 
-        {/* ── Text (before burn) ──────────────────────────────────────────── */}
+        {/* ── Text (before burn) — scroll-driven line reveal ────────────── */}
         {textVisible && (
           <div
             ref={textElRef}
@@ -353,9 +360,13 @@ export default function NeighborhoodsSection() {
                 lineHeight: 1.1,
                 marginBottom: "2px",
                 WebkitFontSmoothing: "antialiased",
+                opacity: visibleLines >= 1 ? 1 : 0,
+                filter: visibleLines >= 1 ? "blur(0px)" : "blur(8px)",
+                transform: visibleLines >= 1 ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity 0.5s cubic-bezier(0.23,1,0.32,1), filter 0.5s cubic-bezier(0.23,1,0.32,1), transform 0.5s cubic-bezier(0.23,1,0.32,1)",
               }}
             >
-              <CharReveal text="Destroying" />
+              Destroying
             </p>
             <p
               style={{
@@ -366,9 +377,13 @@ export default function NeighborhoodsSection() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
                 WebkitFontSmoothing: "antialiased",
+                opacity: visibleLines >= 2 ? 1 : 0,
+                filter: visibleLines >= 2 ? "blur(0px)" : "blur(8px)",
+                transform: visibleLines >= 2 ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity 0.5s cubic-bezier(0.23,1,0.32,1), filter 0.5s cubic-bezier(0.23,1,0.32,1), transform 0.5s cubic-bezier(0.23,1,0.32,1)",
               }}
             >
-              <CharReveal text="entire neighborhoods." baseDelay={0.3} />
+              entire neighborhoods.
             </p>
           </div>
         )}

@@ -242,27 +242,26 @@ const ILLUSTRATIONS = [
   IllustrationEnvelope,
 ];
 
-/* ─── Word blur-reveal variants ─── */
+/* ─── Paragraph blur fade-in variants ─── */
 
-const wordVariants = {
-  hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
-  visible: (i: number) => ({
+const blockVariants = {
+  hidden: { opacity: 0, y: 12, filter: "blur(6px)" },
+  visible: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.8,
+      duration: 0.5,
       ease: EASE_OUT_QUINT,
-      delay: i * 0.06,
-      filter: { duration: 0.9, ease: EASE_OUT_QUINT, delay: i * 0.06 },
+      filter: { duration: 0.6, ease: EASE_OUT_QUINT },
     },
-  }),
-  exit: (i: number) => ({
+  },
+  exit: {
     opacity: 0,
-    y: -10,
+    y: -8,
     filter: "blur(4px)",
-    transition: { delay: i * 0.015, duration: 0.35, ease: EASE_OUT_QUINT },
-  }),
+    transition: { duration: 0.25, ease: EASE_OUT_QUINT },
+  },
 };
 
 const reducedVariants = {
@@ -397,7 +396,7 @@ export default function SystemSection() {
   const stickyRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
-  const variants = prefersReducedMotion ? reducedVariants : wordVariants;
+  const variants = prefersReducedMotion ? reducedVariants : blockVariants;
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -486,31 +485,27 @@ export default function SystemSection() {
                 }}
               >
                 {/* Feature number + label */}
-                <div
+                <motion.div
+                  variants={variants}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: isMobile ? "10px" : "16px",
+                    willChange: "filter, opacity, transform",
                   }}
                 >
-                  <motion.span
-                    custom={0}
-                    variants={variants}
+                  <span
                     style={{
                       fontFamily: "'Alte Haas Grotesk', sans-serif",
                       fontSize: "18px",
                       fontWeight: 700,
                       color: "#B8965A",
                       letterSpacing: "2px",
-                      willChange: "filter, opacity, transform",
-                      display: "inline-block",
                     }}
                   >
                     [{feature.number}]
-                  </motion.span>
-                  <motion.span
-                    custom={1}
-                    variants={variants}
+                  </span>
+                  <span
                     style={{
                       fontFamily: "'Alte Haas Grotesk', sans-serif",
                       fontSize: isMobile ? "12px" : "14px",
@@ -519,72 +514,44 @@ export default function SystemSection() {
                       letterSpacing: "3px",
                       textTransform: "uppercase",
                       opacity: 0.5,
-                      willChange: "filter, opacity, transform",
-                      display: "inline-block",
                     }}
                   >
                     {feature.label}
-                  </motion.span>
-                </div>
+                  </span>
+                </motion.div>
 
                 {/* Title */}
                 <motion.p
+                  variants={variants}
                   style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: isMobile ? "0 7px" : "0 10px",
                     margin: 0,
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
+                    fontWeight: 400,
+                    color: "#4A3C24",
+                    lineHeight: "110%",
+                    letterSpacing: "-0.02em",
+                    willChange: "filter, opacity, transform",
                   }}
                 >
-                  {feature.title.split(" ").map((word, i) => (
-                    <motion.span
-                      key={`t-${activeIndex}-${i}`}
-                      custom={i + 2}
-                      variants={variants}
-                      style={{
-                        display: "inline-block",
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
-                        fontWeight: 400,
-                        color: "#4A3C24",
-                        lineHeight: "110%",
-                        letterSpacing: "-0.02em",
-                        willChange: "filter, opacity, transform",
-                      }}
-                    >
-                      {word}
-                    </motion.span>
-                  ))}
+                  {feature.title}
                 </motion.p>
 
                 {/* Copy */}
                 <motion.p
+                  variants={variants}
                   style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "0 5px",
                     margin: 0,
                     maxWidth: isMobile ? "100%" : "480px",
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: isMobile ? "clamp(16px, 2vw, 20px)" : "22px",
+                    fontWeight: 400,
+                    color: "#4A3C24",
+                    lineHeight: "160%",
+                    willChange: "filter, opacity, transform",
                   }}
                 >
-                  {feature.copy.split(" ").map((word, i) => (
-                    <motion.span
-                      key={`c-${activeIndex}-${i}`}
-                      custom={i + 4}
-                      variants={variants}
-                      style={{
-                        display: "inline-block",
-                        fontFamily: "'Alte Haas Grotesk', sans-serif",
-                        fontSize: isMobile ? "clamp(16px, 2vw, 20px)" : "22px",
-                        fontWeight: 400,
-                        color: "#4A3C24",
-                        lineHeight: "160%",
-                        willChange: "filter, opacity, transform",
-                      }}
-                    >
-                      {word}
-                    </motion.span>
-                  ))}
+                  {feature.copy}
                 </motion.p>
 
 

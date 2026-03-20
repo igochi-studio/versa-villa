@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, useReducedMotion, useInView, AnimatePresence } from "motion/react";
+import { motion, useReducedMotion, useScroll, useMotionValueEvent, AnimatePresence } from "motion/react";
 import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
@@ -9,21 +9,21 @@ const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
 
 const TREE_SPRING = {
   type: "spring" as const,
-  stiffness: 140,
-  damping: 100,
+  stiffness: 200,
+  damping: 80,
   mass: 2,
 };
 
 const CHAR_SPRING = {
   type: "spring" as const,
-  stiffness: 140,
-  damping: 100,
+  stiffness: 200,
+  damping: 80,
   mass: 2,
 };
 
 const LINES = ["Come Home to", "Pacific Palisades"];
-const CHAR_STAGGER = 0.022;
-const ANIM_DELAY = 0.3;
+const CHAR_STAGGER = 0.012;
+const ANIM_DELAY = 0.15;
 
 // Total chars across all lines — used to time the CTA after text finishes
 const TOTAL_CHARS = LINES.reduce((sum, l) => sum + l.length, 0);
@@ -92,9 +92,20 @@ function CharReveal({
 export default function LandscapeSection() {
   const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const outerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const inView = useInView(sectionRef, { once: true, amount: 0.15 });
   const flowerVideoRef = useRef<HTMLVideoElement>(null);
+  const [inView, setInView] = useState(false);
+
+  // Scroll-driven reveal — triggers at ~30% scroll through the 200vh wrapper
+  const { scrollYProgress } = useScroll({
+    target: outerRef,
+    offset: ["start end", "end end"],
+  });
+
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v >= 0.3 && !inView) setInView(true);
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   // true = browser can play transparent WebM (Chrome/Firefox) → need multiply blend
@@ -114,10 +125,12 @@ export default function LandscapeSection() {
   }, []);
 
   return (
+    <div ref={outerRef} style={{ height: "200vh", position: "relative" }}>
     <section
       ref={sectionRef}
       style={{
-        position: "relative",
+        position: "sticky",
+        top: 0,
         height: "100vh",
         overflow: "hidden",
         backgroundColor: "#F8F2E4",
@@ -146,6 +159,7 @@ export default function LandscapeSection() {
             lineHeight: 1.15,
             letterSpacing: "-0.02em",
             color: "#4A3C24",
+            textAlign: "center",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
           }}
@@ -167,10 +181,10 @@ export default function LandscapeSection() {
                   whiteSpace: isMobile ? "normal" : "nowrap",
                   willChange: "filter",
                 }}
-                initial={shouldReduceMotion ? false : { filter: "blur(8px)" }}
+                initial={shouldReduceMotion ? false : { filter: "blur(5px)" }}
                 animate={inView ? { filter: "blur(0px)" } : undefined}
                 transition={{
-                  duration: lineDur,
+                  duration: lineDur * 0.25,
                   ease: EASE_OUT_QUINT,
                   delay: lineStart,
                 }}
@@ -707,5 +721,6 @@ export default function LandscapeSection() {
         }
       `}</style>
     </section>
+    </div>
   );
 }

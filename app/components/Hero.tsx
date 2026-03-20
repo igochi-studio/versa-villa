@@ -613,7 +613,7 @@ export default function Hero() {
                 <span key={lineIdx} style={{ display: "block" }}>
                   {words.map((w, wi) => {
                     const globalIdx = lineIdx === 0 ? wi : 3 + wi;
-                    const wordDelay = 0.4 + globalIdx * 0.12;
+                    const wordDelay = 0.2 + globalIdx * 0.07;
                     return (
                       <motion.span
                         key={w.text}
@@ -624,7 +624,7 @@ export default function Hero() {
                         initial={
                           shouldReduceMotion
                             ? false
-                            : { opacity: 0, y: 18, filter: "blur(6px)" }
+                            : { opacity: 0, y: 12, filter: "blur(6px)" }
                         }
                         animate={
                           ready
@@ -632,11 +632,11 @@ export default function Hero() {
                             : undefined
                         }
                         transition={{
-                          duration: 0.9,
+                          duration: 0.65,
                           ease: EASE_OUT_QUINT,
                           delay: wordDelay,
                           filter: {
-                            duration: 1.1,
+                            duration: 0.7,
                             ease: EASE_OUT_QUINT,
                             delay: wordDelay,
                           },
@@ -657,7 +657,7 @@ export default function Hero() {
             style={{ marginTop: "28px", display: "inline-block" }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
             animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
-            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 1.3 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 0.75 }}
           >
             {/* CSS transitions for hover — 150ms ease, no spring linger */}
             <button

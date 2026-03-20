@@ -418,32 +418,7 @@ export default function DestroyingCosmos() {
     return () => observer.disconnect();
   }, [goPhase]);
 
-  // ── Title reveal ───────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isVisible) return;
-    const t = setTimeout(() => setShowTitle(true), TITLE_REVEAL_DELAY);
-    return () => clearTimeout(t);
-  }, [isVisible]);
-
-  // ── Subtitle cycling ───────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isVisible) return;
-    let count = 0;
-    let interval: ReturnType<typeof setInterval> | null = null;
-    const showTimer = setTimeout(() => setShowSubtitle(true), SUBTITLE_START_DELAY);
-    const cycleTimer = setTimeout(() => {
-      interval = setInterval(() => {
-        count++;
-        if (count >= SUBTITLES.length - 1) {
-          setSubtitleIndex((prev) => Math.max(prev, SUBTITLES.length - 1));
-          if (interval) clearInterval(interval);
-        } else {
-          setSubtitleIndex((prev) => Math.max(prev, count));
-        }
-      }, SUBTITLE_INTERVAL);
-    }, SUBTITLE_START_DELAY + SUBTITLE_INTERVAL);
-    return () => { clearTimeout(showTimer); clearTimeout(cycleTimer); if (interval) clearInterval(interval); };
-  }, [isVisible]);
+  // ── Title + subtitle reveal — now fully scroll-driven (no timers) ────
 
   // ── Reveal groups ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -525,14 +500,19 @@ export default function DestroyingCosmos() {
       s.borderRadius = `${lerp(16, 0, expandP)}px`;
     }
 
+    // ── Scroll-driven title + subtitle reveal (bidirectional) ──────────
+    // Title shows as soon as scroll starts, subtitles spread across 0.03–0.28
+    setShowTitle(v >= 0.005);
+    const subThresholds = [0.03, 0.09, 0.15, 0.21, 0.27];
+    let scrollIdx = -1;
+    for (let i = subThresholds.length - 1; i >= 0; i--) {
+      if (v >= subThresholds[i]) { scrollIdx = i; break; }
+    }
+    setShowSubtitle(scrollIdx >= 0);
+    if (scrollIdx >= 0) setSubtitleIndex(scrollIdx);
+
     // Phase transition: cosmos → expanded when expansion is significant
     if (p === 0) {
-      const scrollIdx = Math.min(
-        SUBTITLES.length - 1,
-        Math.floor((v / (EXPAND_START - 0.02)) * SUBTITLES.length)
-      );
-      setSubtitleIndex((prev) => Math.max(prev, scrollIdx));
-
       if (v >= COSMOS_FADE_AT) {
         goPhase(1);
       }
@@ -898,12 +878,12 @@ export default function DestroyingCosmos() {
               display: "inline-block",
               willChange: "filter, opacity, transform",
             }}
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: "blur(6px)" }}
-            animate={showTitle ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 12, filter: "blur(6px)" }}
+            animate={showTitle ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 12, filter: "blur(6px)" }}
             transition={{
-              duration: 0.9,
+              duration: 0.5,
               ease: EASE_OUT_QUINT,
-              filter: { duration: 1.1, ease: EASE_OUT_QUINT },
+              filter: { duration: 0.6, ease: EASE_OUT_QUINT },
             }}
           >
             Destroying
@@ -928,13 +908,13 @@ export default function DestroyingCosmos() {
                     whiteSpace: isMobile ? "normal" : "nowrap",
                     willChange: "filter, opacity, transform",
                   }}
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 18, filter: "blur(6px)" }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 12, filter: "blur(6px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
+                  exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                   transition={{
-                    duration: 0.9,
+                    duration: 0.45,
                     ease: EASE_OUT_QUINT,
-                    filter: { duration: 1.1, ease: EASE_OUT_QUINT },
+                    filter: { duration: 0.5, ease: EASE_OUT_QUINT },
                   }}
                 >
                   {SUBTITLES[subtitleIndex]}

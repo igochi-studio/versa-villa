@@ -13,23 +13,14 @@ import { useIsMobile } from "../hooks/useIsMobile";
 // ── Easing ──────────────────────────────────────────────────────────────────
 const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as [number, number, number, number];
 
-// ── Story lines ─────────────────────────────────────────────────────────────
-const LINES = [
-  "After decades shaping Pacific Palisades,",
-  "the fires took Ardie\u2019s own home too.",
+// ── Story sentences ──────────────────────────────────────────────────────────
+const SENTENCES = [
+  "After decades shaping Pacific Palisades, the fires took Ardie\u2019s own home too.",
   "Rebuilding wasn\u2019t about replacing what was lost anymore.",
   "It was about creating something stronger.",
 ];
 
-// Flatten all words with their line index for rendering
-const ALL_WORDS: { word: string; line: number; globalIndex: number }[] = [];
-LINES.forEach((line, lineIdx) => {
-  line.split(" ").forEach((word) => {
-    ALL_WORDS.push({ word, line: lineIdx, globalIndex: ALL_WORDS.length });
-  });
-});
-
-const TOTAL_WORDS = ALL_WORDS.length;
+const TOTAL_SENTENCES = SENTENCES.length;
 
 // ── Tree entrance — spring: fast start, slow decelerate ─────────────────────
 const TREE_SPRING = {
@@ -45,7 +36,7 @@ export default function StorySection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const [hasEnteredOnce, setHasEnteredOnce] = useState(false);
-  const [highlightedCount, setHighlightedCount] = useState(0);
+  const [revealedSentences, setRevealedSentences] = useState(0);
 
   // ── Detect first entry for tree reveal ──────────────────────────────
   useEffect(() => {
@@ -66,12 +57,13 @@ export default function StorySection() {
     offset: ["start start", "end end"],
   });
 
-  // Map scroll progress to number of highlighted words
-  // Reserve 0-5% for entry, 5%-85% for word reveal, 85-100% for linger
+  // Map scroll progress to sentence reveals — one sentence per scroll step
+  // 3 sentences across the scroll: ~0.15, ~0.45, ~0.75
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    const wordProgress = Math.max(0, Math.min(1, (v - 0.05) / 0.8));
-    const count = Math.round(wordProgress * TOTAL_WORDS);
-    setHighlightedCount(count);
+    if (v >= 0.70) setRevealedSentences(3);
+    else if (v >= 0.40) setRevealedSentences(2);
+    else if (v >= 0.15) setRevealedSentences(1);
+    else setRevealedSentences(0);
   });
 
   // Birds: converge toward top-center
@@ -84,7 +76,7 @@ export default function StorySection() {
     <section
       id="its-personal"
       ref={containerRef}
-      style={{ height: "650vh", position: "relative" }}
+      style={{ height: "400vh", position: "relative" }}
     >
       <div
         ref={stickyRef}
@@ -186,7 +178,7 @@ export default function StorySection() {
           }}
         />
 
-        {/* ── All text as single flowing paragraph, scroll-driven word highlight ── */}
+        {/* ── Sentence-by-sentence scroll reveal (single flowing paragraph) ── */}
         <div
           style={{
             position: "relative",
@@ -208,18 +200,19 @@ export default function StorySection() {
               textAlign: "center",
             }}
           >
-            {ALL_WORDS.map((w, idx) => {
-              const isHighlighted = idx < highlightedCount;
+            {SENTENCES.map((sentence, idx) => {
+              const isRevealed = idx < revealedSentences;
               return (
                 <span
                   key={idx}
                   style={{
-                    opacity: hasEnteredOnce ? (isHighlighted ? 1 : 0.18) : 0,
-                    transition: "opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1)",
-                    willChange: "opacity",
+                    opacity: hasEnteredOnce ? (isRevealed ? 1 : 0.12) : 0,
+                    filter: hasEnteredOnce ? (isRevealed ? "blur(0px)" : "blur(4px)") : "blur(6px)",
+                    transition: "opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.5s cubic-bezier(0.23, 1, 0.32, 1)",
+                    willChange: "opacity, filter",
                   }}
                 >
-                  {w.word}{idx < ALL_WORDS.length - 1 ? " " : ""}
+                  {sentence}{idx < SENTENCES.length - 1 ? " " : ""}
                 </span>
               );
             })}

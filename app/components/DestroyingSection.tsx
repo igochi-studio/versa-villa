@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "motion/react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import StorySection from "./StorySection";
 
@@ -340,10 +340,10 @@ const wordVariants = {
     y: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.8,
+      duration: 0.5,
       ease: EASE_OUT_QUINT,
-      delay: 0.5 + i * 0.08,
-      filter: { duration: 0.9, ease: EASE_OUT_QUINT, delay: 0.5 + i * 0.08 },
+      delay: 0.15 + i * 0.04,
+      filter: { duration: 0.6, ease: EASE_OUT_QUINT, delay: 0.15 + i * 0.04 },
     },
   }),
 };
@@ -451,38 +451,18 @@ function QuestionsScrollSection({ isMobile }: { isMobile: boolean }) {
   });
 
   const [revealedCount, setRevealedCount] = useState(0);
-  const [inView, setInView] = useState(false);
-  const stickyRef = useRef<HTMLDivElement>(null);
 
-  // Detect when the sticky section is in view
-  useEffect(() => {
-    const el = stickyRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Auto-reveal questions one after another when in view
-  useEffect(() => {
-    if (!inView) return;
-    if (revealedCount >= 3) return;
-
-    // First one reveals immediately, then stagger every 1.2s
-    const delay = revealedCount === 0 ? 300 : 1200;
-    const timer = setTimeout(() => {
-      setRevealedCount((c) => Math.min(c + 1, 3));
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [inView, revealedCount]);
+  // Reveal questions at scroll thresholds — spread across scroll so each has reading time
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v >= 0.55) setRevealedCount(3);
+    else if (v >= 0.35) setRevealedCount(2);
+    else if (v >= 0.15) setRevealedCount(1);
+    else setRevealedCount(0);
+  });
 
   return (
-    <div ref={containerRef} style={{ height: "300vh", position: "relative" }}>
+    <div ref={containerRef} style={{ height: "450vh", position: "relative" }}>
       <div
-        ref={stickyRef}
         style={{
           position: "sticky",
           top: 0,
