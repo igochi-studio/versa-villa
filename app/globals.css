@@ -28,10 +28,6 @@
   --color-brown:     #4A3C24;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 html,
 body {
   background-color: #F8F2E4;
@@ -46,9 +42,4 @@ body {
   html, body {
     overscroll-behavior: none;
   }
-}
-
-/* Force GPU compositing on all animated elements */
-[style*="willChange"] {
-  transform: translateZ(0);
 }
