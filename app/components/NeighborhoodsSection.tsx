@@ -363,7 +363,7 @@ export default function NeighborhoodsSection() {
                 opacity: visibleLines >= 1 ? 1 : 0,
                 filter: visibleLines >= 1 ? "blur(0px)" : "blur(8px)",
                 transform: visibleLines >= 1 ? "translateY(0)" : "translateY(10px)",
-                transition: "opacity 0.5s cubic-bezier(0.23,1,0.32,1), filter 0.5s cubic-bezier(0.23,1,0.32,1), transform 0.5s cubic-bezier(0.23,1,0.32,1)",
+                transition: "opacity 0.5s cubic-bezier(0.16,1,0.3,1), filter 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1)",
               }}
             >
               Destroying
@@ -380,7 +380,7 @@ export default function NeighborhoodsSection() {
                 opacity: visibleLines >= 2 ? 1 : 0,
                 filter: visibleLines >= 2 ? "blur(0px)" : "blur(8px)",
                 transform: visibleLines >= 2 ? "translateY(0)" : "translateY(10px)",
-                transition: "opacity 0.5s cubic-bezier(0.23,1,0.32,1), filter 0.5s cubic-bezier(0.23,1,0.32,1), transform 0.5s cubic-bezier(0.23,1,0.32,1)",
+                transition: "opacity 0.5s cubic-bezier(0.16,1,0.3,1), filter 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1)",
               }}
             >
               entire neighborhoods.

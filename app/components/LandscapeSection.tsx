@@ -5,7 +5,7 @@ import { motion, useReducedMotion, useScroll, useMotionValueEvent, AnimatePresen
 import { ArrowRightIcon, Cross2Icon, InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
-const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
 const TREE_SPRING = {
   type: "spring" as const,
@@ -185,7 +185,7 @@ export default function LandscapeSection() {
                 animate={inView ? { filter: "blur(0px)" } : undefined}
                 transition={{
                   duration: lineDur * 0.25,
-                  ease: EASE_OUT_QUINT,
+                  ease: EASE_OUT_EXPO,
                   delay: lineStart,
                 }}
               >
@@ -204,7 +204,7 @@ export default function LandscapeSection() {
           style={{ marginTop: "28px", display: "inline-block", pointerEvents: "auto" }}
           initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
           animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
-          transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: CTA_DELAY }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: CTA_DELAY }}
         >
           <button
             onClick={() => {
@@ -430,7 +430,7 @@ export default function LandscapeSection() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: EASE_OUT_QUINT }}
+              transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "#F8F2E4",
@@ -474,7 +474,7 @@ export default function LandscapeSection() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.5, ease: EASE_OUT_QUINT }}
+                    transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
                     style={{
                       display: "flex",
                       flexDirection: "column",
@@ -488,7 +488,7 @@ export default function LandscapeSection() {
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.4, ease: EASE_OUT_QUINT, delay: 0.15 }}
+                      transition={{ duration: 0.4, ease: EASE_OUT_EXPO, delay: 0.15 }}
                       style={{
                         width: "48px",
                         height: "48px",
@@ -508,7 +508,7 @@ export default function LandscapeSection() {
                           strokeLinejoin="round"
                           initial={{ pathLength: 0 }}
                           animate={{ pathLength: 1 }}
-                          transition={{ duration: 0.5, ease: EASE_OUT_QUINT, delay: 0.35 }}
+                          transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.35 }}
                         />
                       </svg>
                     </motion.div>
@@ -516,7 +516,7 @@ export default function LandscapeSection() {
                     <motion.h3
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, ease: EASE_OUT_QUINT, delay: 0.3 }}
+                      transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.3 }}
                       style={{
                         fontFamily: "var(--font-playfair), serif",
                         fontSize: "32px",

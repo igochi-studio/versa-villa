@@ -161,7 +161,7 @@ function CommunityMarquee({ isMobile }: { isMobile: boolean }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             onClick={handleClose}
             style={{
               position: "fixed",
@@ -181,7 +181,7 @@ function CommunityMarquee({ isMobile }: { isMobile: boolean }) {
               initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 maxWidth: "90vw",
                 maxHeight: "85vh",
@@ -197,7 +197,7 @@ function CommunityMarquee({ isMobile }: { isMobile: boolean }) {
 
       <style>{`
         .marquee-card-img {
-          transition: transform 700ms cubic-bezier(0.23, 1, 0.32, 1);
+          transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         .marquee-card:hover .marquee-card-img {
           transform: scale(1.04);
@@ -248,7 +248,7 @@ const QUESTIONS = [
   },
 ];
 
-const EASE_OUT_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const COLUMN_STAGGER = 1500; // ms between each column reveal
 
 // ── SVG draw-on illustration (brush stroke / hand-drawn texture) ─────────────
@@ -305,7 +305,7 @@ function DrawOnIllustration({
             initial={{ pathLength: 0, opacity: 0 }}
             animate={active ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
             transition={{
-              pathLength: { duration: 0.8, ease: EASE_OUT_QUINT },
+              pathLength: { duration: 0.8, ease: EASE_OUT_EXPO },
               opacity: { duration: 0.15 },
             }}
           />
@@ -322,7 +322,7 @@ function DrawOnIllustration({
             initial={{ pathLength: 0, opacity: 0 }}
             animate={active ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
             transition={{
-              pathLength: { duration: 1.0, ease: EASE_OUT_QUINT, delay: 0.4 },
+              pathLength: { duration: 1.0, ease: EASE_OUT_EXPO, delay: 0.4 },
               opacity: { duration: 0.15, delay: 0.4 },
             }}
           />
@@ -341,9 +341,9 @@ const wordVariants = {
     filter: "blur(0px)",
     transition: {
       duration: 0.5,
-      ease: EASE_OUT_QUINT,
+      ease: EASE_OUT_EXPO,
       delay: 0.15 + i * 0.04,
-      filter: { duration: 0.6, ease: EASE_OUT_QUINT, delay: 0.15 + i * 0.04 },
+      filter: { duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.15 + i * 0.04 },
     },
   }),
 };
@@ -371,7 +371,7 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
             key={colIndex}
             initial={{ opacity: 0, y: 40 }}
             animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO }}
             style={{
               flex: "1 1 0",
               display: "flex",
@@ -390,7 +390,7 @@ function QuestionsGrid({ isMobile, revealedCount }: { isMobile: boolean; reveale
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isRevealed ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.6, ease: EASE_OUT_QUINT }}
+              transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
             >
               <DrawOnIllustration
                 structural={q.structural}
@@ -497,7 +497,7 @@ const VILLA_IMAGES = [
   "/villa-image-5.webp",
 ];
 const VILLA_CYCLE_MS = 4000;
-const EASE_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const EASE_QUINT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 function VillaReveal({ isMobile }: { isMobile: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);

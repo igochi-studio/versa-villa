@@ -11,7 +11,7 @@ import {
 import { useIsMobile } from "../hooks/useIsMobile";
 
 // ── Easing ──────────────────────────────────────────────────────────────────
-const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as [number, number, number, number];
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 // ── Story sentences ──────────────────────────────────────────────────────────
 const SENTENCES = [
@@ -208,7 +208,7 @@ export default function StorySection() {
                   style={{
                     opacity: hasEnteredOnce ? (isRevealed ? 1 : 0.12) : 0,
                     filter: hasEnteredOnce ? (isRevealed ? "blur(0px)" : "blur(4px)") : "blur(6px)",
-                    transition: "opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.5s cubic-bezier(0.23, 1, 0.32, 1)",
+                    transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
                     willChange: "opacity, filter",
                   }}
                 >

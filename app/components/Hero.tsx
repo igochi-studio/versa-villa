@@ -21,7 +21,7 @@ const LOAD_MIN_MS = 1400;
 
 // ── Easing ──────────────────────────────────────────────────────────────────
 // ease-out-quint: stronger deceleration, classier settle
-const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
 // ── Heading word-by-word blur reveal ────────────────────────────────────────
@@ -277,7 +277,7 @@ export default function Hero() {
           zIndex: 1,
         }}
         animate={{ opacity: isMoviePlaying ? 0 : 0.6 }}
-        transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+        transition={{ duration: 0.8, ease: EASE_OUT_EXPO }}
       />
 
       {/* Main movie with controls */}
@@ -293,7 +293,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO }}
             onMouseMove={handleMouseMoveOnMovie}
             onClick={(e) => {
               // Only close if clicking the video area (not controls)
@@ -322,7 +322,7 @@ export default function Hero() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: controlsVisible ? 1 : 0 }}
-              transition={{ duration: 0.4, ease: EASE_OUT_QUINT }}
+              transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
               style={{
                 position: "absolute",
                 bottom: 0,
@@ -633,11 +633,11 @@ export default function Hero() {
                         }
                         transition={{
                           duration: 0.65,
-                          ease: EASE_OUT_QUINT,
+                          ease: EASE_OUT_EXPO,
                           delay: wordDelay,
                           filter: {
                             duration: 0.7,
-                            ease: EASE_OUT_QUINT,
+                            ease: EASE_OUT_EXPO,
                             delay: wordDelay,
                           },
                         }}
@@ -657,7 +657,7 @@ export default function Hero() {
             style={{ marginTop: "28px", display: "inline-block" }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
             animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
-            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 0.75 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.75 }}
           >
             {/* CSS transitions for hover — 150ms ease, no spring linger */}
             <button

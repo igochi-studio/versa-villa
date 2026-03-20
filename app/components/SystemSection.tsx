@@ -34,7 +34,7 @@ function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
 
 /* ─── Constants ─── */
 
-const EASE_OUT_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const SCROLL_HEIGHT = "700vh"; // enough scroll room for 6 features
 
 const FEATURES = [
@@ -252,15 +252,15 @@ const blockVariants = {
     filter: "blur(0px)",
     transition: {
       duration: 0.5,
-      ease: EASE_OUT_QUINT,
-      filter: { duration: 0.6, ease: EASE_OUT_QUINT },
+      ease: EASE_OUT_EXPO,
+      filter: { duration: 0.6, ease: EASE_OUT_EXPO },
     },
   },
   exit: {
     opacity: 0,
     y: -8,
     filter: "blur(4px)",
-    transition: { duration: 0.25, ease: EASE_OUT_QUINT },
+    transition: { duration: 0.25, ease: EASE_OUT_EXPO },
   },
 };
 
@@ -338,7 +338,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
               left: 0,
               width: isMobile ? "140px" : "160px",
               zIndex: 50,
-              animation: "wsj-pop 0.3s cubic-bezier(0.23, 1, 0.32, 1)",
+              animation: "wsj-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -579,7 +579,7 @@ export default function SystemSection() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.6, ease: EASE_OUT_QUINT }}
+                transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
                 style={{
                   width: "100%",
                   aspectRatio: isMobile ? "16 / 10" : undefined,
@@ -682,7 +682,7 @@ export default function SystemSection() {
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 4 }}
-                        transition={{ duration: 0.2, ease: EASE_OUT_QUINT }}
+                        transition={{ duration: 0.2, ease: EASE_OUT_EXPO }}
                         style={{
                           fontFamily: "'Alte Haas Grotesk', sans-serif",
                           fontSize: "12px",
@@ -754,7 +754,7 @@ export default function SystemSection() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3, ease: EASE_OUT_QUINT }}
+                transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
                   fontSize: "14px",

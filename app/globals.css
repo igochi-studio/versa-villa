@@ -28,9 +28,27 @@
   --color-brown:     #4A3C24;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   background-color: #F8F2E4;
   color: #4A3C24;
   font-family: "Alte Haas Grotesk", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent scroll chaining / rubber-band on desktop — tighter feel */
+@media (min-width: 768px) {
+  html, body {
+    overscroll-behavior: none;
+  }
+}
+
+/* Force GPU compositing on all animated elements */
+[style*="willChange"] {
+  transform: translateZ(0);
 }

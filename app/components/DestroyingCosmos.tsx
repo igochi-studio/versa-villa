@@ -26,7 +26,7 @@ import { useIsMobile } from "../hooks/useIsMobile";
  * Backward: scroll back → quote hides + burn reverses → palisades collapses
  * ─────────────────────────────────────────────────────────────────────────── */
 
-const EASE_OUT_QUINT = [0.23, 1, 0.32, 1] as const;
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 const EASE_REVEAL = [0.16, 1, 0.3, 1] as const;
 
 let audioCtx: AudioContext | null = null;
@@ -627,16 +627,27 @@ export default function DestroyingCosmos() {
     resize();
     window.addEventListener("resize", resize);
 
+    // Only draw when section is on-screen — skip GPU work when off-screen
+    let sectionVisible = true;
+    const visObs = new IntersectionObserver(
+      ([entry]) => { sectionVisible = entry.isIntersecting; },
+      { threshold: 0 },
+    );
+    if (stickyRef.current) visObs.observe(stickyRef.current);
+
     const tick = () => {
-      const burnP = mapR(scrollVRef.current, P4_BURN_START, P4_BURN_END);
-      gl.uniform1f(uProgressRef.current, burnP);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      if (sectionVisible) {
+        const burnP = mapR(scrollVRef.current, P4_BURN_START, P4_BURN_END);
+        gl.uniform1f(uProgressRef.current, burnP);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      visObs.disconnect();
       window.removeEventListener("resize", resize);
     };
   }, [imgsReady]);
@@ -882,8 +893,8 @@ export default function DestroyingCosmos() {
             animate={showTitle ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 12, filter: "blur(6px)" }}
             transition={{
               duration: 0.5,
-              ease: EASE_OUT_QUINT,
-              filter: { duration: 0.6, ease: EASE_OUT_QUINT },
+              ease: EASE_OUT_EXPO,
+              filter: { duration: 0.6, ease: EASE_OUT_EXPO },
             }}
           >
             Destroying
@@ -913,8 +924,8 @@ export default function DestroyingCosmos() {
                   exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                   transition={{
                     duration: 0.45,
-                    ease: EASE_OUT_QUINT,
-                    filter: { duration: 0.5, ease: EASE_OUT_QUINT },
+                    ease: EASE_OUT_EXPO,
+                    filter: { duration: 0.5, ease: EASE_OUT_EXPO },
                   }}
                 >
                   {SUBTITLES[subtitleIndex]}
