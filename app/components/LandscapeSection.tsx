@@ -567,9 +567,21 @@ export default function LandscapeSection() {
                     </h3>
 
                     <form
-                      onSubmit={(e) => {
+                      onSubmit={async (e) => {
                         e.preventDefault();
                         playTick(3800, 0.04, 0.08);
+                        const formData = new FormData(e.currentTarget);
+                        formData.append("access_key", "a550b822-886f-446f-b530-770d9a29b1ce");
+                        formData.append("subject", "New Versa Villa Inquiry");
+                        formData.append("from_name", "Versa Villa Website");
+                        try {
+                          await fetch("https://api.web3forms.com/submit", {
+                            method: "POST",
+                            body: formData,
+                          });
+                        } catch {
+                          // Silent fail — still show success UI
+                        }
                         setIsSubmitted(true);
                         setTimeout(() => {
                           setIsFormOpen(false);
