@@ -623,11 +623,12 @@ export default function Hero() {
               position: "absolute",
               inset: 0,
               zIndex: 15,
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, transparent 70%)",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
+              justifyContent: "flex-end",
+              paddingBottom: isMobile ? "120px" : "80px",
               gap: isMobile ? "20px" : "24px",
             }}
           >
