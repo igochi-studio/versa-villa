@@ -98,6 +98,9 @@ export default function Hero() {
     return () => window.removeEventListener("resize", check);
   }, []);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
+  const [movieEnded, setMovieEnded] = useState(false);
+  const interviewVideoRef = useRef<HTMLVideoElement>(null);
+  const [interviewPlaying, setInterviewPlaying] = useState(false);
 
   // Movie controls state
   const [isPaused, setIsPaused] = useState(false);
@@ -126,9 +129,10 @@ export default function Hero() {
     const onTimeUpdate = () => setCurrentTime(video.currentTime);
     const onDurationChange = () => setDuration(video.duration || 0);
     const onEnded = () => {
-      setIsMoviePlaying(false);
-      setIsPaused(false);
-      window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: false } }));
+      // Freeze on last frame, show end screen options
+      setIsPaused(true);
+      setMovieEnded(true);
+      setControlsVisible(false);
     };
 
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -168,6 +172,7 @@ export default function Hero() {
     setIsMoviePlaying(true);
     setIsPaused(false);
     setIsMuted(false);
+    setMovieEnded(false);
     window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: true } }));
     setTimeout(() => {
       const mainVideo = mainVideoRef.current;
@@ -191,8 +196,43 @@ export default function Hero() {
     }
     setIsMoviePlaying(false);
     setIsPaused(false);
+    setMovieEnded(false);
+    setInterviewPlaying(false);
     window.dispatchEvent(new CustomEvent("versa-movie", { detail: { playing: false } }));
   }, []);
+
+  const handleWatchAgain = useCallback(() => {
+    setMovieEnded(false);
+    setIsPaused(false);
+    setControlsVisible(true);
+    resetHideTimer();
+    const mainVideo = mainVideoRef.current;
+    if (mainVideo) {
+      mainVideo.currentTime = 0;
+      mainVideo.play().catch(() => {});
+    }
+  }, [resetHideTimer]);
+
+  const handleWatchInterview = useCallback(() => {
+    setMovieEnded(false);
+    // Pause main movie
+    const mainVideo = mainVideoRef.current;
+    if (mainVideo) mainVideo.pause();
+    setInterviewPlaying(true);
+    setTimeout(() => {
+      interviewVideoRef.current?.play().catch(() => {});
+    }, 100);
+  }, []);
+
+  const handleCloseInterview = useCallback(() => {
+    if (interviewVideoRef.current) {
+      interviewVideoRef.current.pause();
+      interviewVideoRef.current.currentTime = 0;
+    }
+    setInterviewPlaying(false);
+    // Close everything
+    handleCloseMovie();
+  }, [handleCloseMovie]);
 
   const togglePause = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -571,6 +611,267 @@ export default function Hero() {
         )}
       </AnimatePresence>
 
+      {/* Movie ended overlay — Watch Again + Watch Interview */}
+      <AnimatePresence>
+        {movieEnded && isMoviePlaying && !interviewPlaying && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 15,
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: isMobile ? "20px" : "24px",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={handleCloseMovie}
+              style={{
+                position: "absolute",
+                top: isMobile ? 16 : 32,
+                right: isMobile ? 16 : 32,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#F8F2E4",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: 0.7,
+                transition: "opacity 150ms ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+            >
+              <Cross2Icon width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
+            </button>
+
+            {/* Watch Again */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.2 }}
+            >
+              <button
+                onClick={handleWatchAgain}
+                onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+                className="hero-endscreen-btn"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "4px 6px",
+                  borderBottom: "1.5px solid #B8965A",
+                  borderRadius: 0,
+                  position: "relative",
+                  overflow: "hidden",
+                  color: "#F8F2E4",
+                  transition: "color 150ms ease",
+                }}
+              >
+                <span
+                  className="hero-endscreen-btn-bg"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "#F8F2E4",
+                    transformOrigin: "bottom center",
+                    transform: "scaleY(0)",
+                    transition: "transform 180ms ease",
+                    zIndex: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: isMobile ? "clamp(18px, 2.5vw, 24px)" : "28px",
+                    fontWeight: 400,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    position: "relative",
+                    zIndex: 1,
+                    color: "inherit",
+                    transition: "color 150ms ease",
+                  }}
+                >
+                  WATCH AGAIN
+                </span>
+                <span
+                  className="hero-endscreen-btn-arrow"
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    color: "#B8965A",
+                    transition: "color 150ms ease, transform 150ms ease",
+                  }}
+                >
+                  <ArrowRightIcon width={isMobile ? 18 : 24} height={isMobile ? 18 : 24} />
+                </span>
+              </button>
+            </motion.div>
+
+            {/* Watch Interview */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.35 }}
+            >
+              <button
+                onClick={handleWatchInterview}
+                onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+                className="hero-endscreen-btn2"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "4px 6px",
+                  borderBottom: "1.5px solid #B8965A",
+                  borderRadius: 0,
+                  position: "relative",
+                  overflow: "hidden",
+                  color: "#F8F2E4",
+                  transition: "color 150ms ease",
+                }}
+              >
+                <span
+                  className="hero-endscreen-btn2-bg"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "#F8F2E4",
+                    transformOrigin: "bottom center",
+                    transform: "scaleY(0)",
+                    transition: "transform 180ms ease",
+                    zIndex: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: isMobile ? "clamp(18px, 2.5vw, 24px)" : "28px",
+                    fontWeight: 400,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    position: "relative",
+                    zIndex: 1,
+                    color: "inherit",
+                    transition: "color 150ms ease",
+                  }}
+                >
+                  WATCH INTERVIEW
+                </span>
+                <span
+                  className="hero-endscreen-btn2-arrow"
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    color: "#B8965A",
+                    transition: "color 150ms ease, transform 150ms ease",
+                  }}
+                >
+                  <ArrowRightIcon width={isMobile ? 18 : 24} height={isMobile ? 18 : 24} />
+                </span>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Interview Video Overlay */}
+      <AnimatePresence>
+        {interviewPlaying && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 20,
+              backgroundColor: "rgba(0, 0, 0, 0.95)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+            onClick={handleCloseInterview}
+          >
+            <button
+              onClick={handleCloseInterview}
+              style={{
+                position: "absolute",
+                top: isMobile ? 16 : 32,
+                right: isMobile ? 16 : 32,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#F8F2E4",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: 0.7,
+                transition: "opacity 150ms ease",
+                zIndex: 10,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+            >
+              <Cross2Icon width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
+            </button>
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+              style={{
+                width: isMobile ? "95vw" : "80vw",
+                maxWidth: "1200px",
+                aspectRatio: "16 / 9",
+                position: "relative",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                ref={interviewVideoRef}
+                src="/fox-local-interview.mp4"
+                controls
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  backgroundColor: "#000",
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* UI Layer */}
       <motion.div
         style={{
@@ -745,6 +1046,34 @@ export default function Hero() {
           transform: translateX(4px);
         }
         .hero-watch-btn:active {
+          transform: scale(0.97);
+          transition: transform 80ms ease;
+        }
+        .hero-endscreen-btn:hover {
+          color: #1a1a1a;
+        }
+        .hero-endscreen-btn:hover .hero-endscreen-btn-bg {
+          transform: scaleY(1);
+        }
+        .hero-endscreen-btn:hover .hero-endscreen-btn-arrow {
+          color: #1a1a1a;
+          transform: translateX(4px);
+        }
+        .hero-endscreen-btn:active {
+          transform: scale(0.97);
+          transition: transform 80ms ease;
+        }
+        .hero-endscreen-btn2:hover {
+          color: #1a1a1a;
+        }
+        .hero-endscreen-btn2:hover .hero-endscreen-btn2-bg {
+          transform: scaleY(1);
+        }
+        .hero-endscreen-btn2:hover .hero-endscreen-btn2-arrow {
+          color: #1a1a1a;
+          transform: translateX(4px);
+        }
+        .hero-endscreen-btn2:active {
           transform: scale(0.97);
           transition: transform 80ms ease;
         }

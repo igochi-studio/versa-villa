@@ -8,7 +8,7 @@ import {
   useMotionValueEvent,
   useReducedMotion,
 } from "motion/react";
-import { ExternalLinkIcon, MagnifyingGlassIcon, PlayIcon } from "@radix-ui/react-icons";
+import { ExternalLinkIcon, MagnifyingGlassIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 /* ─── Haptic sound ─── */
@@ -342,7 +342,8 @@ function CoverageLink({
   onPlayVideo?: (src: string) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const imgSize = isMobile ? 32 : 52;
+  const thumbW = isMobile ? 32 : 48;
+  const thumbH = Math.round(thumbW * 1.29); // match ~387:498 aspect ratio
 
   if (coverage.type === "video") {
     return (
@@ -363,7 +364,7 @@ function CoverageLink({
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "10px",
             padding: "4px 6px",
             borderBottom: "1.5px solid #B8965A",
             borderRadius: 0,
@@ -378,7 +379,7 @@ function CoverageLink({
             style={{
               position: "absolute",
               inset: 0,
-              backgroundColor: "#B8965A",
+              backgroundColor: "#4A3C24",
               transformOrigin: "bottom center",
               transform: "scaleY(0)",
               transition: "transform 180ms ease",
@@ -386,6 +387,7 @@ function CoverageLink({
             }}
           />
           <span
+            className="coverage-watch-btn-text"
             style={{
               fontFamily: "'Alte Haas Grotesk', sans-serif",
               fontSize: isMobile ? "11px" : "12px",
@@ -402,7 +404,7 @@ function CoverageLink({
             {coverage.label}
           </span>
           <span
-            className="coverage-watch-btn-icon"
+            className="coverage-watch-btn-arrow"
             style={{
               position: "relative",
               zIndex: 1,
@@ -412,7 +414,7 @@ function CoverageLink({
               transition: "color 150ms ease, transform 150ms ease",
             }}
           >
-            <PlayIcon style={{ width: 11, height: 11 }} />
+            <ArrowRightIcon style={{ width: 14, height: 14 }} />
           </span>
         </button>
 
@@ -423,9 +425,9 @@ function CoverageLink({
           .coverage-watch-btn:hover .coverage-watch-btn-bg {
             transform: scaleY(1);
           }
-          .coverage-watch-btn:hover .coverage-watch-btn-icon {
+          .coverage-watch-btn:hover .coverage-watch-btn-arrow {
             color: #F8F2E4;
-            transform: translateX(2px);
+            transform: translateX(3px);
           }
           .coverage-watch-btn:active {
             transform: scale(0.97);
@@ -452,11 +454,12 @@ function CoverageLink({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          width: imgSize,
-          height: "auto",
+          width: thumbW,
+          height: thumbH,
           flexShrink: 0,
           cursor: "zoom-in",
           position: "relative",
+          overflow: "visible",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -464,8 +467,9 @@ function CoverageLink({
           src={coverage.image}
           alt={coverage.alt}
           style={{
-            width: "100%",
-            height: "auto",
+            width: thumbW,
+            height: thumbH,
+            objectFit: "cover",
             display: "block",
           }}
         />
@@ -474,20 +478,22 @@ function CoverageLink({
         <div
           style={{
             position: "absolute",
-            bottom: -2,
-            right: -2,
-            width: 18,
-            height: 18,
+            bottom: -4,
+            right: -4,
+            width: 20,
+            height: 20,
             borderRadius: "50%",
             backgroundColor: "#F8F2E4",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            opacity: hovered ? 0 : 0.8,
+            opacity: hovered ? 0 : 0.85,
             transition: "opacity 0.2s ease",
+            pointerEvents: "none",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
           }}
         >
-          <MagnifyingGlassIcon style={{ width: 11, height: 11, color: "#4A3C24" }} />
+          <MagnifyingGlassIcon style={{ width: 12, height: 12, color: "#4A3C24" }} />
         </div>
 
         {/* Expanded preview on hover */}
@@ -497,8 +503,9 @@ function CoverageLink({
               position: "absolute",
               bottom: "calc(100% + 8px)",
               left: 0,
-              width: isMobile ? "140px" : "160px",
+              width: isMobile ? "120px" : "140px",
               zIndex: 50,
+              pointerEvents: "none",
               animation: "coverage-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
@@ -589,6 +596,15 @@ export default function SystemSection() {
     playTick(3800, 0.04, 0.08);
     setActiveIndex(i);
     setHoveredIndex(null);
+
+    // Scroll to the matching position so future scrolling continues from here
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const containerTop = window.scrollY + rect.top;
+    const scrollableHeight = container.scrollHeight - window.innerHeight;
+    const targetScroll = containerTop + (i / FEATURES.length) * scrollableHeight;
+    window.scrollTo({ top: targetScroll, behavior: "smooth" });
   }, []);
 
   const handlePlayInterview = useCallback((src: string) => {
