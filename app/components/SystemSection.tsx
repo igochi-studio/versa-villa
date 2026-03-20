@@ -8,7 +8,7 @@ import {
   useMotionValueEvent,
   useReducedMotion,
 } from "motion/react";
-import { ExternalLinkIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { ExternalLinkIcon, MagnifyingGlassIcon, PlayIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 /* ─── Haptic sound ─── */
@@ -37,7 +37,32 @@ function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const SCROLL_HEIGHT = "700vh"; // enough scroll room for 6 features
 
-const FEATURES = [
+type ArticleCoverage = {
+  type?: "article";
+  image: string;
+  alt: string;
+  label: string;
+  url: string;
+};
+
+type VideoCoverage = {
+  type: "video";
+  label: string;
+  videoSrc: string;
+};
+
+type Coverage = ArticleCoverage | VideoCoverage;
+
+const FEATURES: {
+  number: string;
+  title: string;
+  copy: string;
+  cost: string | null;
+  label: string;
+  cue: string;
+  media: { src: string; type: "image" | "video" };
+  coverage: Coverage;
+}[] = [
   {
     number: "01",
     title: "Autonomous Detection",
@@ -45,7 +70,13 @@ const FEATURES = [
     cost: "$325,000",
     label: "FIRE DETECTION SYSTEM",
     cue: "Detection",
-    media: { src: "/detection system.webp", type: "image" as const },
+    media: { src: "/detection system.webp", type: "image" },
+    coverage: {
+      image: "/coverage by wall street journal.webp",
+      alt: "Coverage by Wall Street Journal",
+      label: "Coverage By WSJ",
+      url: "https://www.wsj.com/real-estate/luxury-homes/fire-resistant-home-pacific-palisades-los-angeles-c66bff83",
+    },
   },
   {
     number: "02",
@@ -54,7 +85,13 @@ const FEATURES = [
     cost: "$300,000",
     label: "STEEL FRAME",
     cue: "Steel",
-    media: { src: "/steel.webp", type: "image" as const },
+    media: { src: "/steel.webp", type: "image" },
+    coverage: {
+      image: "/page six article.png",
+      alt: "Coverage by Page Six",
+      label: "Coverage By Page Six",
+      url: "https://pagesix.com/2026/03/02/hollywood/inside-the-ambitious-project-to-make-truly-fireproof-homes-after-the-devastating-palisades-fires/",
+    },
   },
   {
     number: "03",
@@ -63,7 +100,13 @@ const FEATURES = [
     cost: "$400,000",
     label: "FIRE-RATED WALLS",
     cue: "Walls",
-    media: { src: "/010_Bienvenida 1241_by mrbarcelo.webp", type: "image" as const },
+    media: { src: "/010_Bienvenida 1241_by mrbarcelo.webp", type: "image" },
+    coverage: {
+      image: "/la times.png",
+      alt: "Coverage by LA Times",
+      label: "Coverage By LA Times",
+      url: "https://www.latimes.com/environment/story/2026-03-02/can-fire-resistant-homes-be-sexy",
+    },
   },
   {
     number: "04",
@@ -72,7 +115,13 @@ const FEATURES = [
     cost: "$300,000",
     label: "BOROSILICATE WINDOWS",
     cue: "Glass",
-    media: { src: "/glass.mov", type: "video" as const },
+    media: { src: "/glass.mov", type: "video" },
+    coverage: {
+      image: "/real deal.png",
+      alt: "Coverage by Real Deal",
+      label: "Coverage By Real Deal",
+      url: "https://therealdeal.com/la/2026/03/02/ardie-tavangarian-to-bring-fire-resistant-homes-norcal-florida/",
+    },
   },
   {
     number: "05",
@@ -81,7 +130,13 @@ const FEATURES = [
     cost: null,
     label: "BACKUP SYSTEMS",
     cue: "Backup",
-    media: { src: "/backup.webp", type: "image" as const },
+    media: { src: "/backup.webp", type: "image" },
+    coverage: {
+      image: "/hey socal article.png",
+      alt: "Coverage by Hey SoCal",
+      label: "Coverage By Hey SoCal",
+      url: "https://heysocal.com/2026/02/06/newsom-announces-funding-for-la-fire-survivors-to-access-pre-built-housing/",
+    },
   },
   {
     number: "06",
@@ -90,7 +145,12 @@ const FEATURES = [
     cost: null,
     label: "NONCOMBUSTIBLE ENVELOPE",
     cue: "Envelope",
-    media: { src: "/envelope.webp", type: "image" as const },
+    media: { src: "/envelope.webp", type: "image" },
+    coverage: {
+      type: "video",
+      label: "Watch Interview",
+      videoSrc: "/fox-local-interview.mp4",
+    },
   },
 ];
 
@@ -270,12 +330,113 @@ const reducedVariants = {
   exit: { opacity: 0, transition: { duration: 0.3 } },
 };
 
-/* ─── WSJ Coverage Easter Egg ─── */
+/* ─── Coverage Link (article or video) ─── */
 
-function WSJCoverage({ isMobile }: { isMobile: boolean }) {
+function CoverageLink({
+  coverage,
+  isMobile,
+  onPlayVideo,
+}: {
+  coverage: Coverage;
+  isMobile: boolean;
+  onPlayVideo?: (src: string) => void;
+}) {
   const [hovered, setHovered] = useState(false);
   const imgSize = isMobile ? 32 : 52;
 
+  if (coverage.type === "video") {
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          marginBottom: isMobile ? "12px" : "20px",
+        }}
+      >
+        <button
+          onClick={() => onPlayVideo?.(coverage.videoSrc)}
+          onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+          className="coverage-watch-btn"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "4px 6px",
+            borderBottom: "1.5px solid #B8965A",
+            borderRadius: 0,
+            position: "relative",
+            overflow: "hidden",
+            color: "#4A3C24",
+            transition: "color 150ms ease",
+          }}
+        >
+          <span
+            className="coverage-watch-btn-bg"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "#B8965A",
+              transformOrigin: "bottom center",
+              transform: "scaleY(0)",
+              transition: "transform 180ms ease",
+              zIndex: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: "'Alte Haas Grotesk', sans-serif",
+              fontSize: isMobile ? "11px" : "12px",
+              fontWeight: 500,
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              position: "relative",
+              zIndex: 1,
+              color: "inherit",
+              transition: "color 150ms ease",
+            }}
+          >
+            {coverage.label}
+          </span>
+          <span
+            className="coverage-watch-btn-icon"
+            style={{
+              position: "relative",
+              zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              color: "#B8965A",
+              transition: "color 150ms ease, transform 150ms ease",
+            }}
+          >
+            <PlayIcon style={{ width: 11, height: 11 }} />
+          </span>
+        </button>
+
+        <style>{`
+          .coverage-watch-btn:hover {
+            color: #F8F2E4;
+          }
+          .coverage-watch-btn:hover .coverage-watch-btn-bg {
+            transform: scaleY(1);
+          }
+          .coverage-watch-btn:hover .coverage-watch-btn-icon {
+            color: #F8F2E4;
+            transform: translateX(2px);
+          }
+          .coverage-watch-btn:active {
+            transform: scale(0.97);
+            transition: transform 80ms ease;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Article coverage
   return (
     <div
       style={{
@@ -300,8 +461,8 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/coverage by wall street journal.webp"
-          alt="Coverage by Wall Street Journal"
+          src={coverage.image}
+          alt={coverage.alt}
           style={{
             width: "100%",
             height: "auto",
@@ -329,7 +490,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
           <MagnifyingGlassIcon style={{ width: 11, height: 11, color: "#4A3C24" }} />
         </div>
 
-        {/* Expanded preview on hover — no container, transparent bg */}
+        {/* Expanded preview on hover */}
         {hovered && (
           <div
             style={{
@@ -338,13 +499,13 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
               left: 0,
               width: isMobile ? "140px" : "160px",
               zIndex: 50,
-              animation: "wsj-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+              animation: "coverage-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/coverage by wall street journal.webp"
-              alt="Coverage by Wall Street Journal"
+              src={coverage.image}
+              alt={coverage.alt}
               style={{
                 width: "100%",
                 height: "auto",
@@ -357,7 +518,7 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
 
       {/* Label + link */}
       <a
-        href="https://www.wsj.com/real-estate/luxury-homes/fire-resistant-home-pacific-palisades-los-angeles-c66bff83"
+        href={coverage.url}
         target="_blank"
         rel="noopener noreferrer"
         style={{
@@ -374,13 +535,12 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
           whiteSpace: "nowrap",
         }}
       >
-        Coverage By WSJ
+        {coverage.label}
         <ExternalLinkIcon style={{ width: 11, height: 11 }} />
       </a>
 
-      {/* Inline keyframes for the pop animation */}
       <style>{`
-        @keyframes wsj-pop {
+        @keyframes coverage-pop {
           from { opacity: 0; transform: scale(0.9) translateY(4px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
@@ -394,12 +554,15 @@ function WSJCoverage({ isMobile }: { isMobile: boolean }) {
 export default function SystemSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLElement>(null);
+  const interviewVideoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
   const variants = prefersReducedMotion ? reducedVariants : blockVariants;
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [interviewPlaying, setInterviewPlaying] = useState(false);
+  const [interviewSrc, setInterviewSrc] = useState("");
 
   /* ── Scroll tracking (purely scroll-driven) ── */
   const { scrollYProgress } = useScroll({
@@ -426,6 +589,22 @@ export default function SystemSection() {
     playTick(3800, 0.04, 0.08);
     setActiveIndex(i);
     setHoveredIndex(null);
+  }, []);
+
+  const handlePlayInterview = useCallback((src: string) => {
+    setInterviewSrc(src);
+    setInterviewPlaying(true);
+    setTimeout(() => {
+      interviewVideoRef.current?.play().catch(() => {});
+    }, 100);
+  }, []);
+
+  const handleCloseInterview = useCallback(() => {
+    if (interviewVideoRef.current) {
+      interviewVideoRef.current.pause();
+      interviewVideoRef.current.currentTime = 0;
+    }
+    setInterviewPlaying(false);
   }, []);
 
   const feature = FEATURES[activeIndex];
@@ -470,8 +649,6 @@ export default function SystemSection() {
               minHeight: isMobile ? "45%" : undefined,
             }}
           >
-            <WSJCoverage isMobile={isMobile} />
-
             <AnimatePresence mode="wait">
               <motion.div
                 key={`feature-${activeIndex}`}
@@ -484,6 +661,15 @@ export default function SystemSection() {
                   gap: isMobile ? "16px" : "24px",
                 }}
               >
+                {/* Coverage link — per feature */}
+                <motion.div variants={variants} style={{ willChange: "filter, opacity, transform" }}>
+                  <CoverageLink
+                    coverage={feature.coverage}
+                    isMobile={isMobile}
+                    onPlayVideo={handlePlayInterview}
+                  />
+                </motion.div>
+
                 {/* Feature number + label */}
                 <motion.div
                   variants={variants}
@@ -771,6 +957,86 @@ export default function SystemSection() {
           </div>
         </div>
       </section>
+
+      {/* ── Interview Video Overlay ── */}
+      <AnimatePresence>
+        {interviewPlaying && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: "rgba(0, 0, 0, 0.92)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+            onClick={handleCloseInterview}
+          >
+            {/* Close button */}
+            <button
+              onClick={handleCloseInterview}
+              style={{
+                position: "absolute",
+                top: isMobile ? 16 : 32,
+                right: isMobile ? 16 : 32,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#F8F2E4",
+                fontFamily: "'Alte Haas Grotesk', sans-serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                opacity: 0.7,
+                transition: "opacity 150ms ease",
+                zIndex: 10,
+                padding: "8px 12px",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+            >
+              CLOSE
+            </button>
+
+            {/* Video */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+              style={{
+                width: isMobile ? "95vw" : "80vw",
+                maxWidth: "1200px",
+                aspectRatio: "16 / 9",
+                position: "relative",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                ref={interviewVideoRef}
+                src={interviewSrc}
+                controls
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  backgroundColor: "#000",
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
