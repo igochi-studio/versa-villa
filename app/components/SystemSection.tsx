@@ -453,10 +453,12 @@ function CoverageLink({
         onMouseLeave={() => setHovered(false)}
         style={{
           width: imgSize,
-          height: "auto",
+          height: imgSize,
           flexShrink: 0,
           cursor: "zoom-in",
           position: "relative",
+          borderRadius: "4px",
+          overflow: "hidden",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -465,7 +467,8 @@ function CoverageLink({
           alt={coverage.alt}
           style={{
             width: "100%",
-            height: "auto",
+            height: "100%",
+            objectFit: "cover",
             display: "block",
           }}
         />
@@ -474,8 +477,8 @@ function CoverageLink({
         <div
           style={{
             position: "absolute",
-            bottom: -2,
-            right: -2,
+            bottom: 2,
+            right: 2,
             width: 18,
             height: 18,
             borderRadius: "50%",
@@ -497,7 +500,10 @@ function CoverageLink({
               position: "absolute",
               bottom: "calc(100% + 8px)",
               left: 0,
-              width: isMobile ? "140px" : "160px",
+              width: isMobile ? "160px" : "200px",
+              aspectRatio: "4 / 3",
+              borderRadius: "4px",
+              overflow: "hidden",
               zIndex: 50,
               animation: "coverage-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
@@ -508,7 +514,8 @@ function CoverageLink({
               alt={coverage.alt}
               style={{
                 width: "100%",
-                height: "auto",
+                height: "100%",
+                objectFit: "cover",
                 display: "block",
               }}
             />
