@@ -190,7 +190,7 @@ export default function HeroV2() {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ height: "100vh", position: "sticky", top: 0, zIndex: 1 }}
+      style={{ height: "100vh", position: "relative", zIndex: 1 }}
     >
       {/* Background video — making of Versa Villa */}
       <video
@@ -358,13 +358,13 @@ export default function HeroV2() {
             })}
           </h1>
 
-          {/* Two CTAs — classy underline like reference */}
+          {/* Two CTAs — statement buttons, large Alte Haas Grotesk */}
           <motion.div
             style={{
-              marginTop: isMobile ? "28px" : "36px",
+              marginTop: isMobile ? "32px" : "44px",
               display: "flex",
               alignItems: "center",
-              gap: isMobile ? "28px" : "40px",
+              gap: isMobile ? "32px" : "48px",
               flexWrap: "wrap",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
@@ -388,10 +388,10 @@ export default function HeroV2() {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "14px",
+                gap: isMobile ? "14px" : "18px",
                 textDecoration: "none",
-                borderBottom: "1px solid rgba(248, 242, 228, 0.5)",
-                paddingBottom: "6px",
+                borderBottom: "2px solid rgba(248, 242, 228, 0.6)",
+                paddingBottom: isMobile ? "8px" : "10px",
                 color: "#F8F2E4",
                 transition: "gap 0.3s ease, border-color 0.3s ease",
                 cursor: "pointer",
@@ -399,14 +399,14 @@ export default function HeroV2() {
             >
               <span
                 style={{
-                  fontFamily: "var(--font-playfair), serif",
-                  fontSize: isMobile ? "clamp(18px, 3vw, 24px)" : "22px",
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: isMobile ? "clamp(24px, 4vw, 32px)" : "32px",
                   fontWeight: 400,
                 }}
               >
                 Check eligibility
               </span>
-              <span style={{ fontSize: "20px", lineHeight: 1 }}>&rarr;</span>
+              <ArrowRightIcon width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} />
             </a>
 
             {/* Watch Movie */}
@@ -419,25 +419,25 @@ export default function HeroV2() {
                 border: "none",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "14px",
-                borderBottom: "1px solid rgba(248, 242, 228, 0.3)",
-                paddingBottom: "6px",
-                padding: "0 0 6px 0",
-                color: "rgba(248, 242, 228, 0.7)",
+                gap: isMobile ? "14px" : "18px",
+                borderBottom: "2px solid rgba(248, 242, 228, 0.35)",
+                paddingBottom: isMobile ? "8px" : "10px",
+                padding: "0 0 10px 0",
+                color: "rgba(248, 242, 228, 0.75)",
                 transition: "gap 0.3s ease, color 0.3s ease, border-color 0.3s ease",
                 cursor: "pointer",
               }}
             >
               <span
                 style={{
-                  fontFamily: "var(--font-playfair), serif",
-                  fontSize: isMobile ? "clamp(18px, 3vw, 24px)" : "22px",
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: isMobile ? "clamp(24px, 4vw, 32px)" : "32px",
                   fontWeight: 400,
                 }}
               >
                 Watch movie
               </span>
-              <span style={{ fontSize: "20px", lineHeight: 1 }}>&rarr;</span>
+              <ArrowRightIcon width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} style={{ color: "#B8965A" }} />
             </button>
           </motion.div>
         </div>

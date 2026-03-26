@@ -25,31 +25,31 @@ const PRESS_LOGOS = [
     src: "/wsj-wordmark.svg",
     alt: "Wall Street Journal",
     url: "https://www.wsj.com/real-estate/luxury-homes/fire-resistant-home-pacific-palisades-los-angeles-c66bff83",
-    height: 24,
+    height: 28,
   },
   {
     src: "/pgsix-wordmark.svg",
     alt: "Page Six",
     url: "https://pagesix.com/2026/03/02/hollywood/inside-the-ambitious-project-to-make-truly-fireproof-homes-after-the-devastating-palisades-fires/",
-    height: 22,
+    height: 26,
   },
   {
     src: "/latimes-wordmark.svg",
     alt: "LA Times",
     url: "https://www.latimes.com/environment/story/2026-03-02/can-fire-resistant-homes-be-sexy",
-    height: 22,
+    height: 26,
   },
   {
     src: "/trd-wordmark.svg",
     alt: "The Real Deal",
     url: "https://therealdeal.com/la/2026/03/02/ardie-tavangarian-to-bring-fire-resistant-homes-norcal-florida/",
-    height: 20,
+    height: 24,
   },
   {
     src: "/hs-wordmark.svg",
     alt: "Hey SoCal",
     url: "https://heysocal.com/2026/02/06/newsom-announces-funding-for-la-fire-survivors-to-access-pre-built-housing/",
-    height: 20,
+    height: 24,
   },
 ];
 
@@ -97,8 +97,8 @@ export default function AsSeenOn() {
     };
   }, []);
 
-  // Duplicate logos for seamless loop
-  const logos = [...PRESS_LOGOS, ...PRESS_LOGOS];
+  // Duplicate logos 4x for seamless loop on wide screens
+  const logos = [...PRESS_LOGOS, ...PRESS_LOGOS, ...PRESS_LOGOS, ...PRESS_LOGOS];
 
   return (
     <section
@@ -159,7 +159,7 @@ export default function AsSeenOn() {
                 alignItems: "center",
                 justifyContent: "center",
                 padding: "8px 16px",
-                opacity: 0.4,
+                opacity: 0.55,
                 transition: "opacity 0.3s ease, transform 0.3s ease",
               }}
               onMouseOver={(e) => {
