@@ -80,7 +80,7 @@ function NavLink({
       <span
         style={{
           fontFamily: "'Alte Haas Grotesk', sans-serif",
-          fontSize: "11px",
+          fontSize: "12px",
           fontWeight: 400,
           letterSpacing: "0.08em",
           color: hovered ? "#B8965A" : "rgba(248, 242, 228, 0.5)",
@@ -95,7 +95,7 @@ function NavLink({
       <span
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: isMobile ? "14px" : "16px",
+          fontSize: isMobile ? "15px" : "18px",
           fontWeight: 400,
           letterSpacing: "-0.01em",
           lineHeight: 1.2,

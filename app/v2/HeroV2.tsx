@@ -310,7 +310,7 @@ export default function HeroV2() {
         <div
           style={{
             position: "absolute",
-            bottom: isMobile ? "15%" : "18%",
+            bottom: isMobile ? "10%" : "12%",
             left: isMobile ? "24px" : "48px",
             textAlign: "left",
             maxWidth: isMobile ? "85%" : "720px",
@@ -358,13 +358,13 @@ export default function HeroV2() {
             })}
           </h1>
 
-          {/* Two CTAs — statement buttons, large Alte Haas Grotesk */}
+          {/* Two CTAs — statement buttons with gold underline */}
           <motion.div
             style={{
-              marginTop: isMobile ? "32px" : "44px",
+              marginTop: isMobile ? "36px" : "48px",
               display: "flex",
-              alignItems: "center",
-              gap: isMobile ? "32px" : "48px",
+              alignItems: "flex-start",
+              gap: isMobile ? "36px" : "56px",
               flexWrap: "wrap",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
@@ -387,26 +387,28 @@ export default function HeroV2() {
               className="hero-v2-cta"
               style={{
                 display: "inline-flex",
-                alignItems: "center",
-                gap: isMobile ? "14px" : "18px",
+                flexDirection: "column",
+                gap: "12px",
                 textDecoration: "none",
-                borderBottom: "2px solid rgba(248, 242, 228, 0.6)",
-                paddingBottom: isMobile ? "8px" : "10px",
-                color: "#F8F2E4",
-                transition: "gap 0.3s ease, border-color 0.3s ease",
                 cursor: "pointer",
               }}
             >
-              <span
-                style={{
-                  fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(24px, 4vw, 32px)" : "32px",
-                  fontWeight: 400,
-                }}
-              >
-                Check eligibility
-              </span>
-              <ArrowRightIcon width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} />
+              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "14px" : "20px" }}>
+                <span
+                  style={{
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: isMobile ? "clamp(20px, 3.5vw, 28px)" : "28px",
+                    fontWeight: 400,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#F8F2E4",
+                  }}
+                >
+                  CHECK ELIGIBILITY
+                </span>
+                <ArrowRightIcon width={isMobile ? 22 : 24} height={isMobile ? 22 : 24} style={{ color: "#B8965A" }} />
+              </div>
+              <div style={{ width: "100%", height: "2px", backgroundColor: "#B8965A" }} />
             </a>
 
             {/* Watch Movie */}
@@ -418,26 +420,28 @@ export default function HeroV2() {
                 background: "transparent",
                 border: "none",
                 display: "inline-flex",
-                alignItems: "center",
-                gap: isMobile ? "14px" : "18px",
-                borderBottom: "2px solid rgba(248, 242, 228, 0.35)",
-                paddingBottom: isMobile ? "8px" : "10px",
-                padding: "0 0 10px 0",
-                color: "rgba(248, 242, 228, 0.75)",
-                transition: "gap 0.3s ease, color 0.3s ease, border-color 0.3s ease",
+                flexDirection: "column",
+                gap: "12px",
                 cursor: "pointer",
+                padding: 0,
               }}
             >
-              <span
-                style={{
-                  fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(24px, 4vw, 32px)" : "32px",
-                  fontWeight: 400,
-                }}
-              >
-                Watch movie
-              </span>
-              <ArrowRightIcon width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} style={{ color: "#B8965A" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "14px" : "20px" }}>
+                <span
+                  style={{
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: isMobile ? "clamp(20px, 3.5vw, 28px)" : "28px",
+                    fontWeight: 400,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(248, 242, 228, 0.7)",
+                  }}
+                >
+                  WATCH MOVIE
+                </span>
+                <ArrowRightIcon width={isMobile ? 22 : 24} height={isMobile ? 22 : 24} style={{ color: "#B8965A" }} />
+              </div>
+              <div style={{ width: "100%", height: "2px", backgroundColor: "rgba(184, 150, 90, 0.5)" }} />
             </button>
           </motion.div>
         </div>
