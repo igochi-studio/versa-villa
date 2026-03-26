@@ -13,79 +13,151 @@ const NAV_ITEMS = [
 ];
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
-const SCROLL_THRESHOLD = 80;
 
-function useHeaderVisibility() {
-  const [shown, setShown] = useState(true);
-  const lastScrollY = useRef(0);
-  const ticking = useRef(false);
-
-  const onScroll = useCallback(() => {
-    if (ticking.current) return;
-    ticking.current = true;
-    requestAnimationFrame(() => {
-      const y = window.scrollY;
-      if (y < SCROLL_THRESHOLD) setShown(true);
-      else if (y > lastScrollY.current + 5) setShown(false);
-      else if (y < lastScrollY.current - 5) setShown(true);
-      lastScrollY.current = y;
-      ticking.current = false;
-    });
-  }, []);
-
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    if (e.clientY < 60) setShown(true);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("mousemove", onMouseMove);
-    };
-  }, [onScroll, onMouseMove]);
-
-  return shown;
+// ── Haptic sound — matches original Header ──────────────────────────────────
+let audioCtx: AudioContext | null = null;
+function playTick(frequency = 4200, duration = 0.03, volume = 0.06) {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch { /* silent */ }
 }
 
-function useHeaderTheme(headerRef: React.RefObject<HTMLElement | null>) {
-  const [isDark, setIsDark] = useState(true);
+// ── Nav link — retains original numbered style, gold underline, sound ───────
+function NavLink({
+  label,
+  href,
+  index,
+  isMobile,
+}: {
+  label: string;
+  href: string;
+  index: number;
+  isMobile: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const num = String(index + 1).padStart(2, "0");
 
-  useEffect(() => {
-    let raf = 0;
-    const check = () => {
-      const header = headerRef.current;
-      const el = document.elementFromPoint(window.innerWidth / 2, 90);
-      if (el && header && !header.contains(el)) {
-        if (el.tagName === "VIDEO" || el.tagName === "CANVAS") {
-          setIsDark(true);
-        } else {
-          const bg = getComputedStyle(el).backgroundColor;
-          const match = bg?.match(/\d+/g);
-          if (match) {
-            const [r, g, b] = match.map(Number);
-            setIsDark((0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.45);
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        playTick(3600, 0.04, 0.06);
+        if (href.startsWith("#")) {
+          e.preventDefault();
+          const el = document.querySelector(href);
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top, behavior: "smooth" });
           }
         }
-      }
-      raf = requestAnimationFrame(check);
-    };
-    raf = requestAnimationFrame(check);
-    return () => cancelAnimationFrame(raf);
-  }, [headerRef]);
+      }}
+      onMouseEnter={() => {
+        setHovered(true);
+        playTick(4800, 0.025, 0.04);
+      }}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: isMobile ? "6px" : "8px",
+        textDecoration: "none",
+        position: "relative",
+        paddingBottom: "4px",
+        cursor: "pointer",
+      }}
+    >
+      {/* Number */}
+      <span
+        style={{
+          fontFamily: "'Alte Haas Grotesk', sans-serif",
+          fontSize: "11px",
+          fontWeight: 400,
+          letterSpacing: "0.08em",
+          color: hovered ? "#B8965A" : "rgba(248, 242, 228, 0.3)",
+          transition: "color 0.3s ease",
+          userSelect: "none",
+        }}
+      >
+        {num}
+      </span>
 
-  return isDark;
+      {/* Label — Playfair Display like the original */}
+      <span
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: isMobile ? "14px" : "16px",
+          fontWeight: 400,
+          letterSpacing: "-0.01em",
+          lineHeight: 1.2,
+          color: hovered ? "#F8F2E4" : "rgba(248, 242, 228, 0.6)",
+          transition: "color 0.3s ease",
+        }}
+      >
+        {label}
+      </span>
+
+      {/* Gold hover underline — sweeps in from left */}
+      <span
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: "1px",
+          backgroundColor: "#B8965A",
+          width: hovered ? "100%" : "0%",
+          opacity: hovered ? 1 : 0,
+          transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease",
+          transformOrigin: "left",
+        }}
+      />
+    </a>
+  );
 }
 
 export default function HeaderV2() {
   const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
-  const headerRef = useRef<HTMLElement>(null);
-  const shown = useHeaderVisibility();
-  const isDark = useHeaderTheme(headerRef);
+  const [scrolled, setScrolled] = useState(false);
+  const [shown, setShown] = useState(true);
+  const lastScrollY = useRef(0);
   const [moviePlaying, setMoviePlaying] = useState(false);
 
+  // Scroll: show/hide + glass state
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setScrolled(y > 80);
+        if (y < 80) setShown(true);
+        else if (y > lastScrollY.current + 5) setShown(false);
+        else if (y < lastScrollY.current - 5) setShown(true);
+        lastScrollY.current = y;
+        ticking = false;
+      });
+    };
+    const onMouse = (e: MouseEvent) => { if (e.clientY < 60) setShown(true); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", onMouse);
+    };
+  }, []);
+
+  // Movie state from Hero
   useEffect(() => {
     const handler = (e: Event) => setMoviePlaying((e as CustomEvent).detail.playing);
     window.addEventListener("versa-movie", handler);
@@ -94,84 +166,67 @@ export default function HeaderV2() {
 
   if (moviePlaying) return null;
 
-  const textColor = isDark ? "#F8F2E4" : "#4A3C24";
-  const mutedColor = isDark ? "rgba(248, 242, 228, 0.6)" : "rgba(74, 60, 36, 0.5)";
-
   return (
-    <motion.header
-      ref={headerRef}
+    <motion.nav
+      initial={shouldReduceMotion ? false : { y: -20, opacity: 0 }}
+      animate={{ y: shown ? 0 : -100, opacity: shown ? 1 : 0 }}
+      transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
       style={{
         position: "fixed",
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 100,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: isMobile ? "16px 20px" : "24px 40px",
+        padding: scrolled
+          ? (isMobile ? "12px 20px" : "14px 48px")
+          : (isMobile ? "20px 20px" : "24px 48px"),
+        background: scrolled
+          ? "rgba(10, 10, 10, 0.92)"
+          : "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)",
+        backdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "none",
+        boxShadow: scrolled ? "0 1px 0 rgba(184, 150, 90, 0.15)" : "none",
+        transition: "padding 0.4s ease, background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease",
         pointerEvents: shown ? "auto" : "none",
-        backdropFilter: "blur(12px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.4)",
-        backgroundColor: isDark ? "rgba(0,0,0,0.15)" : "rgba(248,242,228,0.6)",
-        borderBottom: isDark
-          ? "1px solid rgba(248,242,228,0.08)"
-          : "1px solid rgba(74,60,36,0.06)",
-        transition: "background-color 0.4s ease, border-color 0.4s ease",
       }}
-      initial={shouldReduceMotion ? false : { y: -20, opacity: 0 }}
-      animate={{
-        y: shown ? 0 : -100,
-        opacity: shown ? 1 : 0,
-      }}
-      transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
     >
       {/* Logo */}
-      <a href="/v2" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+      <a href="/v2" style={{ textDecoration: "none" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={isDark ? "/logo-light.svg" : "/logo-dark.svg"}
+          src="/versa-villa-logo.svg"
           alt="Versa Villa"
-          style={{ height: isMobile ? "28px" : "36px", width: "auto", transition: "filter 0.4s ease" }}
+          style={{
+            height: isMobile ? "30px" : "36px",
+            width: "auto",
+            display: "block",
+          }}
         />
       </a>
 
-      {/* Nav items — always visible, horizontal */}
+      {/* Nav items — horizontal, preserving original serif + numbered style */}
       {!isMobile && (
-        <nav style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          {NAV_ITEMS.map((item) => (
-            <a
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "32px",
+          }}
+        >
+          {NAV_ITEMS.map((item, i) => (
+            <NavLink
               key={item.label}
+              label={item.label}
               href={item.href}
-              onClick={(e) => {
-                if (item.href.startsWith("#")) {
-                  e.preventDefault();
-                  const el = document.querySelector(item.href);
-                  if (el) {
-                    const top = el.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({ top, behavior: "smooth" });
-                  }
-                }
-              }}
-              style={{
-                fontFamily: "'Alte Haas Grotesk', sans-serif",
-                fontSize: "13px",
-                fontWeight: 400,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: mutedColor,
-                textDecoration: "none",
-                transition: "color 0.2s ease",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = textColor; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = mutedColor; }}
-            >
-              {item.label}
-            </a>
+              index={i}
+              isMobile={isMobile}
+            />
           ))}
-        </nav>
+        </div>
       )}
-    </motion.header>
+    </motion.nav>
   );
 }

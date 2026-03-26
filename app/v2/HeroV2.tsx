@@ -354,14 +354,14 @@ export default function HeroV2() {
             })}
           </h1>
 
-          {/* Two CTAs side by side */}
+          {/* Two CTAs — premium underline style */}
           <motion.div
             style={{
-              marginTop: "32px",
+              marginTop: "40px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: isMobile ? "16px" : "24px",
+              gap: isMobile ? "32px" : "48px",
               flexWrap: "wrap",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
@@ -380,65 +380,68 @@ export default function HeroV2() {
                   window.scrollTo({ top, behavior: "smooth" });
                 }
               }}
+              onMouseEnter={() => playTick(4000, 0.03, 0.05)}
               className="hero-v2-cta"
               style={{
-                background: "#F8F2E4",
+                background: "transparent",
                 border: "none",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: isMobile ? "12px 24px" : "14px 32px",
+                gap: "12px",
+                padding: "4px 6px",
+                borderBottom: "1px solid #B8965A",
                 borderRadius: 0,
                 textDecoration: "none",
-                color: "#1a1a1a",
-                transition: "background 150ms ease, color 150ms ease",
+                color: "#B8965A",
+                transition: "gap 0.3s ease, color 0.3s ease",
               }}
             >
               <span
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(16px, 2.5vw, 20px)" : "20px",
-                  fontWeight: 400,
+                  fontSize: isMobile ? "clamp(14px, 2vw, 18px)" : "13px",
+                  fontWeight: 500,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "3px",
                 }}
               >
                 CHECK ELIGIBILITY
               </span>
-              <ArrowRightIcon width={isMobile ? 18 : 20} height={isMobile ? 18 : 20} />
+              <ArrowRightIcon width={14} height={14} />
             </a>
 
             {/* Watch Movie */}
             <button
               onClick={handleWatchMovie}
               onMouseEnter={() => playTick(4000, 0.03, 0.05)}
-              className="hero-v2-cta-outline"
+              className="hero-v2-cta"
               style={{
                 background: "transparent",
-                border: "1.5px solid rgba(248, 242, 228, 0.5)",
+                border: "none",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: isMobile ? "12px 24px" : "14px 32px",
+                gap: "12px",
+                padding: "4px 6px",
+                borderBottom: "1px solid rgba(248, 242, 228, 0.35)",
                 borderRadius: 0,
                 color: "#F8F2E4",
-                transition: "background 150ms ease, border-color 150ms ease",
+                transition: "gap 0.3s ease, color 0.3s ease, border-color 0.3s ease",
               }}
             >
               <span
                 style={{
                   fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(16px, 2.5vw, 20px)" : "20px",
-                  fontWeight: 400,
+                  fontSize: isMobile ? "clamp(14px, 2vw, 18px)" : "13px",
+                  fontWeight: 500,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "3px",
                 }}
               >
                 WATCH MOVIE
               </span>
-              <ArrowRightIcon width={isMobile ? 18 : 20} height={isMobile ? 18 : 20} style={{ color: "#B8965A" }} />
+              <ArrowRightIcon width={14} height={14} style={{ color: "#B8965A" }} />
             </button>
           </motion.div>
         </div>
@@ -447,14 +450,9 @@ export default function HeroV2() {
       {/* Hover styles */}
       <style>{`
         .hero-v2-cta:hover {
-          background: #B8965A !important;
-          color: #F8F2E4 !important;
+          gap: 18px !important;
         }
-        .hero-v2-cta-outline:hover {
-          background: rgba(248, 242, 228, 0.1) !important;
-          border-color: rgba(248, 242, 228, 0.8) !important;
-        }
-        .hero-v2-cta:active, .hero-v2-cta-outline:active {
+        .hero-v2-cta:active {
           transform: scale(0.97);
           transition: transform 80ms ease;
         }
