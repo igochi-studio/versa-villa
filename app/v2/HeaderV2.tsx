@@ -83,7 +83,7 @@ function NavLink({
           fontSize: "11px",
           fontWeight: 400,
           letterSpacing: "0.08em",
-          color: hovered ? "#B8965A" : "rgba(248, 242, 228, 0.3)",
+          color: hovered ? "#B8965A" : "rgba(248, 242, 228, 0.5)",
           transition: "color 0.3s ease",
           userSelect: "none",
         }}
@@ -99,7 +99,7 @@ function NavLink({
           fontWeight: 400,
           letterSpacing: "-0.01em",
           lineHeight: 1.2,
-          color: hovered ? "#F8F2E4" : "rgba(248, 242, 228, 0.6)",
+          color: hovered ? "#F8F2E4" : "rgba(248, 242, 228, 0.8)",
           transition: "color 0.3s ease",
         }}
       >
@@ -169,7 +169,7 @@ export default function HeaderV2() {
   return (
     <motion.nav
       initial={shouldReduceMotion ? false : { y: -20, opacity: 0 }}
-      animate={{ y: shown ? 0 : -100, opacity: shown ? 1 : 0 }}
+      animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
       style={{
         position: "fixed",
@@ -190,7 +190,7 @@ export default function HeaderV2() {
         WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "none",
         boxShadow: scrolled ? "0 1px 0 rgba(184, 150, 90, 0.15)" : "none",
         transition: "padding 0.4s ease, background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease",
-        pointerEvents: shown ? "auto" : "none",
+        pointerEvents: "auto",
       }}
     >
       {/* Logo */}

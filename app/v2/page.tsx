@@ -1,5 +1,6 @@
 import HeroV2 from "./HeroV2";
 import HeaderV2 from "./HeaderV2";
+import AsSeenOn from "./AsSeenOn";
 import DestroyingCosmos from "../components/DestroyingCosmos";
 import DestroyingSection from "../components/DestroyingSection";
 import SystemSection from "../components/SystemSection";
@@ -10,6 +11,7 @@ export default function HomeV2() {
     <main>
       <HeaderV2 />
       <HeroV2 />
+      <AsSeenOn />
       <div className="relative z-[2] flex flex-col gap-[100px] md:gap-[200px]" style={{ backgroundColor: "#F8F2E4" }}>
         <DestroyingCosmos />
         <DestroyingSection />

@@ -18,13 +18,17 @@ const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
 const HEADING_WORDS = [
-  { text: "Born", line: 0 },
-  { text: "from", line: 0 },
-  { text: "resilience,", line: 0 },
-  { text: "built", line: 1 },
-  { text: "for", line: 1 },
-  { text: "the", line: 1 },
-  { text: "future.", line: 1 },
+  { text: "Built", line: 0 },
+  { text: "in", line: 0 },
+  { text: "6", line: 0 },
+  { text: "months.", line: 0 },
+  { text: "Fully", line: 1 },
+  { text: "fire", line: 1 },
+  { text: "resistant.", line: 1 },
+  { text: "Designed", line: 2 },
+  { text: "for", line: 2 },
+  { text: "the", line: 2 },
+  { text: "future.", line: 2 },
 ];
 
 let audioCtx: AudioContext | null = null;
@@ -297,7 +301,7 @@ export default function HeroV2() {
         )}
       </AnimatePresence>
 
-      {/* UI Layer — heading + two CTAs */}
+      {/* UI Layer — left-aligned editorial layout */}
       <motion.div
         style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: isMoviePlaying ? "none" : "auto" }}
         animate={{ opacity: isMoviePlaying ? 0 : 1 }}
@@ -306,38 +310,38 @@ export default function HeroV2() {
         <div
           style={{
             position: "absolute",
-            top: isMobile ? "45%" : "400px",
-            left: "50%",
-            transform: isMobile ? "translate(-50%, -50%)" : "translateX(-50%)",
-            textAlign: "center",
-            width: isMobile ? "90%" : "auto",
+            bottom: isMobile ? "15%" : "18%",
+            left: isMobile ? "24px" : "48px",
+            textAlign: "left",
+            maxWidth: isMobile ? "85%" : "720px",
           }}
         >
-          {/* Heading */}
+          {/* Heading — large editorial serif */}
           <h1
             style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: isMobile ? "clamp(32px, 5vw, 48px)" : "56px",
+              fontSize: isMobile ? "clamp(28px, 6vw, 42px)" : "clamp(40px, 3.5vw, 52px)",
               fontWeight: 400,
-              lineHeight: "110%",
+              lineHeight: "130%",
               letterSpacing: "-0.02em",
               color: "#F8F2E4",
               WebkitFontSmoothing: "antialiased",
-              whiteSpace: isMobile ? "normal" : "nowrap",
+              margin: 0,
             }}
           >
-            {[0, 1].map((lineIdx) => {
+            {[0, 1, 2].map((lineIdx) => {
               const words = HEADING_WORDS.filter((w) => w.line === lineIdx);
+              const prevWords = HEADING_WORDS.filter((w) => w.line < lineIdx).length;
               return (
                 <span key={lineIdx} style={{ display: "block" }}>
                   {words.map((w, wi) => {
-                    const globalIdx = lineIdx === 0 ? wi : 3 + wi;
-                    const wordDelay = 0.2 + globalIdx * 0.07;
+                    const globalIdx = prevWords + wi;
+                    const wordDelay = 0.2 + globalIdx * 0.06;
                     return (
                       <motion.span
                         key={w.text}
                         style={{ display: "inline-block", willChange: "filter, opacity, transform" }}
-                        initial={shouldReduceMotion ? false : { opacity: 0, y: 12, filter: "blur(6px)" }}
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(6px)" }}
                         animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
                         transition={{
                           duration: 0.65, ease: EASE_OUT_EXPO, delay: wordDelay,
@@ -354,19 +358,18 @@ export default function HeroV2() {
             })}
           </h1>
 
-          {/* Two CTAs — premium underline style */}
+          {/* Two CTAs — classy underline like reference */}
           <motion.div
             style={{
-              marginTop: "40px",
+              marginTop: isMobile ? "28px" : "36px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: isMobile ? "32px" : "48px",
+              gap: isMobile ? "28px" : "40px",
               flexWrap: "wrap",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
             animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
-            transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.75 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.9 }}
           >
             {/* Check Eligibility */}
             <a
@@ -383,32 +386,27 @@ export default function HeroV2() {
               onMouseEnter={() => playTick(4000, 0.03, 0.05)}
               className="hero-v2-cta"
               style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "12px",
-                padding: "4px 6px",
-                borderBottom: "1px solid #B8965A",
-                borderRadius: 0,
+                gap: "14px",
                 textDecoration: "none",
-                color: "#B8965A",
-                transition: "gap 0.3s ease, color 0.3s ease",
+                borderBottom: "1px solid rgba(248, 242, 228, 0.5)",
+                paddingBottom: "6px",
+                color: "#F8F2E4",
+                transition: "gap 0.3s ease, border-color 0.3s ease",
+                cursor: "pointer",
               }}
             >
               <span
                 style={{
-                  fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(14px, 2vw, 18px)" : "13px",
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: "3px",
+                  fontFamily: "var(--font-playfair), serif",
+                  fontSize: isMobile ? "clamp(18px, 3vw, 24px)" : "22px",
+                  fontWeight: 400,
                 }}
               >
-                CHECK ELIGIBILITY
+                Check eligibility
               </span>
-              <ArrowRightIcon width={14} height={14} />
+              <span style={{ fontSize: "20px", lineHeight: 1 }}>&rarr;</span>
             </a>
 
             {/* Watch Movie */}
@@ -419,29 +417,27 @@ export default function HeroV2() {
               style={{
                 background: "transparent",
                 border: "none",
-                cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "12px",
-                padding: "4px 6px",
-                borderBottom: "1px solid rgba(248, 242, 228, 0.35)",
-                borderRadius: 0,
-                color: "#F8F2E4",
+                gap: "14px",
+                borderBottom: "1px solid rgba(248, 242, 228, 0.3)",
+                paddingBottom: "6px",
+                padding: "0 0 6px 0",
+                color: "rgba(248, 242, 228, 0.7)",
                 transition: "gap 0.3s ease, color 0.3s ease, border-color 0.3s ease",
+                cursor: "pointer",
               }}
             >
               <span
                 style={{
-                  fontFamily: "'Alte Haas Grotesk', sans-serif",
-                  fontSize: isMobile ? "clamp(14px, 2vw, 18px)" : "13px",
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: "3px",
+                  fontFamily: "var(--font-playfair), serif",
+                  fontSize: isMobile ? "clamp(18px, 3vw, 24px)" : "22px",
+                  fontWeight: 400,
                 }}
               >
-                WATCH MOVIE
+                Watch movie
               </span>
-              <ArrowRightIcon width={14} height={14} style={{ color: "#B8965A" }} />
+              <span style={{ fontSize: "20px", lineHeight: 1 }}>&rarr;</span>
             </button>
           </motion.div>
         </div>
