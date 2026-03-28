@@ -214,7 +214,7 @@ export default function ContextV2() {
           style={{
             position: "relative",
             zIndex: 2,
-            textAlign: "center",
+            textAlign: isMobile ? "left" : "center",
             padding: isMobile ? "0 24px" : "0 60px",
             maxWidth: "720px",
             width: "100%",
@@ -265,8 +265,8 @@ export default function ContextV2() {
             style={{
               display: "flex",
               flexDirection: isMobile ? "column" : "row",
-              justifyContent: "center",
-              alignItems: "center",
+              justifyContent: isMobile ? "flex-start" : "center",
+              alignItems: isMobile ? "flex-start" : "center",
               gap: isMobile ? "28px" : "80px",
               marginBottom: isMobile ? "32px" : "44px",
             }}
@@ -278,7 +278,7 @@ export default function ContextV2() {
             }
             transition={{ ...REVEAL_SPRING, delay: 0.35 }}
           >
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: isMobile ? "left" : "center" }}>
               <span
                 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -308,7 +308,7 @@ export default function ContextV2() {
                 Homes lost in Palisades
               </span>
             </div>
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: isMobile ? "left" : "center" }}>
               <span
                 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -348,7 +348,7 @@ export default function ContextV2() {
               width: "80px",
               height: "1.5px",
               backgroundColor: "#B8965A",
-              margin: "0 auto",
+              margin: isMobile ? "0" : "0 auto",
               marginBottom: isMobile ? "28px" : "36px",
             }}
           />
@@ -368,7 +368,7 @@ export default function ContextV2() {
               fontWeight: 400,
               color: "#4A3C24",
               lineHeight: "170%",
-              margin: "0 auto",
+              margin: isMobile ? 0 : "0 auto",
               maxWidth: "600px",
             }}
           >
