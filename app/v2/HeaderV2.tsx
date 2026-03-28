@@ -464,7 +464,7 @@ export default function HeaderV2() {
           src="/versa-villa-logo.svg"
           alt="Versa Villa"
           style={{
-            height: isMobile ? "30px" : "36px",
+            height: isMobile ? "38px" : "46px",
             width: "auto",
             display: "block",
           }}
