@@ -128,87 +128,85 @@ export default function ContextV2() {
           padding: isMobile ? "80px 0" : "160px 0",
         }}
       >
-        {/* ── Left bush — bottom-left corner ── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src="/left-tree.svg"
-          alt=""
-          loading="lazy"
-          initial={prefersReducedMotion ? false : { x: "-100%", opacity: 0 }}
-          animate={inView ? { x: "0%", opacity: 1 } : undefined}
-          transition={{ ...TREE_SPRING, delay: 0.3 }}
-          style={{
-            position: "absolute",
-            bottom: isMobile ? "5%" : "22%",
-            left: isMobile ? "-10%" : "-2%",
-            width: isMobile ? "30vw" : "14vw",
-            height: "auto",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        />
-
-        {/* ── Right tree — right edge ── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src="/right-tree.svg"
-          alt=""
-          loading="lazy"
-          initial={prefersReducedMotion ? false : { x: "80%", opacity: 0 }}
-          animate={inView ? { x: "0%", opacity: 1 } : undefined}
-          transition={{ ...TREE_SPRING, delay: 0.15 }}
-          style={{
-            position: "absolute",
-            top: isMobile ? "2%" : "6%",
-            right: isMobile ? "-14%" : "-4%",
-            height: isMobile ? "65%" : "68%",
-            width: "auto",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        />
-
-        {/* ── Left bird ── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src="/left-bird.svg"
-          alt=""
-          loading="lazy"
-          style={{
-            position: "absolute",
-            top: isMobile ? "12%" : "14%",
-            left: isMobile ? "16%" : "28%",
-            width: isMobile ? "40px" : "84px",
-            height: "auto",
-            pointerEvents: "none",
-            opacity: inView ? 1 : 0,
-            transition: "opacity 1.2s ease-out 0.5s",
-            zIndex: 3,
-            y: leftBirdY,
-            x: leftBirdX,
-          }}
-        />
-
-        {/* ── Right bird ── */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <motion.img
-          src="/right-bird.svg"
-          alt=""
-          loading="lazy"
-          style={{
-            position: "absolute",
-            top: isMobile ? "22%" : "30%",
-            right: isMobile ? "24%" : "28%",
-            width: isMobile ? "34px" : "64px",
-            height: "auto",
-            pointerEvents: "none",
-            opacity: inView ? 1 : 0,
-            transition: "opacity 1.2s ease-out 0.9s",
-            zIndex: 3,
-            y: rightBirdY,
-            x: rightBirdX,
-          }}
-        />
+        {/* ── Decorative elements — desktop only ── */}
+        {!isMobile && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <motion.img
+              src="/left-tree.svg"
+              alt=""
+              loading="lazy"
+              initial={prefersReducedMotion ? false : { x: "-100%", opacity: 0 }}
+              animate={inView ? { x: "0%", opacity: 1 } : undefined}
+              transition={{ ...TREE_SPRING, delay: 0.3 }}
+              style={{
+                position: "absolute",
+                bottom: "22%",
+                left: "-2%",
+                width: "14vw",
+                height: "auto",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <motion.img
+              src="/right-tree.svg"
+              alt=""
+              loading="lazy"
+              initial={prefersReducedMotion ? false : { x: "80%", opacity: 0 }}
+              animate={inView ? { x: "0%", opacity: 1 } : undefined}
+              transition={{ ...TREE_SPRING, delay: 0.15 }}
+              style={{
+                position: "absolute",
+                top: "6%",
+                right: "-4%",
+                height: "68%",
+                width: "auto",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <motion.img
+              src="/left-bird.svg"
+              alt=""
+              loading="lazy"
+              style={{
+                position: "absolute",
+                top: "14%",
+                left: "28%",
+                width: "84px",
+                height: "auto",
+                pointerEvents: "none",
+                opacity: inView ? 1 : 0,
+                transition: "opacity 1.2s ease-out 0.5s",
+                zIndex: 3,
+                y: leftBirdY,
+                x: leftBirdX,
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <motion.img
+              src="/right-bird.svg"
+              alt=""
+              loading="lazy"
+              style={{
+                position: "absolute",
+                top: "30%",
+                right: "28%",
+                width: "64px",
+                height: "auto",
+                pointerEvents: "none",
+                opacity: inView ? 1 : 0,
+                transition: "opacity 1.2s ease-out 0.9s",
+                zIndex: 3,
+                y: rightBirdY,
+                x: rightBirdX,
+              }}
+            />
+          </>
+        )}
 
         {/* ── Center text content ── */}
         <div
@@ -237,7 +235,7 @@ export default function ContextV2() {
             transition={{ ...REVEAL_SPRING, delay: 0.1 }}
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? "clamp(26px, 5.5vw, 38px)" : "42px",
+              fontSize: isMobile ? "clamp(24px, 5vw, 32px)" : "42px",
               fontWeight: 400,
               color: "#4A3C24",
               lineHeight: "140%",
@@ -266,8 +264,10 @@ export default function ContextV2() {
           <motion.div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               justifyContent: "center",
-              gap: isMobile ? "40px" : "80px",
+              alignItems: "center",
+              gap: isMobile ? "28px" : "80px",
               marginBottom: isMobile ? "32px" : "44px",
             }}
             initial={{ opacity: 0, y: 30, filter: "blur(6px)" }}

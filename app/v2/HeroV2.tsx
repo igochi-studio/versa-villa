@@ -124,6 +124,10 @@ export default function HeroV2() {
   useEffect(() => {
     const video = bgVideoRef.current;
     if (!video) return;
+    // On mobile, skip past the title card that shows "VERSA VILLA" text
+    if (window.innerWidth < 768) {
+      video.currentTime = 5;
+    }
     video.play().catch(() => {});
   }, []);
 
@@ -311,10 +315,20 @@ export default function HeroV2() {
         <div
           style={{
             position: "absolute",
-            bottom: isMobile ? "6%" : "8%",
-            left: isMobile ? "24px" : "48px",
-            textAlign: "left",
-            maxWidth: isMobile ? "85%" : "720px",
+            ...(isMobile
+              ? {
+                  top: "50%",
+                  left: "24px",
+                  right: "24px",
+                  transform: "translateY(-50%)",
+                  textAlign: "center",
+                }
+              : {
+                  bottom: "8%",
+                  left: "48px",
+                  textAlign: "left",
+                }),
+            maxWidth: isMobile ? "100%" : "720px",
           }}
         >
           {/* Heading — large editorial serif */}
@@ -365,7 +379,9 @@ export default function HeroV2() {
               marginTop: isMobile ? "28px" : "36px",
               display: "flex",
               alignItems: "center",
-              gap: isMobile ? "12px" : "16px",
+              justifyContent: isMobile ? "center" : "flex-start",
+              gap: isMobile ? "8px" : "16px",
+              flexWrap: isMobile ? "wrap" : "nowrap",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
             animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
