@@ -5,11 +5,12 @@ import { motion, useReducedMotion } from "motion/react";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const NAV_ITEMS = [
-  { label: "OUR STORY", href: "#destruction" },
-  { label: "FIRE FEATURES", href: "#fire-features" },
-  { label: "PROCESS ARCHIVE", href: "/process-archive" },
-  { label: "GALLERY", href: "/gallery" },
-  { label: "MODELS", href: "/future" },
+  { label: "FEATURES", href: "/v2#fire-features" },
+  { label: "OUR STORY", href: "/v2#context" },
+  { label: "THE VISION", href: "/v2#vision" },
+  { label: "PROCESS ARCHIVE", href: "/v2/process-archive" },
+  { label: "GALLERY", href: "/v2/gallery" },
+  { label: "MODELS", href: "/v2/models" },
 ];
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -52,13 +53,20 @@ function NavLink({
       href={href}
       onClick={(e) => {
         playTick(3600, 0.04, 0.06);
-        if (href.startsWith("#")) {
-          e.preventDefault();
-          const el = document.querySelector(href);
-          if (el) {
-            const top = el.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({ top, behavior: "smooth" });
+        const hashIndex = href.indexOf("#");
+        if (hashIndex !== -1) {
+          const path = href.substring(0, hashIndex);
+          const hash = href.substring(hashIndex);
+          const isHome = window.location.pathname === "/v2" || window.location.pathname === "/v2/";
+          if (!path || isHome) {
+            e.preventDefault();
+            const el = document.querySelector(hash);
+            if (el) {
+              const top = el.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({ top, behavior: "smooth" });
+            }
           }
+          // else: let browser navigate to /v2#hash
         }
       }}
       onMouseEnter={() => {

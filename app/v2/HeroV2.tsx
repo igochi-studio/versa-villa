@@ -73,6 +73,7 @@ export default function HeroV2() {
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
   const [isMoviePlaying, setIsMoviePlaying] = useState(false);
+  const [hoveredCta, setHoveredCta] = useState<"eligibility" | "movie" | null>(null);
 
   // Movie controls
   const [isPaused, setIsPaused] = useState(false);
@@ -310,7 +311,7 @@ export default function HeroV2() {
         <div
           style={{
             position: "absolute",
-            bottom: isMobile ? "10%" : "12%",
+            bottom: isMobile ? "6%" : "8%",
             left: isMobile ? "24px" : "48px",
             textAlign: "left",
             maxWidth: isMobile ? "85%" : "720px",
@@ -361,11 +362,10 @@ export default function HeroV2() {
           {/* Two CTAs — statement buttons with gold underline */}
           <motion.div
             style={{
-              marginTop: isMobile ? "36px" : "48px",
+              marginTop: isMobile ? "28px" : "36px",
               display: "flex",
-              alignItems: "flex-start",
-              gap: isMobile ? "36px" : "56px",
-              flexWrap: "wrap",
+              alignItems: "center",
+              gap: isMobile ? "12px" : "16px",
             }}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 14, filter: "blur(4px)" }}
             animate={ready ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
@@ -373,86 +373,109 @@ export default function HeroV2() {
           >
             {/* Check Eligibility */}
             <a
-              href="#fire-features"
+              href="#eligibility"
               onClick={(e) => {
                 e.preventDefault();
                 playTick(3800, 0.04, 0.08);
-                const el = document.querySelector("#fire-features");
-                if (el) {
-                  const top = el.getBoundingClientRect().top + window.scrollY;
-                  window.scrollTo({ top, behavior: "smooth" });
-                }
+                window.dispatchEvent(new CustomEvent("open-qualification-form"));
               }}
-              onMouseEnter={() => playTick(4000, 0.03, 0.05)}
-              className="hero-v2-cta"
+              onMouseEnter={() => { setHoveredCta("eligibility"); playTick(4000, 0.03, 0.05); }}
+              onMouseLeave={() => setHoveredCta(null)}
               style={{
                 display: "inline-flex",
-                flexDirection: "column",
-                gap: "12px",
+                alignItems: "center",
+                gap: isMobile ? "12px" : "16px",
                 textDecoration: "none",
                 cursor: "pointer",
+                padding: isMobile ? "12px 24px" : "14px 32px",
+                backgroundColor: hoveredCta === "eligibility"
+                  ? "rgba(248,242,228,0.12)"
+                  : "rgba(248,242,228,0.06)",
+                backdropFilter: hoveredCta === "eligibility" ? "blur(12px)" : "blur(8px)",
+                WebkitBackdropFilter: hoveredCta === "eligibility" ? "blur(12px)" : "blur(8px)",
+                border: `1px solid ${hoveredCta === "eligibility" ? "rgba(248,242,228,0.2)" : "rgba(248,242,228,0.08)"}`,
+                transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "14px" : "20px" }}>
-                <span
-                  style={{
-                    fontFamily: "'Alte Haas Grotesk', sans-serif",
-                    fontSize: isMobile ? "clamp(20px, 3.5vw, 28px)" : "28px",
-                    fontWeight: 400,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "#F8F2E4",
-                  }}
-                >
-                  CHECK ELIGIBILITY
-                </span>
-                <ArrowRightIcon width={isMobile ? 22 : 24} height={isMobile ? 22 : 24} style={{ color: "#B8965A" }} />
-              </div>
-              <div style={{ width: "100%", height: "2px", backgroundColor: "#B8965A" }} />
+              <span
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: isMobile ? "clamp(14px, 3vw, 18px)" : "18px",
+                  fontWeight: 400,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: hoveredCta === "eligibility" ? "#F8F2E4" : "rgba(248,242,228,0.85)",
+                  transition: "color 0.4s ease",
+                }}
+              >
+                CHECK ELIGIBILITY
+              </span>
+              <ArrowRightIcon
+                width={isMobile ? 16 : 18}
+                height={isMobile ? 16 : 18}
+                style={{
+                  color: "#B8965A",
+                  transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+                  transform: hoveredCta === "eligibility" ? "translateX(4px)" : "translateX(0)",
+                  opacity: hoveredCta === "eligibility" ? 1 : 0.6,
+                }}
+              />
             </a>
 
             {/* Watch Movie */}
             <button
               onClick={handleWatchMovie}
-              onMouseEnter={() => playTick(4000, 0.03, 0.05)}
-              className="hero-v2-cta"
+              onMouseEnter={() => { setHoveredCta("movie"); playTick(4000, 0.03, 0.05); }}
+              onMouseLeave={() => setHoveredCta(null)}
               style={{
-                background: "transparent",
-                border: "none",
                 display: "inline-flex",
-                flexDirection: "column",
-                gap: "12px",
+                alignItems: "center",
+                gap: isMobile ? "12px" : "16px",
+                textDecoration: "none",
                 cursor: "pointer",
-                padding: 0,
+                padding: isMobile ? "12px 24px" : "14px 32px",
+                backgroundColor: hoveredCta === "movie"
+                  ? "rgba(248,242,228,0.12)"
+                  : "transparent",
+                backdropFilter: hoveredCta === "movie" ? "blur(12px)" : "none",
+                WebkitBackdropFilter: hoveredCta === "movie" ? "blur(12px)" : "none",
+                border: `1px solid ${hoveredCta === "movie" ? "rgba(248,242,228,0.2)" : "rgba(248,242,228,0.08)"}`,
+                transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
+                background: "transparent",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "14px" : "20px" }}>
-                <span
-                  style={{
-                    fontFamily: "'Alte Haas Grotesk', sans-serif",
-                    fontSize: isMobile ? "clamp(20px, 3.5vw, 28px)" : "28px",
-                    fontWeight: 400,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "rgba(248, 242, 228, 0.7)",
-                  }}
-                >
-                  WATCH MOVIE
-                </span>
-                <ArrowRightIcon width={isMobile ? 22 : 24} height={isMobile ? 22 : 24} style={{ color: "#B8965A" }} />
-              </div>
-              <div style={{ width: "100%", height: "2px", backgroundColor: "rgba(184, 150, 90, 0.5)" }} />
+              <span
+                style={{
+                  fontFamily: "'Alte Haas Grotesk', sans-serif",
+                  fontSize: isMobile ? "clamp(14px, 3vw, 18px)" : "18px",
+                  fontWeight: 400,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: hoveredCta === "movie" ? "#F8F2E4" : "rgba(248,242,228,0.5)",
+                  transition: "color 0.4s ease",
+                }}
+              >
+                WATCH MOVIE
+              </span>
+              <ArrowRightIcon
+                width={isMobile ? 16 : 18}
+                height={isMobile ? 16 : 18}
+                style={{
+                  color: "#B8965A",
+                  transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+                  transform: hoveredCta === "movie" ? "translateX(4px)" : "translateX(0)",
+                  opacity: hoveredCta === "movie" ? 1 : 0.6,
+                }}
+              />
             </button>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Hover styles */}
+      {/* Active press style */}
       <style>{`
-        .hero-v2-cta:hover {
-          gap: 18px !important;
-        }
-        .hero-v2-cta:active {
+        a[href="#fire-features"]:active,
+        button:active {
           transform: scale(0.97);
           transition: transform 80ms ease;
         }
