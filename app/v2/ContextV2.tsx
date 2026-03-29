@@ -235,24 +235,17 @@ export default function ContextV2() {
             transition={{ ...REVEAL_SPRING, delay: 0.1 }}
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? "clamp(24px, 5vw, 32px)" : "42px",
+              fontSize: isMobile ? "clamp(24px, 5vw, 32px)" : "36px",
               fontWeight: 400,
               color: "#4A3C24",
-              lineHeight: "140%",
+              lineHeight: "145%",
               letterSpacing: "-0.02em",
               margin: 0,
               marginBottom: isMobile ? "48px" : "60px",
             }}
           >
             The Palisades and Eaton fires destroyed over{" "}
-            <span
-              style={{
-                color: "#B8965A",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {formatNumber(structureCount)}+
-            </span>{" "}
+            <span style={{ color: "#B8965A" }}>16,000+</span>{" "}
             structures across Los Angeles County.
           </motion.h2>
 
