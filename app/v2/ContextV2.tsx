@@ -244,20 +244,22 @@ export default function ContextV2() {
               marginBottom: isMobile ? "48px" : "60px",
             }}
           >
-            The Palisades and Eaton fires
+            The Palisades and Eaton fires destroyed
             <br />
-            destroyed over{" "}
+            over{" "}
             <span
               style={{
                 color: "#B8965A",
                 fontVariantNumeric: "tabular-nums",
+                display: "inline-block",
+                minWidth: "2.5em",
               }}
             >
               {formatNumber(structureCount)}+
             </span>{" "}
-            structures
+            structures across
             <br />
-            across Los Angeles County.
+            Los Angeles County.
           </motion.h2>
 
           {/* Stats row */}
@@ -288,6 +290,7 @@ export default function ContextV2() {
                   display: "block",
                   lineHeight: "110%",
                   fontVariantNumeric: "tabular-nums",
+                  minWidth: "3em",
                 }}
               >
                 {formatNumber(homeCount)}+
