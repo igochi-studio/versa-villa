@@ -119,7 +119,7 @@ function NavLink({
       <span
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: isMobile ? "15px" : "18px",
+          fontSize: isMobile ? "16px" : "20px",
           fontWeight: 400,
           letterSpacing: "-0.01em",
           lineHeight: 1.2,
@@ -464,7 +464,7 @@ export default function HeaderV2() {
           src="/versa-villa-logo.svg"
           alt="Versa Villa"
           style={{
-            height: isMobile ? "38px" : "46px",
+            height: isMobile ? "42px" : "52px",
             width: "auto",
             display: "block",
           }}

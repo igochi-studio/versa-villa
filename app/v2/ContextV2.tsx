@@ -94,8 +94,8 @@ export default function ContextV2() {
   );
 
   // Count-up values
-  const structureCount = useCountUp(12000, inView, 2200, 400);
-  const homeCount = useCountUp(5600, inView, 2000, 600);
+  const structureCount = useCountUp(16000, inView, 2200, 400);
+  const homeCount = useCountUp(6800, inView, 2000, 600);
 
   const formatNumber = useCallback(
     (n: number) => n.toLocaleString("en-US"),
@@ -253,7 +253,7 @@ export default function ContextV2() {
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {formatNumber(structureCount)}
+              {formatNumber(structureCount)}+
             </span>{" "}
             structures
             <br />
@@ -290,7 +290,7 @@ export default function ContextV2() {
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {formatNumber(homeCount)}
+                {formatNumber(homeCount)}+
               </span>
               <span
                 style={{
@@ -305,7 +305,7 @@ export default function ContextV2() {
                   display: "block",
                 }}
               >
-                Homes lost in Palisades
+                Structures lost in Palisades
               </span>
             </div>
             <div style={{ textAlign: isMobile ? "left" : "center" }}>

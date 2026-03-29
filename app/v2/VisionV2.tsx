@@ -170,7 +170,7 @@ export default function VisionV2() {
                   opacity: 0.7,
                 }}
               >
-                VersaVilla is a first-of-its-kind residence that combines luxury
+                Versa Villa is a first-of-its-kind residence that combines luxury
                 architecture with advanced resilience, completed in under 6
                 months. More than a structure, it is a response to what was lost
                 and a promise that communities can rebuild stronger, faster, and
@@ -332,7 +332,7 @@ export default function VisionV2() {
                   opacity: 0.7,
                 }}
               >
-                VersaVilla is a first-of-its-kind residence that combines luxury
+                Versa Villa is a first-of-its-kind residence that combines luxury
                 architecture with advanced resilience, completed in under 6
                 months. More than a structure, it is a response to what was lost
                 and a promise that communities can rebuild stronger, faster, and

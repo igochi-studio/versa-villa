@@ -120,7 +120,7 @@ function DesktopModelGallery() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={model.image}
-            alt={`VersaVilla Model ${model.number}`}
+            alt={`Versa Villa Model ${model.number}`}
             style={{
               width: "100%",
               height: "100%",
@@ -326,7 +326,7 @@ function MobileModelCard({ model }: { model: Model }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={model.image}
-          alt={`VersaVilla Model ${model.number}`}
+          alt={`Versa Villa Model ${model.number}`}
           style={{ width: "100%", display: "block" }}
         />
       </div>
