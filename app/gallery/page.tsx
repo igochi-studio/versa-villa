@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useIsMobile } from "../hooks/useIsMobile";
-import Header from "../components/Header";
+import HeaderV2 from "../v2/HeaderV2";
 
 const EASE_OUT_QUINT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -142,7 +142,7 @@ export default function GalleryPage() {
         position: "relative",
       }}
     >
-      <Header />
+      <HeaderV2 />
 
       <div
         ref={scrollRef}

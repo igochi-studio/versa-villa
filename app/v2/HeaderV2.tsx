@@ -7,15 +7,15 @@ import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const NAV_SCROLL = [
-  { label: "FEATURES", href: "/v2#fire-features" },
-  { label: "OUR STORY", href: "/v2#context" },
-  { label: "THE VISION", href: "/v2#vision" },
+  { label: "FEATURES", href: "/#fire-features" },
+  { label: "OUR STORY", href: "/#context" },
+  { label: "THE VISION", href: "/#vision" },
 ];
 
 const NAV_PAGES = [
-  { label: "PROCESS ARCHIVE", href: "/v2/process-archive" },
-  { label: "GALLERY", href: "/v2/gallery" },
-  { label: "MODELS", href: "/v2/models" },
+  { label: "PROCESS ARCHIVE", href: "/process-archive" },
+  { label: "GALLERY", href: "/gallery" },
+  { label: "MODELS", href: "/models" },
 ];
 
 const NAV_ALL = [...NAV_SCROLL, ...NAV_PAGES];
@@ -52,7 +52,7 @@ function navigateToHref(href: string) {
   if (hashIndex !== -1) {
     const path = href.substring(0, hashIndex);
     const hash = href.substring(hashIndex);
-    const isHome = window.location.pathname === "/v2" || window.location.pathname === "/v2/";
+    const isHome = window.location.pathname === "/" || window.location.pathname === "";
     if (!path || isHome) {
       const el = document.querySelector(hash);
       if (el) {
@@ -458,7 +458,7 @@ export default function HeaderV2() {
       }}
     >
       {/* Logo */}
-      <a href="/v2" style={{ textDecoration: "none" }}>
+      <a href="/" style={{ textDecoration: "none" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/versa-villa-logo.svg"

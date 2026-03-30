@@ -71,7 +71,6 @@ function DesktopModelGallery() {
     resumeRef.current = setTimeout(() => setPaused(false), 8000);
   }, [activeIndex]);
 
-  // Smooth progress bar + auto-cycle
   useEffect(() => {
     if (paused) {
       setProgress(0);
@@ -109,7 +108,6 @@ function DesktopModelGallery() {
         backgroundColor: "#1a1a1a",
       }}
     >
-      {/* ── Full-bleed image ── */}
       <AnimatePresence mode="popLayout">
         <motion.div
           key={`model-img-${activeIndex}`}
@@ -122,7 +120,7 @@ function DesktopModelGallery() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={model.image}
-            alt={`VersaVilla Model ${model.number}`}
+            alt={`Versa Villa Model ${model.number}`}
             style={{
               width: "100%",
               height: "100%",
@@ -133,7 +131,6 @@ function DesktopModelGallery() {
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Bottom gradient overlay ── */}
       <div
         style={{
           position: "absolute",
@@ -147,7 +144,6 @@ function DesktopModelGallery() {
         }}
       />
 
-      {/* ── Bottom content: icons + details ── */}
       <div
         style={{
           position: "absolute",
@@ -161,7 +157,6 @@ function DesktopModelGallery() {
           gap: "28px",
         }}
       >
-        {/* Model selector row */}
         <div
           style={{
             display: "flex",
@@ -207,7 +202,6 @@ function DesktopModelGallery() {
                     transition: "all 0.5s cubic-bezier(0.23, 1, 0.32, 1)",
                   }}
                 />
-                {/* Model number */}
                 <span
                   style={{
                     fontFamily: "'Alte Haas Grotesk', sans-serif",
@@ -220,7 +214,6 @@ function DesktopModelGallery() {
                 >
                   {m.number}
                 </span>
-                {/* Active indicator — thin line */}
                 <div
                   style={{
                     position: "absolute",
@@ -238,7 +231,6 @@ function DesktopModelGallery() {
           })}
         </div>
 
-        {/* Details row */}
         <div
           style={{
             display: "flex",
@@ -291,7 +283,6 @@ function DesktopModelGallery() {
           </AnimatePresence>
         </div>
 
-        {/* Progress bar */}
         <div
           style={{
             height: "1px",
@@ -335,7 +326,7 @@ function MobileModelCard({ model }: { model: Model }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={model.image}
-          alt={`VersaVilla Model ${model.number}`}
+          alt={`Versa Villa Model ${model.number}`}
           style={{ width: "100%", display: "block" }}
         />
       </div>
@@ -394,14 +385,13 @@ function MobileModelCard({ model }: { model: Model }) {
 }
 
 /* ─── Page ─── */
-export default function FuturePage() {
+export default function ModelsPage() {
   const isMobile = useIsMobile();
 
   return (
     <main style={{ backgroundColor: "#F8F2E4", minHeight: "100vh" }}>
       <HeaderV2 />
 
-      {/* Desktop: fullscreen gallery | Mobile: scrolling cards */}
       {isMobile ? (
         <section style={{ padding: "80px 20px 40px" }}>
           {MODELS.map((m) => (
