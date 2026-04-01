@@ -186,7 +186,7 @@ export default function GalleryPage() {
                   <img
                     src={img.src}
                     alt=""
-                    loading="eager"
+                    loading="lazy"
                     style={{
                       width: "100%",
                       height: "auto",

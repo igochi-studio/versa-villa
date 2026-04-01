@@ -126,7 +126,7 @@ export default function HeroV2() {
     if (!video) return;
     // On mobile, skip past the title card that shows "VERSA VILLA" text
     if (window.innerWidth < 768) {
-      video.currentTime = 5;
+      video.currentTime = 10;
     }
     video.play().catch(() => {});
   }, []);
@@ -204,7 +204,7 @@ export default function HeroV2() {
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         style={{
           position: "absolute",
           inset: 0,
@@ -213,6 +213,7 @@ export default function HeroV2() {
           objectFit: "cover",
           display: "block",
           zIndex: 0,
+          backgroundColor: "#1a1a1a",
         }}
       >
         <source src="/versa-villa-final.mp4" type="video/mp4" />

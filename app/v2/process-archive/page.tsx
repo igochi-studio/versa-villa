@@ -171,7 +171,7 @@ export default function ProcessArchivePage() {
                   <img
                     src={img.src}
                     alt=""
-                    loading="eager"
+                    loading="lazy"
                     style={{
                       width: "100%",
                       height: "auto",

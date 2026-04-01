@@ -250,6 +250,8 @@ export default function FeaturesV2() {
                   <img
                     src={logo.src}
                     alt={logo.alt}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       height: `${isMobile ? Math.round(logo.height * 0.8) : logo.height}px`,
                       width: "auto",
@@ -358,6 +360,7 @@ export default function FeaturesV2() {
                     key={feature.media.src}
                     src={feature.media.src}
                     autoPlay muted loop playsInline
+                    preload="metadata"
                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
@@ -365,6 +368,8 @@ export default function FeaturesV2() {
                   <img
                     src={feature.media.src}
                     alt={feature.title}
+                    loading="lazy"
+                    decoding="async"
                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 )}

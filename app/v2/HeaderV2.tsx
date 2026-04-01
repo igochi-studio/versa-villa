@@ -489,6 +489,31 @@ export default function HeaderV2() {
               isMobile={isMobile}
             />
           ))}
+          <button
+            onClick={() => {
+              playTick(3800, 0.04, 0.08);
+              window.dispatchEvent(new CustomEvent("open-qualification-form"));
+            }}
+            onMouseEnter={() => playTick(4000, 0.03, 0.05)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 24px",
+              backgroundColor: "rgba(184, 150, 90, 0.15)",
+              border: "1px solid rgba(184, 150, 90, 0.3)",
+              cursor: "pointer",
+              fontFamily: "'Alte Haas Grotesk', sans-serif",
+              fontSize: "14px",
+              fontWeight: 400,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase" as const,
+              color: "#F8F2E4",
+              transition: "all 0.3s ease",
+            }}
+          >
+            CONTACT US
+          </button>
         </div>
       )}
 
@@ -643,6 +668,43 @@ export default function HeaderV2() {
                   ))}
                 </motion.div>
 
+                {/* Contact Us button */}
+                <motion.button
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease: EASE_OUT_QUINT, delay: 0.35 }}
+                  onClick={() => {
+                    playTick(3800, 0.04, 0.08);
+                    setMenuOpen(false);
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent("open-qualification-form"));
+                    }, 300);
+                  }}
+                  style={{
+                    marginTop: "28px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    padding: "16px 28px",
+                    backgroundColor: "rgba(184, 150, 90, 0.15)",
+                    border: "1px solid rgba(184, 150, 90, 0.3)",
+                    borderRadius: 0,
+                    cursor: "pointer",
+                    fontFamily: "'Alte Haas Grotesk', sans-serif",
+                    fontSize: "15px",
+                    fontWeight: 400,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase" as const,
+                    color: "#F8F2E4",
+                    transition: "all 0.3s ease",
+                    width: "100%",
+                  }}
+                >
+                  CONTACT US
+                </motion.button>
+
                 {/* Bottom gold line */}
                 <motion.div
                   initial={shouldReduceMotion ? { opacity: 0 } : { scaleX: 0, opacity: 0 }}
@@ -652,7 +714,7 @@ export default function HeaderV2() {
                   style={{
                     height: "1px",
                     background: "linear-gradient(90deg, rgba(184, 150, 90, 0.4), rgba(184, 150, 90, 0.1))",
-                    marginTop: "28px",
+                    marginTop: "20px",
                     transformOrigin: "left",
                   }}
                 />
