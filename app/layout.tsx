@@ -5,6 +5,7 @@ import "dialkit/styles.css";
 import { DialRoot } from "dialkit";
 import LoadingScreen from "./components/LoadingScreen";
 import ScrollToTop from "./components/ScrollToTop";
+import QualificationForm from "./components/QualificationForm";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -82,6 +83,7 @@ export default function RootLayout({
         <ScrollToTop />
         <LoadingScreen />
         {children}
+        <QualificationForm />
         {process.env.NODE_ENV === "development" && <DialRoot position="top-right" />}
       </body>
     </html>
